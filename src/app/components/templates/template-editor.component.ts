@@ -1,13 +1,15 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DbService } from '../../services/db.service';
 import { Template, EjercicioBase, TipoEjercicio } from '../../models/interfaces';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-template-editor',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule, DragDropModule],
   template: `
     <div class="min-h-screen bg-[#0a0a0a] px-6 pt-8 pb-32">
       <!-- Header -->
@@ -27,10 +29,16 @@ import { Template, EjercicioBase, TipoEjercicio } from '../../models/interfaces'
       </div>
 
       <!-- Exercises list -->
-      <div class="flex flex-col gap-5 mb-8">
+      <div class="flex flex-col gap-5 mb-8" cdkDropList (cdkDropListDropped)="drop($event)">
         @for (ejercicio of ejercicios(); track $index) {
-          <div class="bg-[#141414] rounded-3xl p-6 border border-[#1e1e1e] transition-all duration-300 shadow-sm hover:border-[#2a2a2a]">
-            <div class="flex items-center gap-4 mb-4">
+          <div cdkDrag class="bg-[#141414] rounded-3xl p-6 border border-[#1e1e1e] transition-all duration-300 shadow-sm hover:border-[#2a2a2a] relative">
+            
+            <!-- Drag Handle -->
+            <div cdkDragHandle class="absolute top-4 left-0 right-0 flex justify-center cursor-grab active:cursor-grabbing text-[#2a2a2a] hover:text-[#737373] transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="16" y1="9" y2="9"/><line x1="8" x2="16" y1="15" y2="15"/></svg>
+            </div>
+
+            <div class="flex items-center gap-4 mb-4 mt-2">
               <span class="text-[#737373] text-sm font-semibold shrink-0">{{ $index + 1 }}.</span>
               <input
                 type="text"
@@ -136,6 +144,12 @@ export class TemplateEditorComponent implements OnInit {
         this.ejercicios.set([...template.ejercicios]);
       }
     }
+  }
+
+  drop(event: CdkDragDrop<string[]>) {
+    const ejs = [...this.ejercicios()];
+    moveItemInArray(ejs, event.previousIndex, event.currentIndex);
+    this.ejercicios.set(ejs);
   }
 
   addExercise() {

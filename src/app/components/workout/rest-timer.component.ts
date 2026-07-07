@@ -41,37 +41,22 @@ import { Component, input, output, signal, computed, OnDestroy } from '@angular/
       </div>
 
       <!-- Botones -->
-      <div class="flex gap-2">
-        @if (!activo() && !terminado()) {
-          <button
-            (click)="iniciar()"
-            class="min-h-14 rounded-xl bg-cyan-400 px-6 text-[#0a0a0a] font-semibold text-sm active:scale-95 transition-transform"
-          >
-            Iniciar
-          </button>
-        }
-        @if (activo()) {
-          <button
-            (click)="pausar()"
-            class="min-h-14 rounded-xl bg-[#1e1e1e] px-6 text-[#f5f5f5] font-semibold text-sm border border-[#737373] active:scale-95 transition-transform"
-          >
-            Pausar
-          </button>
-        }
-        @if (!activo() && segundosRestantes() < duracion() && !terminado()) {
-          <button
-            (click)="iniciar()"
-            class="min-h-14 rounded-xl bg-cyan-400 px-6 text-[#0a0a0a] font-semibold text-sm active:scale-95 transition-transform"
-          >
-            Reanudar
-          </button>
-        }
-        <button
-          (click)="reiniciar()"
-          class="min-h-14 rounded-xl bg-[#1e1e1e] px-6 text-[#737373] font-semibold text-sm border border-[#1e1e1e] active:scale-95 transition-transform"
-        >
-          Reiniciar
+      <div class="flex items-center justify-center gap-3 mt-6 w-full px-6">
+        <button (click)="adjustTime(-30)" class="h-12 flex-1 rounded-xl bg-[#1e1e1e] text-[#a3a3a3] text-sm font-semibold active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]">-30s</button>
+        
+        <button (click)="reiniciar()" class="h-12 w-12 shrink-0 flex items-center justify-center rounded-xl bg-[#1e1e1e] text-[#a3a3a3] active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]" aria-label="Reiniciar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
+        
+        <button (click)="toggleTimer()" class="h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl bg-cyan-400 text-[#0a0a0a] active:scale-90 transition-all duration-300 shadow-lg shadow-cyan-400/20 hover:bg-cyan-300" aria-label="Play/Pause">
+          @if (activo()) {
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          }
+        </button>
+
+        <button (click)="adjustTime(30)" class="h-12 flex-1 rounded-xl bg-[#1e1e1e] text-[#a3a3a3] text-sm font-semibold active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]">+30s</button>
       </div>
     </div>
   `,
@@ -99,6 +84,7 @@ export class RestTimerComponent implements OnDestroy {
 
   // ─── State ───
   segundosRestantes = signal(0);
+  duracionActual = signal(0);
   activo = signal(false);
   terminado = signal(false);
 
@@ -114,7 +100,7 @@ export class RestTimerComponent implements OnDestroy {
   });
 
   dashOffset = computed(() => {
-    const dur = this.duracion();
+    const dur = this.duracionActual();
     if (dur === 0) return 0;
     const progreso = this.segundosRestantes() / dur;
     return this.circumferencia * (1 - progreso);
@@ -126,27 +112,18 @@ export class RestTimerComponent implements OnDestroy {
     return 'timer-idle';
   });
 
-  constructor() {
+  ngOnInit() {
     this.segundosRestantes.set(this.duracion());
+    this.duracionActual.set(this.duracion());
   }
 
-  // ─── Public API ───
-
   iniciar(): void {
-    if (this.activo()) return;
-
-    // If finished or not yet started, reset to full duration
-    if (this.terminado() || this.segundosRestantes() === 0) {
-      this.segundosRestantes.set(this.duracion());
-      this.terminado.set(false);
+    if (this.terminado()) {
+      this.reiniciar();
     }
-
-    // If first start (still at default 0 from constructor race), set duration
-    if (this.segundosRestantes() === 0) {
-      this.segundosRestantes.set(this.duracion());
-    }
-
+    
     this.activo.set(true);
+    this.terminado.set(false);
     this.intervalId = setInterval(() => {
       const restante = this.segundosRestantes();
       if (restante <= 1) {
@@ -162,6 +139,14 @@ export class RestTimerComponent implements OnDestroy {
     }, 1000);
   }
 
+  toggleTimer() {
+    if (this.activo()) {
+      this.pausar();
+    } else {
+      this.iniciar();
+    }
+  }
+
   pausar(): void {
     this.detener();
   }
@@ -169,7 +154,22 @@ export class RestTimerComponent implements OnDestroy {
   reiniciar(): void {
     this.detener();
     this.segundosRestantes.set(this.duracion());
+    this.duracionActual.set(this.duracion());
     this.terminado.set(false);
+  }
+
+  adjustTime(seconds: number) {
+    const current = this.segundosRestantes();
+    const next = current + seconds;
+    if (next > 0) {
+      this.segundosRestantes.set(next);
+      if (next > this.duracionActual()) {
+        this.duracionActual.set(next);
+      }
+      this.vibrarShort();
+    } else {
+      this.segundosRestantes.set(1);
+    }
   }
 
   ngOnDestroy(): void {
@@ -209,6 +209,14 @@ export class RestTimerComponent implements OnDestroy {
       navigator?.vibrate?.([200, 100, 200]);
     } catch {
       // Vibration API not available
+    }
+  }
+
+  private vibrarShort(): void {
+    try {
+      navigator?.vibrate?.([20]);
+    } catch {
+      // API not available
     }
   }
 }

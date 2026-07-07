@@ -1,15 +1,58 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EjercicioLog, SerieFuerza, Sugerencia } from '../../models/interfaces';
+import { ProgressionService, ExerciseHistoryRecord } from '../../services/progression.service';
 
 @Component({
   selector: 'app-exercise-strength',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="rounded-2xl bg-[#141414] p-4 space-y-4">
       <!-- Header -->
-      <h3 class="text-lg font-bold text-[#f5f5f5]">{{ ejercicioLog().nombre }}</h3>
+      <div 
+        class="flex items-center justify-between cursor-pointer active:opacity-70 transition-opacity"
+        (click)="toggleHistory()"
+      >
+        <h3 class="text-lg font-bold text-[#f5f5f5]">{{ ejercicioLog().nombre }}</h3>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="text-[#737373] transition-transform duration-300"
+          [class.rotate-180]="showHistory()"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      <!-- In-Line History -->
+      @if (showHistory()) {
+        <div class="animate-fade-in bg-[#1e1e1e] rounded-xl p-3 border border-[#2a2a2a]">
+          <h4 class="text-xs uppercase tracking-wider text-[#737373] mb-3">Últimas sesiones</h4>
+          @if (history().length > 0) {
+            <table class="w-full text-sm text-left">
+              <thead>
+                <tr class="text-[#737373] border-b border-[#2a2a2a]">
+                  <th class="pb-2 font-medium">Fecha</th>
+                  <th class="pb-2 font-medium">Mejor Serie</th>
+                  <th class="pb-2 font-medium text-right">Volumen</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (record of history(); track record.fecha) {
+                  <tr class="border-b border-[#2a2a2a]/50 last:border-0 text-[#f5f5f5]">
+                    <td class="py-2">{{ record.fecha | slice:5:10 }}</td>
+                    <td class="py-2 text-cyan-400">{{ record.peso }}{{ unidadPeso() }} × {{ record.reps }}</td>
+                    <td class="py-2 text-right">{{ record.volumenTotal }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="text-[#737373] text-sm text-center py-2">No hay historial previo.</p>
+          }
+        </div>
+      }
 
       <!-- Sugerencia referencia -->
       @if (sugerencia()) {
@@ -79,7 +122,9 @@ import { EjercicioLog, SerieFuerza, Sugerencia } from '../../models/interfaces';
   `,
   styles: [``],
 })
-export class ExerciseStrengthComponent {
+export class ExerciseStrengthComponent implements OnInit {
+  private progressionService = inject(ProgressionService);
+
   // ─── Inputs / Outputs ───
   ejercicioLog = input.required<EjercicioLog>();
   sugerencia = input<Sugerencia | null>(null);
@@ -91,6 +136,17 @@ export class ExerciseStrengthComponent {
   // ─── Local state ───
   pesoInput = '';
   repsInput = '';
+  showHistory = signal(false);
+  history = signal<ExerciseHistoryRecord[]>([]);
+
+  async ngOnInit() {
+    const records = await this.progressionService.getExerciseHistory(this.ejercicioLog().nombre);
+    this.history.set(records);
+  }
+
+  toggleHistory() {
+    this.showHistory.update(v => !v);
+  }
 
   // ─── Actions ───
   terminarSerie(): void {
@@ -119,5 +175,13 @@ export class ExerciseStrengthComponent {
     // Emit events
     this.serieCompletada.emit(nuevaSerie);
     this.logUpdated.emit(log);
+    
+    this.vibrarShort();
+  }
+
+  private vibrarShort() {
+    try {
+      navigator?.vibrate?.([20]);
+    } catch {}
   }
 }

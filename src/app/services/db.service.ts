@@ -159,6 +159,32 @@ export class DbService {
     return database.get('monthly-logs', mesId);
   }
 
+  async getTrainingDays(): Promise<string[]> {
+    const logs = await this.getAllMonthlyArchives();
+    const days = new Set<string>();
+    for (const archive of logs) {
+      for (const log of archive.logs) {
+        days.add(log.fecha);
+      }
+    }
+    return Array.from(days).sort();
+  }
+
+  async getLastLog(): Promise<LogDiario | null> {
+    const logs = await this.getAllMonthlyArchives();
+    if (logs.length === 0) return null;
+    
+    logs.sort((a, b) => b.mesId.localeCompare(a.mesId));
+    
+    for (const archive of logs) {
+      if (archive.logs.length > 0) {
+        const sortedLogs = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+        return sortedLogs[0];
+      }
+    }
+    return null;
+  }
+
   async getAllMonthlyArchives(): Promise<ArchivoMensual[]> {
     const database = await this.db;
     return database.getAll('monthly-logs');
