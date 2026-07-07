@@ -62,11 +62,11 @@ import { Component, input, output, signal, computed, OnDestroy } from '@angular/
   `,
   styles: [`
     @keyframes pulse-border {
-      0%, 100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-      50% { border-color: #fb7185; box-shadow: 0 0 16px 4px rgba(244, 63, 94, 0.25); }
+      0%, 100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); background-color: rgba(244, 63, 94, 0.05); }
+      50% { border-color: #fb7185; box-shadow: 0 0 20px 8px rgba(244, 63, 94, 0.3); background-color: rgba(244, 63, 94, 0.15); }
     }
     :host .timer-finished {
-      animation: pulse-border 1s ease-in-out infinite;
+      animation: pulse-border 0.8s ease-in-out infinite;
       border-color: #f43f5e;
     }
     :host .timer-active {
@@ -189,16 +189,34 @@ export class RestTimerComponent implements OnDestroy {
   private reproducirBeep(): void {
     try {
       const ctx = new AudioContext();
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = 440;
-      gainNode.gain.value = 0.3;
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.3);
-      oscillator.onended = () => ctx.close();
+      
+      const playTone = (freq: number, startTime: number, duration: number) => {
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = freq;
+        
+        // Envelope para evitar clicks
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+        gainNode.gain.setValueAtTime(0.5, startTime + duration - 0.05);
+        gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      const now = ctx.currentTime;
+      // Triple beep pattern
+      playTone(523.25, now, 0.15);       // C5
+      playTone(523.25, now + 0.25, 0.15); // C5
+      playTone(659.25, now + 0.5, 0.4);  // E5 (longer)
+      
+      setTimeout(() => ctx.close(), 1000);
     } catch {
       // AudioContext not available
     }
@@ -206,9 +224,10 @@ export class RestTimerComponent implements OnDestroy {
 
   private vibrar(): void {
     try {
-      navigator?.vibrate?.([200, 100, 200]);
+      // Patrón intenso para el final del descanso
+      navigator?.vibrate?.([500, 150, 500, 150, 500]);
     } catch {
-      // Vibration API not available
+      // Ignorar errores en navegadores sin soporte
     }
   }
 

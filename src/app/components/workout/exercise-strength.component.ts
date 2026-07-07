@@ -55,10 +55,8 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
       }
 
       <!-- Sugerencia referencia -->
-      @if (sugerencia()) {
-        <p class="text-sm text-[#737373]">{{ sugerencia()!.textoReferencia }}</p>
-      }
-
+      <!-- We remove the standalone text and integrate it into the active row if needed, except for alert -->
+      
       <!-- Alerta de salto de carga -->
       @if (sugerencia()?.esAlertaCarga) {
         <div class="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
@@ -72,52 +70,64 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
         </div>
       }
 
-      <!-- Inputs -->
-      <div class="flex gap-3">
-        <div class="flex-1 space-y-1">
-          <label class="text-xs text-[#737373] uppercase tracking-wide">Peso ({{ unidadPeso() }})</label>
-          <input
-            type="text"
-            inputmode="decimal"
-            [(ngModel)]="pesoInput"
-            [placeholder]="sugerencia() ? '' + sugerencia()!.pesoSugerido : '0'"
-            class="w-full min-h-14 rounded-xl bg-[#1e1e1e] border border-[#737373]/30 px-4 text-center text-xl font-mono text-[#f5f5f5] focus:outline-none focus:border-cyan-400 transition-colors"
-          />
-        </div>
-        <div class="flex-1 space-y-1">
-          <label class="text-xs text-[#737373] uppercase tracking-wide">Reps</label>
-          <input
-            type="text"
-            inputmode="numeric"
-            [(ngModel)]="repsInput"
-            [placeholder]="sugerencia() ? '' + sugerencia()!.repsSugeridas : '0'"
-            class="w-full min-h-14 rounded-xl bg-[#1e1e1e] border border-[#737373]/30 px-4 text-center text-xl font-mono text-[#f5f5f5] focus:outline-none focus:border-cyan-400 transition-colors"
-          />
-        </div>
+      <!-- Sets Header -->
+      <div class="grid grid-cols-[30px_1fr_60px_60px_40px] gap-2 px-2 mt-4 text-[10px] uppercase tracking-widest text-[#737373] font-bold text-center mb-2">
+        <div>Set</div>
+        <div class="text-left">Anterior</div>
+        <div>{{ unidadPeso() }}</div>
+        <div>Reps</div>
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><polyline points="20 6 9 17 4 12"/></svg></div>
       </div>
 
-      <!-- Botón Terminar Serie -->
-      <button
-        (click)="terminarSerie()"
-        class="w-full min-h-14 rounded-xl bg-cyan-400 text-[#0a0a0a] font-bold text-base active:scale-[0.97] transition-transform"
-      >
-        Terminar Serie
-      </button>
-
-      <!-- Series completadas -->
-      @if (ejercicioLog().series && ejercicioLog().series!.length > 0) {
-        <div class="space-y-2">
-          <span class="text-xs text-[#737373] uppercase tracking-wide">Series completadas</span>
-          @for (serie of ejercicioLog().series!; track serie.numero) {
-            <div class="flex items-center justify-between rounded-xl bg-[#1e1e1e] px-4 py-3">
-              <span class="text-sm text-[#737373]">Serie {{ serie.numero }}</span>
-              <span class="text-sm font-semibold text-[#f5f5f5]">
-                {{ serie.peso }}{{ unidadPeso() }} × {{ serie.reps }} reps
-              </span>
+      <!-- Completed Sets -->
+      @if (ejercicioLog().series) {
+        @for (serie of ejercicioLog().series; track serie.numero) {
+          <div class="grid grid-cols-[30px_1fr_60px_60px_40px] gap-2 px-2 py-2 items-center text-[#f5f5f5] bg-emerald-500/5 rounded-xl mb-2 border border-emerald-500/10 transition-all">
+            <div class="text-center font-bold text-emerald-400">{{ serie.numero }}</div>
+            <div class="text-left text-[#737373] text-xs truncate">
+              <!-- Podríamos mostrar el historial real, por ahora simple '-' -->
+              -
             </div>
-          }
-        </div>
+            <div class="text-center font-mono font-medium bg-[#1e1e1e]/60 py-1.5 rounded-lg">{{ serie.peso }}</div>
+            <div class="text-center font-mono font-medium bg-[#1e1e1e]/60 py-1.5 rounded-lg">{{ serie.reps }}</div>
+            <div class="flex justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#10b981" stroke="none" class="drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </div>
+          </div>
+        }
       }
+
+      <!-- Active Input Set -->
+      <div class="grid grid-cols-[30px_1fr_60px_60px_40px] gap-2 px-2 items-center mt-2 pb-2">
+        <div class="text-center font-bold text-[#f5f5f5]">{{ (ejercicioLog().series?.length || 0) + 1 }}</div>
+        
+        <div class="text-left text-[#737373] text-xs leading-tight line-clamp-2 pr-1">
+          {{ sugerencia() ? sugerencia()!.textoReferencia.replace('Anterior: ', '') : '-' }}
+        </div>
+        
+        <input
+          type="text"
+          inputmode="decimal"
+          [(ngModel)]="pesoInput"
+          [placeholder]="sugerencia() ? sugerencia()!.pesoSugerido : '-'"
+          class="w-full h-11 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] text-center font-mono text-base font-semibold text-[#f5f5f5] focus:outline-none focus:border-cyan-400 focus:bg-[#141414] focus:ring-1 focus:ring-cyan-400/50 placeholder:text-[#404040] transition-all"
+        />
+        
+        <input
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="repsInput"
+          [placeholder]="sugerencia() ? sugerencia()!.repsSugeridas : '-'"
+          class="w-full h-11 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] text-center font-mono text-base font-semibold text-[#f5f5f5] focus:outline-none focus:border-cyan-400 focus:bg-[#141414] focus:ring-1 focus:ring-cyan-400/50 placeholder:text-[#404040] transition-all"
+        />
+        
+        <button
+          (click)="terminarSerie()"
+          class="h-11 w-full flex items-center justify-center rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] text-[#737373] active:scale-90 transition-all hover:bg-emerald-500 hover:border-emerald-400 hover:text-[#0a0a0a] hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] group"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
     </div>
   `,
   styles: [``],
