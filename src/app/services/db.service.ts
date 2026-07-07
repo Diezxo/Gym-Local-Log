@@ -159,6 +159,23 @@ export class DbService {
     return database.get('monthly-logs', mesId);
   }
 
+  async deleteLog(fecha: string, templateId: string): Promise<void> {
+    const database = await this.db;
+    const mesId = fecha.substring(0, 7);
+
+    const archive = await database.get('monthly-logs', mesId);
+    if (archive) {
+      archive.logs = archive.logs.filter(
+        (l) => !(l.fecha === fecha && l.templateId === templateId)
+      );
+      await database.put('monthly-logs', archive);
+
+      if (this.fs.isConnected()) {
+        await this.fs.writeJsonFile(`${mesId}.json`, archive);
+      }
+    }
+  }
+
   async getTrainingDays(): Promise<string[]> {
     const logs = await this.getAllMonthlyArchives();
     const days = new Set<string>();

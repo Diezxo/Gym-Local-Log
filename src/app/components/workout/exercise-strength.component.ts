@@ -81,8 +81,11 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
 
       <!-- Completed Sets -->
       @if (ejercicioLog().series) {
-        @for (serie of ejercicioLog().series; track serie.numero) {
-          <div class="grid grid-cols-[30px_1fr_60px_60px_40px] gap-2 px-2 py-2 items-center text-[#f5f5f5] bg-emerald-500/5 rounded-xl mb-2 border border-emerald-500/10 transition-all">
+        @for (serie of ejercicioLog().series; track serie.numero; let isLast = $last) {
+          <div 
+            class="grid grid-cols-[30px_1fr_60px_60px_40px] gap-2 px-2 py-2 items-center text-[#f5f5f5] bg-emerald-500/5 rounded-xl mb-2 border border-emerald-500/10 transition-all"
+            [class.animate-pulse-success]="isLast && justAddedSet()"
+          >
             <div class="text-center font-bold text-emerald-400">{{ serie.numero }}</div>
             <div class="text-left text-[#737373] text-xs truncate">
               <!-- Podríamos mostrar el historial real, por ahora simple '-' -->
@@ -123,7 +126,9 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
         
         <button
           (click)="terminarSerie()"
-          class="h-11 w-full flex items-center justify-center rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] text-[#737373] active:scale-90 transition-all hover:bg-emerald-500 hover:border-emerald-400 hover:text-[#0a0a0a] hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] group"
+          [disabled]="!isValidInput()"
+          class="h-11 w-full flex items-center justify-center rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] transition-all group disabled:opacity-50 disabled:active:scale-100 active:scale-90"
+          [class]="isValidInput() ? 'text-emerald-400 hover:bg-emerald-500 hover:border-emerald-400 hover:text-[#0a0a0a] hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]' : 'text-[#404040]'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform"><polyline points="20 6 9 17 4 12"/></svg>
         </button>
@@ -148,6 +153,7 @@ export class ExerciseStrengthComponent implements OnInit {
   repsInput = '';
   showHistory = signal(false);
   history = signal<ExerciseHistoryRecord[]>([]);
+  justAddedSet = signal(false);
 
   async ngOnInit() {
     const records = await this.progressionService.getExerciseHistory(this.ejercicioLog().nombre);
@@ -158,12 +164,18 @@ export class ExerciseStrengthComponent implements OnInit {
     this.showHistory.update(v => !v);
   }
 
-  // ─── Actions ───
-  terminarSerie(): void {
+  isValidInput(): boolean {
     const peso = parseFloat(this.pesoInput) || this.sugerencia()?.pesoSugerido || 0;
     const reps = parseInt(this.repsInput, 10) || this.sugerencia()?.repsSugeridas || 0;
+    return peso > 0 || reps > 0;
+  }
 
-    if (peso <= 0 && reps <= 0) return;
+  // ─── Actions ───
+  terminarSerie(): void {
+    if (!this.isValidInput()) return;
+
+    const peso = parseFloat(this.pesoInput) || this.sugerencia()?.pesoSugerido || 0;
+    const reps = parseInt(this.repsInput, 10) || this.sugerencia()?.repsSugeridas || 0;
 
     const log = this.ejercicioLog();
     if (!log.series) {
@@ -181,6 +193,12 @@ export class ExerciseStrengthComponent implements OnInit {
     // Clear inputs
     this.pesoInput = '';
     this.repsInput = '';
+
+    // Pulse animation
+    this.justAddedSet.set(true);
+    setTimeout(() => {
+      this.justAddedSet.set(false);
+    }, 1000);
 
     // Emit events
     this.serieCompletada.emit(nuevaSerie);

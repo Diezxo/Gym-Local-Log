@@ -42,7 +42,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Vista: Selección de template -->
       @if (!logActivo()) {
-        <div class="px-4 space-y-4">
+        <div class="px-4 space-y-4 animate-fade-in">
           <h2 class="text-base font-semibold text-[#737373]">Elige tu rutina</h2>
 
           @if (templates().length === 0) {
@@ -70,14 +70,32 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Vista: Entrenamiento activo -->
       @if (logActivo()) {
-        <div class="px-4 space-y-4">
-          <!-- Cancelar -->
-          <button
-            (click)="cancelarEntrenamiento()"
-            class="text-sm text-[#737373] underline underline-offset-4"
-          >
-            ← Cancelar entrenamiento
-          </button>
+        <div class="px-4 space-y-4 animate-scale-in">
+          <!-- Header Entrenamiento y Cancelar -->
+          <div class="flex items-center justify-between">
+            <button
+              (click)="cancelarEntrenamiento()"
+              class="text-sm text-[#737373] hover:text-rose-500 transition-colors flex items-center gap-1 active:scale-95"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Cancelar
+            </button>
+            <span class="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded-md">En curso</span>
+          </div>
+
+          <!-- Barra de Progreso -->
+          <div class="space-y-1.5 pb-2">
+            <div class="flex justify-between text-[10px] text-[#737373] font-bold uppercase tracking-wider">
+              <span>Progreso</span>
+              <span class="text-cyan-400">{{ getCompletedExercisesCount() }} / {{ logActivo()!.ejercicios.length }} completados</span>
+            </div>
+            <div class="w-full h-1.5 bg-[#141414] rounded-full overflow-hidden border border-[#1e1e1e]">
+              <div 
+                class="h-full bg-cyan-400 transition-all duration-500 ease-out shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+                [style.width.%]="(getCompletedExercisesCount() / logActivo()!.ejercicios.length) * 100"
+              ></div>
+            </div>
+          </div>
 
           <!-- Rest Timer -->
           <app-rest-timer
@@ -240,6 +258,20 @@ export class WorkoutComponent implements OnInit {
 
   onTimerFinished(): void {
     // Timer finished - the component handles its own UI/audio/vibration
+  }
+
+  // ─── Progress ───
+  getCompletedExercisesCount(): number {
+    const log = this.logActivo();
+    if (!log) return 0;
+    
+    return log.ejercicios.filter(ej => {
+      if (ej.tipo === 'fuerza') {
+        return ej.series && ej.series.length > 0;
+      } else {
+        return ej.cardio && (ej.cardio.distanciaKm > 0 || ej.cardio.tiempoMinutos > 0);
+      }
+    }).length;
   }
 
   // ─── Notes ───

@@ -110,7 +110,7 @@ interface HeatmapDay {
       <!-- Delete confirmation modal -->
       @if (templateToDelete()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm px-6 transition-opacity">
-          <div class="bg-[#141414] rounded-3xl p-8 w-full max-w-sm border border-[#1e1e1e] shadow-2xl animate-slide-up">
+          <div class="bg-[#141414] rounded-3xl p-8 w-full max-w-sm border border-[#1e1e1e] shadow-2xl animate-scale-in">
             <h3 class="text-xl font-bold text-[#f5f5f5] mb-3">¿Eliminar rutina?</h3>
             <p class="text-[#a3a3a3] text-base mb-8 leading-relaxed">
               Se eliminará <span class="text-[#f5f5f5] font-semibold">{{ templateToDelete()!.nombre }}</span> permanentemente.

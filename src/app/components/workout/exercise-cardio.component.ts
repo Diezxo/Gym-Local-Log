@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EjercicioLog } from '../../models/interfaces';
 
@@ -9,7 +9,12 @@ import { EjercicioLog } from '../../models/interfaces';
   template: `
     <div class="rounded-2xl bg-[#141414] p-4 space-y-4">
       <!-- Header -->
-      <h3 class="text-lg font-bold text-[#f5f5f5]">{{ ejercicioLog().nombre }}</h3>
+      <div class="flex items-center justify-between h-7">
+        <h3 class="text-lg font-bold text-[#f5f5f5]">{{ ejercicioLog().nombre }}</h3>
+        @if (showSaved()) {
+          <svg class="text-emerald-500 animate-fade-in" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        }
+      </div>
 
       <!-- Distancia -->
       <div class="space-y-1">
@@ -87,6 +92,9 @@ export class ExerciseCardioComponent {
   distancia: string = '';
   tiempo: string = '';
   notas: string = '';
+  
+  showSaved = signal(false);
+  private saveTimeout: any;
 
   // ─── Actions ───
   actualizarLog(): void {
@@ -97,5 +105,9 @@ export class ExerciseCardioComponent {
       notasTecnica: this.notas || undefined,
     };
     this.logUpdated.emit(log);
+    
+    this.showSaved.set(true);
+    clearTimeout(this.saveTimeout);
+    this.saveTimeout = setTimeout(() => this.showSaved.set(false), 1500);
   }
 }
