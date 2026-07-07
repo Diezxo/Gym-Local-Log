@@ -140,7 +140,7 @@ input[type="number"] {
   font-size: 16px;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   min-height: 56px;
   display: flex;
@@ -151,11 +151,11 @@ input[type="number"] {
 
 .btn-primary:hover {
   background-color: var(--color-accent-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(1px) scale(0.98);
 }
 
 .btn-danger {
@@ -211,12 +211,15 @@ input[type="number"] {
   font-size: 14px;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-secondary:hover {
   border-color: var(--color-border-active);
   background-color: var(--color-bg-elevated);
+}
+.btn-secondary:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 .card {

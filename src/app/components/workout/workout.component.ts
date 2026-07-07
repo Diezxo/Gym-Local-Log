@@ -129,10 +129,9 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Toast de éxito -->
       @if (mostrarToast()) {
-        <div
-          class="fixed bottom-6 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-5 py-4 text-center text-white font-semibold shadow-xl animate-slide-up"
-        >
-          ✅ ¡Entrenamiento guardado con éxito!
+        <div class="fixed bottom-28 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-6 py-4 flex items-center justify-center gap-3 text-white shadow-xl animate-slide-up">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="font-bold text-sm tracking-wide">¡Entrenamiento guardado con éxito!</span>
         </div>
       }
     </div>

@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { DbService } from '../../services/db.service';
 import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
 
+import { FileSystemService } from '../../services/file-system.service';
+
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -99,29 +101,55 @@ import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
         </div>
 
         <!-- Language -->
-        <div class="bg-[#141414] rounded-2xl p-5 border border-[#1e1e1e]">
-          <h3 class="text-[#f5f5f5] font-semibold mb-1">Idioma</h3>
-          <p class="text-[#737373] text-xs mb-4">Próximamente más idiomas disponibles.</p>
-          <div class="flex gap-2">
+        <div class="bg-[#141414] rounded-3xl p-6 border border-[#1e1e1e] transition-all duration-300 hover:border-[#2a2a2a] shadow-sm">
+          <h3 class="text-[#f5f5f5] text-lg font-semibold mb-1">Idioma</h3>
+          <p class="text-[#737373] text-sm mb-6">Próximamente más idiomas disponibles.</p>
+          <div class="flex gap-3">
             <button
               (click)="updateSetting('idioma', 'es')"
-              class="flex-1 min-h-14 rounded-xl font-medium transition-colors"
+              class="flex-1 min-h-14 rounded-xl font-medium transition-all duration-300 active:scale-95"
               [class]="settings().idioma === 'es'
-                ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30'
-                : 'bg-[#1e1e1e] text-[#737373] border border-[#2a2a2a]'"
+                ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]'
+                : 'bg-[#1e1e1e] text-[#737373] border border-[#2a2a2a] hover:bg-[#2a2a2a]'"
             >
               Español
             </button>
             <button
               (click)="updateSetting('idioma', 'en')"
-              class="flex-1 min-h-14 rounded-xl font-medium transition-colors"
+              class="flex-1 min-h-14 rounded-xl font-medium transition-all duration-300 active:scale-95"
               [class]="settings().idioma === 'en'
-                ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30'
-                : 'bg-[#1e1e1e] text-[#737373] border border-[#2a2a2a]'"
+                ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]'
+                : 'bg-[#1e1e1e] text-[#737373] border border-[#2a2a2a] hover:bg-[#2a2a2a]'"
             >
               English
             </button>
           </div>
+        </div>
+
+        <!-- Local Storage Sync (File System Access API) -->
+        <div class="bg-[#141414] rounded-3xl p-6 border border-[#1e1e1e] transition-all duration-300 hover:border-[#2a2a2a] shadow-sm mb-8">
+          <h3 class="text-[#f5f5f5] text-lg font-semibold mb-1">Carpeta de Sincronización</h3>
+          <p class="text-[#737373] text-sm mb-6">
+            Guarda tus rutinas y registros directamente en una carpeta de tu dispositivo para no perderlos nunca (sólo PC/Android).
+          </p>
+          
+          @if (fsConnected()) {
+            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+              <span class="text-emerald-500 text-sm font-medium">Carpeta conectada</span>
+            </div>
+          } @else {
+            <button
+              (click)="conectarCarpeta()"
+              class="w-full flex items-center justify-center gap-2 min-h-14 rounded-xl bg-cyan-400/10 text-cyan-400 font-medium border border-cyan-400/20 active:scale-[0.98] transition-all duration-300 hover:bg-cyan-400/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+              Conectar Carpeta
+            </button>
+            @if (fsError()) {
+              <p class="text-rose-400 text-xs mt-3">{{ fsError() }}</p>
+            }
+          }
         </div>
       </div>
     </div>
@@ -134,9 +162,13 @@ import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
 })
 export class SettingsComponent implements OnInit {
   private db = inject(DbService);
+  private fs = inject(FileSystemService);
 
   settings = signal<UserSettings>({ ...DEFAULT_SETTINGS });
   showSaved = signal(false);
+  
+  fsConnected = this.fs.isConnected;
+  fsError = signal('');
 
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -153,5 +185,18 @@ export class SettingsComponent implements OnInit {
     this.showSaved.set(true);
     if (this.saveTimeout) clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(() => this.showSaved.set(false), 1500);
+  }
+
+  async conectarCarpeta() {
+    this.fsError.set('');
+    try {
+      const success = await this.fs.connectFolder();
+      if (success) {
+        // Enforce a sync from IndexedDB to the folder for existing data
+        await this.db.syncToFileSystem();
+      }
+    } catch (e: any) {
+      this.fsError.set(e.message || 'Error al conectar carpeta.');
+    }
   }
 }

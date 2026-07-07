@@ -18,11 +18,11 @@ import { EjercicioLog, SerieFuerza, Sugerencia } from '../../models/interfaces';
 
       <!-- Alerta de salto de carga -->
       @if (sugerencia()?.esAlertaCarga) {
-        <div class="rounded-xl bg-rose-500/15 border border-rose-500/40 p-3 flex items-start gap-2">
-          <span class="text-rose-500 text-lg">⚡</span>
+        <div class="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500 mt-0.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           <div>
             <p class="text-rose-500 font-semibold text-sm">¡Salto de carga!</p>
-            <p class="text-rose-400 text-xs">
+            <p class="text-rose-400/80 text-xs mt-1">
               Sugerido: {{ sugerencia()!.pesoSugerido }}{{ unidadPeso() }} × {{ sugerencia()!.repsSugeridas }} reps
             </p>
           </div>

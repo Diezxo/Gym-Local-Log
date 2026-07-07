@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import {
   Template,
@@ -8,6 +8,7 @@ import {
   UserSettings,
   DEFAULT_SETTINGS,
 } from '../models/interfaces';
+import { FileSystemService } from './file-system.service';
 
 // ─── Schema de IndexedDB ───
 interface GymDBSchema extends DBSchema {
@@ -31,6 +32,7 @@ const DB_VERSION = 1;
 @Injectable({ providedIn: 'root' })
 export class DbService {
   private db: Promise<IDBPDatabase<GymDBSchema>>;
+  private fs = inject(FileSystemService);
 
   constructor() {
     this.db = openDB<GymDBSchema>(DB_NAME, DB_VERSION, {
@@ -46,6 +48,50 @@ export class DbService {
         }
       },
     });
+
+    // Check if FS is connected and sync back on startup if possible
+    setTimeout(() => {
+      if (this.fs.isConnected()) {
+        this.syncFromFileSystem();
+      }
+    }, 1000);
+  }
+
+  // ─── Sync ───
+
+  async syncToFileSystem(): Promise<void> {
+    if (!this.fs.isConnected()) return;
+    const [templates, logs, settings] = await Promise.all([
+      this.getTemplates(),
+      this.getAllMonthlyArchives(),
+      this.getSettings(),
+    ]);
+
+    await this.fs.writeJsonFile('templates.json', templates);
+    await this.fs.writeJsonFile('settings.json', settings);
+    for (const archive of logs) {
+      await this.fs.writeJsonFile(`${archive.mesId}.json`, archive);
+    }
+  }
+
+  async syncFromFileSystem(): Promise<void> {
+    if (!this.fs.isConnected()) return;
+    try {
+      const templates = await this.fs.readJsonFile<Template[]>('templates.json');
+      if (templates) {
+        const database = await this.db;
+        for (const t of templates) await database.put('templates', t);
+      }
+      
+      const settings = await this.fs.readJsonFile<UserSettings>('settings.json');
+      if (settings) {
+        await this.saveSettings(settings); // This might loop back to write to FS, but that's okay
+      }
+      // Note: syncing monthly logs dynamically requires reading directory entries, 
+      // which we'll skip for now to keep it simple, assuming IDB is up to date unless a new file was manually dropped.
+    } catch (e) {
+      console.warn('Error syncing from FS on startup:', e);
+    }
   }
 
   // ─── Templates ───
@@ -53,6 +99,11 @@ export class DbService {
   async saveTemplate(template: Template): Promise<void> {
     const database = await this.db;
     await database.put('templates', template);
+    
+    if (this.fs.isConnected()) {
+      const all = await database.getAll('templates');
+      await this.fs.writeJsonFile('templates.json', all);
+    }
   }
 
   async getTemplates(): Promise<Template[]> {
@@ -68,6 +119,11 @@ export class DbService {
   async deleteTemplate(id: string): Promise<void> {
     const database = await this.db;
     await database.delete('templates', id);
+
+    if (this.fs.isConnected()) {
+      const all = await database.getAll('templates');
+      await this.fs.writeJsonFile('templates.json', all);
+    }
   }
 
   // ─── Monthly Logs ───
@@ -92,6 +148,10 @@ export class DbService {
     }
 
     await database.put('monthly-logs', archive);
+
+    if (this.fs.isConnected()) {
+      await this.fs.writeJsonFile(`${mesId}.json`, archive);
+    }
   }
 
   async getMonthlyArchive(mesId: string): Promise<ArchivoMensual | undefined> {
@@ -161,5 +221,9 @@ export class DbService {
   async saveSettings(settings: UserSettings): Promise<void> {
     const database = await this.db;
     await database.put('settings', settings, 'user-settings');
+
+    if (this.fs.isConnected()) {
+      await this.fs.writeJsonFile('settings.json', settings);
+    }
   }
 }
