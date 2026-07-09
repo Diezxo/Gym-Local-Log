@@ -57,7 +57,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           @for (tmpl of templates(); track tmpl.id) {
             <button
               (click)="seleccionarTemplate(tmpl)"
-              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group  hover:"
+              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group shadow-lg hover:shadow-xl"
             >
               <!-- Main content -->
               <div class="flex items-center gap-4 p-4">

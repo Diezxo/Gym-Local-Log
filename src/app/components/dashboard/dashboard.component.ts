@@ -156,7 +156,7 @@ interface HeatDay {
         <div class="mt-4">
           <button
             (click)="irAEntrenar()"
-            class="btn-primary min-h-[56px] text-xl font-black w-full  hover:"
+            class="btn-primary min-h-[56px] text-xl font-black w-full"
           >
             ¡Empieza tu primer entrenamiento!
           </button>

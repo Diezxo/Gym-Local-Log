@@ -27,11 +27,11 @@ import { Component, input, output, signal, computed, OnDestroy, OnInit, ChangeDe
             stroke-linecap="round"
             [attr.stroke-dasharray]="circumferencia"
             [attr.stroke-dashoffset]="dashOffset()"
-            class="transition-all duration-300 drop-"
+            class="transition-all duration-300"
           />
         </svg>
         <span
-          class="text-4xl font-mono font-black z-10 drop-"
+          class="text-4xl font-mono font-black z-10"
           [class.text-[#00f2fe]]="!terminado() && activo()"
           [class.text-rose-500]="terminado()"
           [class.text-[var(--color-text-primary)]]="!activo() && !terminado()"
@@ -48,7 +48,7 @@ import { Component, input, output, signal, computed, OnDestroy, OnInit, ChangeDe
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
         
-        <button (click)="toggleTimer()" class="h-[72px] w-[72px] shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] text-[#0a0a0a] active:scale-90 transition-all duration-300  hover:" aria-label="Play/Pause">
+        <button (click)="toggleTimer()" class="h-[72px] w-[72px] shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] text-[#0a0a0a] active:scale-90 transition-all duration-300" aria-label="Play/Pause">
           @if (activo()) {
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
           } @else {

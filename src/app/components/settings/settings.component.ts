@@ -79,9 +79,7 @@ import { FileSystemService } from '../../services/file-system.service';
         <!-- Weight increment -->
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
           <h3 class="text-[var(--color-text-primary)] font-black text-lg mb-1">Incremento de Peso</h3>
-          <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Incremento sugerido para progresión ({{ settings().unidadPeso },
-  changeDetection: ChangeDetectionStrategy.OnPush
-}).</p>
+          <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Incremento sugerido para progresión ({{ settings().unidadPeso }}).</p>
           <input
             type="text"
             inputmode="decimal"
