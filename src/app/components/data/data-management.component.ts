@@ -19,9 +19,20 @@ interface MonthStats {
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
 
       <!-- Header -->
-      <div>
-        <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ currentMonthLabel() }}</p>
-        <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Historial</h1>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ currentMonthLabel() }}</p>
+          <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Historial</h1>
+        </div>
+        
+        <div class="flex gap-2">
+          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Stats Cards -->
@@ -140,13 +151,23 @@ interface MonthStats {
       <!-- Exportar -->
       <div class="mt-8">
         <h2 class="text-sm font-bold text-[var(--color-text-muted)]  mb-4">Exportar Datos</h2>
-        <div class="flex gap-4 mb-4">
-          <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl">
-            JSON
-          </button>
-          <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl">
-            CSV
-          </button>
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="flex gap-3">
+            <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl text-xs">
+              Mes (JSON)
+            </button>
+            <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl text-xs">
+              Mes (CSV)
+            </button>
+          </div>
+          <div class="flex gap-3">
+            <button (click)="exportAllJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl font-bold bg-[#00f2fe]/10 text-[#00f2fe] border-[#00f2fe]/20 hover:bg-[#00f2fe]/20 text-xs">
+              Todo (JSON)
+            </button>
+            <button (click)="exportAllCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl font-bold bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 text-xs">
+              Todo (CSV)
+            </button>
+          </div>
         </div>
         <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-sm font-bold active:scale-95 transition-all hover:border-[var(--color-text-primary)] hover:text-[var(--color-text-primary)]">
           Importar (.json)
@@ -194,13 +215,54 @@ export class DataManagementComponent implements OnInit {
 
   private monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+  availableMonths = signal<string[]>([]);
+
   async ngOnInit() {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    this.currentMesId.set(`${year}-${month}`);
+    const defaultMes = `${year}-${month}`;
+    this.currentMesId.set(defaultMes);
     this.currentMonthLabel.set(`${this.monthNames[now.getMonth()]} ${year}`);
+    
+    await this.refreshAvailableMonths(defaultMes);
     await this.loadHistory();
+  }
+
+  private async refreshAvailableMonths(defaultMes: string) {
+    const months = await this.exportService.getAvailableMonths();
+    if (!months.includes(defaultMes)) {
+      months.unshift(defaultMes);
+      months.sort().reverse();
+    }
+    this.availableMonths.set(months);
+  }
+
+  canGoPrev(): boolean {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    return currentIndex < months.length - 1 && currentIndex !== -1;
+  }
+
+  canGoNext(): boolean {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    return currentIndex > 0;
+  }
+
+  changeMonth(direction: -1 | 1) {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    if (currentIndex === -1) return;
+    
+    const nextIndex = currentIndex - direction; // -1 (prev) means higher index in reverse sorted array
+    if (nextIndex >= 0 && nextIndex < months.length) {
+      const nextMes = months[nextIndex];
+      this.currentMesId.set(nextMes);
+      const [y, m] = nextMes.split('-');
+      this.currentMonthLabel.set(`${this.monthNames[parseInt(m, 10) - 1]} ${y}`);
+      this.loadHistory();
+    }
   }
 
   async loadHistory() {
@@ -328,6 +390,24 @@ export class DataManagementComponent implements OnInit {
     await this.exportMonth(this.currentMesId(), 'csv');
   }
 
+  async exportAllJSON() {
+    try {
+      await this.exportService.exportAllJSON();
+      this.showFeedback('Copia de seguridad exportada.', false);
+    } catch (err: any) {
+      this.showFeedback(err.message || 'Error al exportar.', true);
+    }
+  }
+
+  async exportAllCSV() {
+    try {
+      await this.exportService.exportAllCSV();
+      this.showFeedback('Datos exportados en CSV.', false);
+    } catch (err: any) {
+      this.showFeedback(err.message || 'Error al exportar.', true);
+    }
+  }
+
   private async exportMonth(mesId: string, format: 'json' | 'csv') {
     try {
       if (format === 'json') {
@@ -348,6 +428,7 @@ export class DataManagementComponent implements OnInit {
     try {
       await this.exportService.importJSON(file);
       this.showFeedback('Importado correctamente', false);
+      await this.refreshAvailableMonths(this.currentMesId());
       await this.loadHistory();
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al importar.', true);

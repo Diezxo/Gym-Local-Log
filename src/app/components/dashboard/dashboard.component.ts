@@ -30,9 +30,20 @@ interface HeatDay {
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
 
       <!-- ── Header ── -->
-      <div>
-        <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ dayLabel() }}</p>
-        <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Dashboard</h1>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ dayLabel() }}</p>
+          <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Dashboard</h1>
+        </div>
+        
+        <div class="flex gap-2">
+          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- ── Semana Actual ── -->
@@ -186,14 +197,78 @@ export class DashboardComponent implements OnInit {
   lastLog = signal<LogDiario | null>(null);
   monthLogs = signal<LogDiario[]>([]);
 
+  currentMesId = signal('');
+  availableMonths = signal<string[]>([]);
+
   private readonly monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   private readonly monthShort = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   private readonly dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   private readonly dayNamesFull = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
   async ngOnInit() {
+    const archives = await this.db.getAllMonthlyArchives();
+    const months = archives.map(a => a.mesId);
+    
     const now = new Date();
-    this.dayLabel.set(`${this.dayNamesFull[now.getDay()]}, ${now.getDate()} de ${this.monthNames[now.getMonth()]}`);
+    const currentMes = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!months.includes(currentMes)) {
+      months.unshift(currentMes);
+    }
+    months.sort().reverse();
+    
+    this.availableMonths.set(months);
+    this.currentMesId.set(currentMes);
+    
+    await this.loadDashboardData(now);
+  }
+
+  canGoPrev(): boolean {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    return currentIndex < months.length - 1 && currentIndex !== -1;
+  }
+
+  canGoNext(): boolean {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    return currentIndex > 0;
+  }
+
+  async changeMonth(direction: -1 | 1) {
+    const months = this.availableMonths();
+    const currentIndex = months.indexOf(this.currentMesId());
+    if (currentIndex === -1) return;
+    
+    const nextIndex = currentIndex - direction;
+    if (nextIndex >= 0 && nextIndex < months.length) {
+      const nextMes = months[nextIndex];
+      this.currentMesId.set(nextMes);
+      
+      const realNow = new Date();
+      const currentRealMes = `${realNow.getFullYear()}-${String(realNow.getMonth() + 1).padStart(2, '0')}`;
+      
+      let refDate: Date;
+      if (nextMes === currentRealMes) {
+        refDate = realNow;
+      } else {
+        const [y, m] = nextMes.split('-');
+        refDate = new Date(parseInt(y, 10), parseInt(m, 10), 0);
+      }
+      
+      await this.loadDashboardData(refDate);
+    }
+  }
+
+  async loadDashboardData(now: Date) {
+    const realNow = new Date();
+    const isCurrentMonth = now.getMonth() === realNow.getMonth() && now.getFullYear() === realNow.getFullYear();
+    
+    if (isCurrentMonth) {
+      this.dayLabel.set(`${this.dayNamesFull[realNow.getDay()]}, ${realNow.getDate()} de ${this.monthNames[realNow.getMonth()]}`);
+    } else {
+      this.dayLabel.set(`Resumen: ${this.monthNames[now.getMonth()]} ${now.getFullYear()}`);
+    }
 
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
     this.daysLeftInMonth.set(daysLeft);
@@ -304,17 +379,17 @@ export class DashboardComponent implements OnInit {
   }
 
   private calcTagVolumens(logs: LogDiario[]) {
-    const tagMap = new Map<MuscleTag, { vol: number; km: number; sesiones: Set<string> }>();
+    const tagMap = new Map<MuscleTag, { seriesCount: number; km: number; sesiones: Set<string> }>();
 
     for (const log of logs) {
       for (const ej of log.ejercicios) {
         const tags = ej.tags ?? [];
         for (const tag of tags) {
-          if (!tagMap.has(tag)) tagMap.set(tag, { vol: 0, km: 0, sesiones: new Set() });
+          if (!tagMap.has(tag)) tagMap.set(tag, { seriesCount: 0, km: 0, sesiones: new Set() });
           const entry = tagMap.get(tag)!;
           entry.sesiones.add(log.fecha);
           if (ej.tipo === 'fuerza' && ej.series) {
-            entry.vol += ej.series.reduce((s, r) => s + r.peso * r.reps, 0);
+            entry.seriesCount += ej.series.length;
           } else if (ej.cardio) {
             entry.km += ej.cardio.distanciaKm ?? 0;
           }
@@ -327,8 +402,8 @@ export class DashboardComponent implements OnInit {
       const isCardio = tag === 'Cardio';
       result.push({
         tag,
-        valor: isCardio ? Math.round(v.km * 10) / 10 : Math.round(v.vol),
-        unidad: isCardio ? 'km' : 'kg',
+        valor: isCardio ? Math.round(v.km * 10) / 10 : v.seriesCount,
+        unidad: isCardio ? 'km' : 'series',
         sesiones: v.sesiones.size,
       });
     });
@@ -343,7 +418,7 @@ export class DashboardComponent implements OnInit {
 
   formatTagValue(tv: TagVolumen): string {
     if (tv.unidad === 'km') return `${tv.valor} km`;
-    return `${tv.valor.toLocaleString()} kg`;
+    return `${tv.valor} series`;
   }
 
   getLogTags(log: LogDiario): MuscleTag[] {

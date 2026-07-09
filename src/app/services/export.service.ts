@@ -20,6 +20,19 @@ export class ExportService {
   }
 
   /**
+   * Exporta todos los meses disponibles como un único JSON
+   */
+  async exportAllJSON(): Promise<void> {
+    const archives = await this.db.getAllMonthlyArchives();
+    if (!archives || archives.length === 0) {
+      throw new Error('No hay datos para exportar');
+    }
+
+    const json = JSON.stringify(archives, null, 2);
+    this.downloadFile(json, `gym_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  }
+
+  /**
    * Exporta el archivo mensual como CSV aplanado
    * Columnas: Fecha, Rutina, Ejercicio, Tipo, Serie/Distancia, Reps/Tiempo, Peso/Notas
    */
@@ -71,6 +84,58 @@ export class ExportService {
   }
 
   /**
+   * Exporta todos los meses disponibles como un único CSV aplanado
+   */
+  async exportAllCSV(): Promise<void> {
+    const archives = await this.db.getAllMonthlyArchives();
+    if (!archives || archives.length === 0) {
+      throw new Error('No hay datos para exportar');
+    }
+
+    const rows: string[] = [];
+    rows.push('Fecha,Rutina,Ejercicio,Tipo,Serie/Distancia,Reps/Tiempo,Peso/Notas');
+
+    for (const archive of archives) {
+      for (const log of archive.logs) {
+        const templateName = await this.getTemplateName(log.templateId);
+
+        for (const ejercicio of log.ejercicios) {
+          if (ejercicio.tipo === 'fuerza' && ejercicio.series) {
+            for (const serie of ejercicio.series) {
+              rows.push(
+                this.csvRow([
+                  log.fecha,
+                  templateName,
+                  ejercicio.nombre,
+                  'Fuerza',
+                  String(serie.numero),
+                  String(serie.reps),
+                  String(serie.peso),
+                ])
+              );
+            }
+          } else if (ejercicio.tipo === 'cardio' && ejercicio.cardio) {
+            rows.push(
+              this.csvRow([
+                log.fecha,
+                templateName,
+                ejercicio.nombre,
+                'Cardio',
+                String(ejercicio.cardio.distanciaKm),
+                String(ejercicio.cardio.tiempoMinutos),
+                ejercicio.cardio.notasTecnica ?? '',
+              ])
+            );
+          }
+        }
+      }
+    }
+
+    const csv = rows.join('\n');
+    this.downloadFile(csv, `gym_backup_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+  }
+
+  /**
    * Importa un archivo JSON como ArchivoMensual
    */
   async importJSON(file: File): Promise<string> {
@@ -78,15 +143,25 @@ export class ExportService {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
-          const data = JSON.parse(reader.result as string) as ArchivoMensual;
+          const data = JSON.parse(reader.result as string);
 
-          // Validaciones básicas
-          if (!data.mesId || !data.logs || !Array.isArray(data.logs)) {
-            throw new Error('Formato de archivo inválido');
+          if (Array.isArray(data)) {
+            // Import multiple months
+            for (const monthData of data) {
+              if (!monthData.mesId || !monthData.logs || !Array.isArray(monthData.logs)) {
+                throw new Error('Formato de archivo inválido en uno de los meses');
+              }
+              await this.db.importMonthlyArchive(monthData);
+            }
+            resolve('all');
+          } else {
+            // Import single month
+            if (!data.mesId || !data.logs || !Array.isArray(data.logs)) {
+              throw new Error('Formato de archivo inválido');
+            }
+            await this.db.importMonthlyArchive(data as ArchivoMensual);
+            resolve(data.mesId);
           }
-
-          await this.db.importMonthlyArchive(data);
-          resolve(data.mesId);
         } catch (err) {
           reject(err);
         }
