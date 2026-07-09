@@ -31,11 +31,14 @@ const DB_VERSION = 1;
 
 @Injectable({ providedIn: 'root' })
 export class DbService {
-  private db: Promise<IDBPDatabase<GymDBSchema>>;
+  // Cached resolved DB instance — avoids re-awaiting the Promise on every call
+  private dbPromise: Promise<IDBPDatabase<GymDBSchema>>;
+  private resolvedDb: IDBPDatabase<GymDBSchema> | null = null;
+
   private fs = inject(FileSystemService);
 
   constructor() {
-    this.db = openDB<GymDBSchema>(DB_NAME, DB_VERSION, {
+    this.dbPromise = openDB<GymDBSchema>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('templates')) {
           db.createObjectStore('templates', { keyPath: 'id' });
@@ -47,14 +50,22 @@ export class DbService {
           db.createObjectStore('settings');
         }
       },
+    }).then(db => {
+      this.resolvedDb = db;
+      return db;
     });
 
-    // Check if FS is connected and sync back on startup if possible
+    // Sync from FS on startup without blocking the constructor
     setTimeout(() => {
       if (this.fs.isConnected()) {
         this.syncFromFileSystem();
       }
     }, 1000);
+  }
+
+  /** Returns the DB, using the cached instance if already resolved */
+  private async getDb(): Promise<IDBPDatabase<GymDBSchema>> {
+    return this.resolvedDb ?? this.dbPromise;
   }
 
   // ─── Sync ───
@@ -67,28 +78,33 @@ export class DbService {
       this.getSettings(),
     ]);
 
-    await this.fs.writeJsonFile('templates.json', templates);
-    await this.fs.writeJsonFile('settings.json', settings);
-    for (const archive of logs) {
-      await this.fs.writeJsonFile(`${archive.mesId}.json`, archive);
-    }
+    // Write all files in parallel instead of sequentially
+    await Promise.all([
+      this.fs.writeJsonFile('templates.json', templates),
+      this.fs.writeJsonFile('settings.json', settings),
+      ...logs.map(archive => this.fs.writeJsonFile(`${archive.mesId}.json`, archive)),
+    ]);
   }
 
   async syncFromFileSystem(): Promise<void> {
     if (!this.fs.isConnected()) return;
     try {
-      const templates = await this.fs.readJsonFile<Template[]>('templates.json');
+      const [templates, settings] = await Promise.all([
+        this.fs.readJsonFile<Template[]>('templates.json'),
+        this.fs.readJsonFile<UserSettings>('settings.json'),
+      ]);
+
+      const database = await this.getDb();
+      const ops: Promise<unknown>[] = [];
+
       if (templates) {
-        const database = await this.db;
-        for (const t of templates) await database.put('templates', t);
+        for (const t of templates) ops.push(database.put('templates', t));
       }
-      
-      const settings = await this.fs.readJsonFile<UserSettings>('settings.json');
       if (settings) {
-        await this.saveSettings(settings); // This might loop back to write to FS, but that's okay
+        ops.push(this.saveSettings(settings));
       }
-      // Note: syncing monthly logs dynamically requires reading directory entries, 
-      // which we'll skip for now to keep it simple, assuming IDB is up to date unless a new file was manually dropped.
+
+      await Promise.all(ops);
     } catch (e) {
       console.warn('Error syncing from FS on startup:', e);
     }
@@ -97,9 +113,9 @@ export class DbService {
   // ─── Templates ───
 
   async saveTemplate(template: Template): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     await database.put('templates', template);
-    
+
     if (this.fs.isConnected()) {
       const all = await database.getAll('templates');
       await this.fs.writeJsonFile('templates.json', all);
@@ -107,17 +123,17 @@ export class DbService {
   }
 
   async getTemplates(): Promise<Template[]> {
-    const database = await this.db;
+    const database = await this.getDb();
     return database.getAll('templates');
   }
 
   async getTemplate(id: string): Promise<Template | undefined> {
-    const database = await this.db;
+    const database = await this.getDb();
     return database.get('templates', id);
   }
 
   async deleteTemplate(id: string): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     await database.delete('templates', id);
 
     if (this.fs.isConnected()) {
@@ -129,7 +145,7 @@ export class DbService {
   // ─── Monthly Logs ───
 
   async saveLog(log: LogDiario): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     const mesId = log.fecha.substring(0, 7); // YYYY-MM
 
     let archive = await database.get('monthly-logs', mesId);
@@ -155,12 +171,12 @@ export class DbService {
   }
 
   async getMonthlyArchive(mesId: string): Promise<ArchivoMensual | undefined> {
-    const database = await this.db;
+    const database = await this.getDb();
     return database.get('monthly-logs', mesId);
   }
 
   async deleteLog(fecha: string, templateId: string): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     const mesId = fecha.substring(0, 7);
 
     const archive = await database.get('monthly-logs', mesId);
@@ -187,37 +203,42 @@ export class DbService {
     return Array.from(days).sort();
   }
 
+  /**
+   * Performance fix: instead of loading ALL archives just to get the latest log,
+   * we get the archive keys first, then only load the most recent months until we
+   * find a non-empty one.
+   */
   async getLastLog(): Promise<LogDiario | null> {
-    const logs = await this.getAllMonthlyArchives();
-    if (logs.length === 0) return null;
-    
-    logs.sort((a, b) => b.mesId.localeCompare(a.mesId));
-    
-    for (const archive of logs) {
-      if (archive.logs.length > 0) {
-        const sortedLogs = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
-        return sortedLogs[0];
+    const database = await this.getDb();
+    // Get all keys sorted descending (most recent first)
+    const keys = (await database.getAllKeys('monthly-logs'))
+      .map(k => k as string)
+      .sort((a, b) => b.localeCompare(a));
+
+    for (const key of keys) {
+      const archive = await database.get('monthly-logs', key);
+      if (archive && archive.logs.length > 0) {
+        const sorted = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+        return sorted[0];
       }
     }
     return null;
   }
 
   async getAllMonthlyArchives(): Promise<ArchivoMensual[]> {
-    const database = await this.db;
+    const database = await this.getDb();
     return database.getAll('monthly-logs');
   }
 
   async importMonthlyArchive(archive: ArchivoMensual): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     const existing = await database.get('monthly-logs', archive.mesId);
 
     if (existing) {
       // Merge: add logs that don't exist yet
+      const existingKeys = new Set(existing.logs.map(l => `${l.fecha}|${l.templateId}`));
       for (const log of archive.logs) {
-        const exists = existing.logs.some(
-          (l) => l.fecha === log.fecha && l.templateId === log.templateId
-        );
-        if (!exists) {
+        if (!existingKeys.has(`${log.fecha}|${log.templateId}`)) {
           existing.logs.push(log);
         }
       }
@@ -234,7 +255,7 @@ export class DbService {
     nombreEjercicio: string,
     mesId: string
   ): Promise<EjercicioLog | undefined> {
-    const database = await this.db;
+    const database = await this.getDb();
     const archive = await database.get('monthly-logs', mesId);
     if (!archive) return undefined;
 
@@ -256,13 +277,13 @@ export class DbService {
   // ─── Settings ───
 
   async getSettings(): Promise<UserSettings> {
-    const database = await this.db;
+    const database = await this.getDb();
     const settings = await database.get('settings', 'user-settings');
     return settings ?? { ...DEFAULT_SETTINGS };
   }
 
   async saveSettings(settings: UserSettings): Promise<void> {
-    const database = await this.db;
+    const database = await this.getDb();
     await database.put('settings', settings, 'user-settings');
 
     if (this.fs.isConnected()) {

@@ -9,6 +9,11 @@ import {
 } from '../../models/interfaces';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
+// Internal type with a stable uid for correct @for tracking
+interface EjercicioConId extends EjercicioBase {
+  _uid: string;
+}
+
 @Component({
   selector: 'app-template-editor',
   standalone: true,
@@ -35,7 +40,12 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 
       <!-- Exercises list -->
       <div class="flex flex-col gap-4 mb-6" cdkDropList (cdkDropListDropped)="drop($event)">
-        @for (ejercicio of ejercicios(); track $index) {
+        <!--
+          BUG FIX: track by _uid (stable unique id per exercise object)
+          instead of $index. Using $index causes Angular to recycle DOM nodes
+          when the signal updates, which makes tag clicks fire on the wrong exercise.
+        -->
+        @for (ejercicio of ejercicios(); track ejercicio._uid) {
           <div cdkDrag class="bg-[#111] rounded-2xl border border-[#1a1a1a] overflow-hidden">
 
             <!-- Drag handle + exercise name row -->
@@ -45,18 +55,18 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="16" y1="9" y2="9"/><line x1="8" x2="16" y1="15" y2="15"/></svg>
               </div>
 
-              <span class="text-[#404040] text-sm font-bold w-5 shrink-0">{{ $index + 1 }}</span>
+              <span class="text-[#404040] text-sm font-bold w-5 shrink-0">{{ getIndex(ejercicio) + 1 }}</span>
 
               <input
                 type="text"
                 [ngModel]="ejercicio.nombre"
-                (ngModelChange)="updateExerciseName($index, $event)"
+                (ngModelChange)="updateExerciseName(ejercicio._uid, $event)"
                 placeholder="Nombre del ejercicio"
                 class="flex-1 min-h-11 px-3 rounded-xl bg-[#1a1a1a] border border-[#222] text-[#f5f5f5] text-sm placeholder-[#404040] focus:outline-none focus:border-cyan-400 transition-colors"
               />
 
               <button
-                (click)="removeExercise($index)"
+                (click)="removeExercise(ejercicio._uid)"
                 class="text-[#2a2a2a] hover:text-rose-500 transition-colors p-1 active:scale-90 shrink-0"
                 aria-label="Eliminar ejercicio"
               >
@@ -70,7 +80,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
               <!-- Type toggle -->
               <div class="flex gap-2">
                 <button
-                  (click)="setExerciseType($index, 'fuerza')"
+                  (click)="setExerciseType(ejercicio._uid, 'fuerza')"
                   class="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'fuerza'
                     ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30'
@@ -80,7 +90,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
                   Fuerza
                 </button>
                 <button
-                  (click)="setExerciseType($index, 'cardio')"
+                  (click)="setExerciseType(ejercicio._uid, 'cardio')"
                   class="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'cardio'
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -97,10 +107,10 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
                 <div class="flex flex-wrap gap-1.5">
                   @for (tag of allTags; track tag) {
                     <button
-                      (click)="toggleTag($index, tag)"
+                      (click)="toggleTag(ejercicio._uid, tag)"
                       class="px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95"
                       [style.background]="hasTag(ejercicio, tag) ? getTagColor(tag).bg : 'rgba(255,255,255,0.03)'"
-                      [style.borderColor]="hasTag(ejercicio, tag) ? getTagColor(tag).border : 'rgba(255,255,255,0.06)'"
+                      [style.border-color]="hasTag(ejercicio, tag) ? getTagColor(tag).border : 'rgba(255,255,255,0.06)'"
                       [style.color]="hasTag(ejercicio, tag) ? getTagColor(tag).text : '#404040'"
                     >{{ tag }}</button>
                   }
@@ -154,7 +164,8 @@ export class TemplateEditorComponent implements OnInit {
   isEditing = signal(false);
   editingId = signal<string | null>(null);
   templateName = signal('');
-  ejercicios = signal<EjercicioBase[]>([]);
+  // Use EjercicioConId internally so @for can track by stable _uid
+  ejercicios = signal<EjercicioConId[]>([]);
   errorMessage = signal('');
 
   readonly allTags: MuscleTag[] = MUSCLE_TAGS;
@@ -167,9 +178,14 @@ export class TemplateEditorComponent implements OnInit {
       const template = await this.db.getTemplate(id);
       if (template) {
         this.templateName.set(template.nombre);
-        this.ejercicios.set([...template.ejercicios]);
+        this.ejercicios.set(template.ejercicios.map(e => ({ ...e, _uid: crypto.randomUUID() })));
       }
     }
+  }
+
+  /** Helper: find the current index of an exercise by its uid */
+  getIndex(ej: EjercicioConId): number {
+    return this.ejercicios().findIndex(e => e._uid === ej._uid);
   }
 
   drop(event: CdkDragDrop<string[]>) {
@@ -179,45 +195,44 @@ export class TemplateEditorComponent implements OnInit {
   }
 
   addExercise() {
-    this.ejercicios.update(list => [...list, { nombre: '', tipo: 'fuerza' as TipoEjercicio, tags: [] }]);
+    this.ejercicios.update(list => [
+      ...list,
+      { nombre: '', tipo: 'fuerza' as TipoEjercicio, tags: [], _uid: crypto.randomUUID() },
+    ]);
   }
 
-  removeExercise(index: number) {
-    this.ejercicios.update(list => list.filter((_, i) => i !== index));
+  removeExercise(uid: string) {
+    this.ejercicios.update(list => list.filter(e => e._uid !== uid));
   }
 
-  updateExerciseName(index: number, name: string) {
-    this.ejercicios.update(list => {
-      const updated = [...list];
-      updated[index] = { ...updated[index], nombre: name };
-      return updated;
-    });
+  updateExerciseName(uid: string, name: string) {
+    this.ejercicios.update(list =>
+      list.map(e => e._uid === uid ? { ...e, nombre: name } : e)
+    );
   }
 
-  setExerciseType(index: number, tipo: TipoEjercicio) {
-    this.ejercicios.update(list => {
-      const updated = [...list];
-      updated[index] = { ...updated[index], tipo };
-      return updated;
-    });
+  setExerciseType(uid: string, tipo: TipoEjercicio) {
+    this.ejercicios.update(list =>
+      list.map(e => e._uid === uid ? { ...e, tipo } : e)
+    );
   }
 
-  toggleTag(index: number, tag: MuscleTag) {
-    this.ejercicios.update(list => {
-      const updated = [...list];
-      const ej = { ...updated[index] };
-      const currentTags = ej.tags ?? [];
-      if (currentTags.includes(tag)) {
-        ej.tags = currentTags.filter(t => t !== tag);
-      } else {
-        ej.tags = [...currentTags, tag];
-      }
-      updated[index] = ej;
-      return updated;
-    });
+  toggleTag(uid: string, tag: MuscleTag) {
+    this.ejercicios.update(list =>
+      list.map(e => {
+        if (e._uid !== uid) return e;
+        const currentTags = e.tags ?? [];
+        return {
+          ...e,
+          tags: currentTags.includes(tag)
+            ? currentTags.filter(t => t !== tag)
+            : [...currentTags, tag],
+        };
+      })
+    );
   }
 
-  hasTag(ejercicio: EjercicioBase, tag: MuscleTag): boolean {
+  hasTag(ejercicio: EjercicioConId, tag: MuscleTag): boolean {
     return (ejercicio.tags ?? []).includes(tag);
   }
 
@@ -240,8 +255,7 @@ export class TemplateEditorComponent implements OnInit {
       return;
     }
 
-    const emptyExercise = exercises.find(e => !e.nombre.trim());
-    if (emptyExercise) {
+    if (exercises.some(e => !e.nombre.trim())) {
       this.errorMessage.set('Todos los ejercicios deben tener un nombre.');
       return;
     }
@@ -249,7 +263,8 @@ export class TemplateEditorComponent implements OnInit {
     const template: Template = {
       id: this.editingId() ?? crypto.randomUUID(),
       nombre: name,
-      ejercicios: exercises.map(e => ({
+      // Strip internal _uid before saving
+      ejercicios: exercises.map(({ _uid: _discard, ...e }) => ({
         nombre: e.nombre.trim(),
         tipo: e.tipo,
         tags: e.tags ?? [],

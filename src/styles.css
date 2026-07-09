@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
 
 /* ─── Theme Tokens ─── */
 @theme {
@@ -28,7 +28,7 @@
 }
 
 html {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   -webkit-tap-highlight-color: transparent;
@@ -64,7 +64,7 @@ textarea {
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 16px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   width: 100%;
   outline: none;
   transition: border-color 0.2s ease;
@@ -157,7 +157,7 @@ input[type="number"] {
   border-radius: 14px;
   border: none;
   font-size: 16px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
@@ -185,7 +185,7 @@ input[type="number"] {
   border-radius: 14px;
   border: none;
   font-size: 16px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -204,7 +204,7 @@ input[type="number"] {
   border-radius: 14px;
   border: none;
   font-size: 16px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -228,7 +228,7 @@ input[type="number"] {
   border-radius: 12px;
   border: 1px solid var(--color-border);
   font-size: 14px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
