@@ -26,29 +26,29 @@ interface HeatDay {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[#0a0a0a] px-5 pt-8 pb-32">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8">
 
       <!-- ── Header ── -->
-      <div class="mb-8">
-        <p class="text-xs text-[#404040] uppercase tracking-[0.2em] mb-1">{{ dayLabel() }}</p>
-        <h1 class="text-3xl font-bold text-[#f5f5f5] tracking-tight">Dashboard</h1>
+      <div>
+        <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ dayLabel() }}</p>
+        <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Dashboard</h1>
       </div>
 
       <!-- ── Semana Actual ── -->
-      <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-[#737373] uppercase tracking-wider">Esta semana</h2>
-          <span class="text-xs text-[#404040]">{{ weekRangeLabel() }}</span>
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Esta semana</h2>
+          <span class="text-sm text-[var(--color-text-secondary)] font-medium">{{ weekRangeLabel() }}</span>
         </div>
-        <div class="grid grid-cols-7 gap-1.5 bg-[#111] rounded-2xl p-3 border border-[#1a1a1a]">
+        <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-[32px] p-6 border border-[var(--color-border)] shadow-xl">
           @for (day of weekDays(); track day.label) {
-            <div class="flex flex-col items-center gap-1.5">
-              <span class="text-[9px] font-bold uppercase tracking-wider"
-                [class]="day.isToday ? 'text-cyan-400' : 'text-[#404040]'">
+            <div class="flex flex-col items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider"
+                [class]="day.isToday ? 'text-[#00f2fe]' : 'text-[var(--color-text-muted)]'">
                 {{ day.label }}
               </span>
               <div
-                class="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-bold transition-all"
+                class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold transition-all"
                 [class]="getWeekDayClass(day)"
               >
                 {{ day.dayNum }}
@@ -59,40 +59,41 @@ interface HeatDay {
       </div>
 
       <!-- ── Streak + Stats Row ── -->
-      <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="grid grid-cols-3 gap-4">
         <!-- Racha -->
-        <div class="col-span-1 bg-[#111] rounded-2xl p-4 border border-[#1a1a1a] flex flex-col items-center justify-center gap-1">
-          <span class="text-3xl font-black text-amber-400">{{ streak() }}</span>
-          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Racha<br/>días</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
+          <span class="text-[40px] font-black text-amber-400 leading-none">{{ streak() }}</span>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Racha<br/>días</span>
         </div>
         <!-- Sesiones mes -->
-        <div class="col-span-1 bg-[#111] rounded-2xl p-4 border border-[#1a1a1a] flex flex-col items-center justify-center gap-1">
-          <span class="text-3xl font-black text-cyan-400">{{ monthSessions() }}</span>
-          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Sesiones<br/>este mes</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl relative overflow-hidden min-h-[120px]">
+          <div class="absolute inset-0 bg-gradient-to-br from-[#00f2fe]/10 to-[#a252ff]/10 z-0 pointer-events-none"></div>
+          <span class="text-[40px] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold z-10">Sesiones<br/>este mes</span>
         </div>
         <!-- Días restantes del mes -->
-        <div class="col-span-1 bg-[#111] rounded-2xl p-4 border border-[#1a1a1a] flex flex-col items-center justify-center gap-1">
-          <span class="text-3xl font-black text-[#f5f5f5]">{{ daysLeftInMonth() }}</span>
-          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Días<br/>restantes</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
+          <span class="text-[40px] font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Días<br/>restantes</span>
         </div>
       </div>
 
       <!-- ── Volumen por Tag ── -->
       @if (tagVolumens().length > 0) {
-        <div class="mb-6">
-          <h2 class="text-sm font-semibold text-[#737373] uppercase tracking-wider mb-3">Volumen este mes</h2>
-          <div class="flex flex-col gap-2">
+        <div>
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Volumen este mes</h2>
+          <div class="flex flex-col gap-3">
             @for (tv of tagVolumens(); track tv.tag) {
               <div
-                class="flex items-center gap-3 rounded-xl px-4 py-3 border"
+                class="flex items-center gap-4 rounded-[20px] px-5 py-4 border shadow-md"
                 [style.background]="getTagColor(tv.tag).bg"
                 [style.borderColor]="getTagColor(tv.tag).border"
               >
-                <div class="w-2 h-2 rounded-full flex-shrink-0" [style.background]="getTagColor(tv.tag).text"></div>
-                <span class="flex-1 text-sm font-semibold text-[#f5f5f5]">{{ tv.tag }}</span>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-[#404040]">{{ tv.sesiones }} ses.</span>
-                  <span class="font-bold text-sm" [style.color]="getTagColor(tv.tag).text">
+                <div class="w-3 h-3 rounded-full flex-shrink-0" [style.background]="getTagColor(tv.tag).text"></div>
+                <span class="flex-1 text-base font-bold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm text-[var(--color-text-muted)] font-medium">{{ tv.sesiones }} ses.</span>
+                  <span class="font-black text-base" [style.color]="getTagColor(tv.tag).text">
                     {{ formatTagValue(tv) }}
                   </span>
                 </div>
@@ -103,19 +104,19 @@ interface HeatDay {
       }
 
       <!-- ── Consistencia (30 días) ── -->
-      <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-[#737373] uppercase tracking-wider">Consistencia</h2>
-          <span class="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Consistencia</h2>
+          <span class="text-sm font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-xl">
             {{ trainedCount() }} / 30 días
           </span>
         </div>
-        <div class="bg-[#111] rounded-2xl border border-[#1a1a1a] p-4">
-          <div class="grid gap-1.5" style="grid-template-columns: repeat(10, 1fr)">
+        <div class="bg-[var(--color-bg-card)] rounded-[32px] border border-[var(--color-border)] p-6 shadow-xl">
+          <div class="grid gap-2.5" style="grid-template-columns: repeat(10, 1fr)">
             @for (day of heatmap(); track day.date) {
               <div
-                class="aspect-square rounded-sm transition-colors"
-                [class]="day.trained ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]' : 'bg-[#1a1a1a]'"
+                class="aspect-square rounded-md transition-colors"
+                [class]="day.trained ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-[var(--color-bg-input)]'"
                 [title]="day.date"
               ></div>
             }
@@ -125,17 +126,17 @@ interface HeatDay {
 
       <!-- ── Último Entrenamiento ── -->
       @if (lastLog()) {
-        <div>
-          <h2 class="text-sm font-semibold text-[#737373] uppercase tracking-wider mb-3">Último entrenamiento</h2>
-          <div class="bg-[#111] rounded-2xl p-4 border border-[#1a1a1a]">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[#f5f5f5] font-bold">{{ formatFecha(lastLog()!.fecha) }}</span>
-              <span class="text-xs text-[#404040]">Hace {{ getDaysAgo(lastLog()!.fecha) }}</span>
+        <div class="mt-4">
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Último entrenamiento</h2>
+          <div class="bg-[var(--color-bg-card)] rounded-[32px] p-6 border border-[var(--color-border)] shadow-xl">
+            <div class="flex items-center justify-between mb-5">
+              <span class="text-[var(--color-text-primary)] font-black text-xl">{{ formatFecha(lastLog()!.fecha) }}</span>
+              <span class="text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-3 py-1 rounded-full">Hace {{ getDaysAgo(lastLog()!.fecha) }}</span>
             </div>
-            <div class="flex flex-wrap gap-1.5">
+            <div class="flex flex-wrap gap-2.5 mb-6">
               @for (tag of getLogTags(lastLog()!); track tag) {
                 <span
-                  class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                  class="px-4 py-1.5 rounded-full text-xs font-bold border"
                   [style.background]="getTagColor(tag).bg"
                   [style.borderColor]="getTagColor(tag).border"
                   [style.color]="getTagColor(tag).text"
@@ -144,19 +145,21 @@ interface HeatDay {
             </div>
             <button
               (click)="irAEntrenar()"
-              class="mt-3 w-full py-2.5 rounded-xl bg-[#1a1a1a] text-cyan-400 text-sm font-semibold border border-cyan-400/20 hover:border-cyan-400/50 transition-all active:scale-95"
+              class="btn-primary min-h-[64px] text-lg font-black w-full"
             >
               Iniciar nuevo entrenamiento →
             </button>
           </div>
         </div>
       } @else {
-        <button
-          (click)="irAEntrenar()"
-          class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500/20 to-cyan-400/10 border border-cyan-400/30 text-cyan-400 font-bold text-base active:scale-95 transition-all hover:border-cyan-400/60"
-        >
-          ¡Empieza tu primer entrenamiento!
-        </button>
+        <div class="mt-4">
+          <button
+            (click)="irAEntrenar()"
+            class="btn-primary min-h-[72px] text-xl font-black w-full shadow-[0_10px_30px_rgba(0,242,254,0.4)] hover:shadow-[0_15px_40px_rgba(0,242,254,0.6)]"
+          >
+            ¡Empieza tu primer entrenamiento!
+          </button>
+        </div>
       }
     </div>
   `,
@@ -247,10 +250,10 @@ export class DashboardComponent implements OnInit {
   }
 
   getWeekDayClass(day: { isToday: boolean; trained: boolean; dayNum: number }): string {
-    if (day.trained && day.isToday) return 'bg-emerald-500 text-[#0a0a0a] ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0a0a0a]';
-    if (day.trained) return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-    if (day.isToday) return 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/40';
-    return 'bg-transparent text-[#404040]';
+    if (day.trained && day.isToday) return 'bg-gradient-to-br from-[#00f2fe] to-[#a252ff] text-white shadow-[0_0_15px_rgba(79,172,254,0.5)]';
+    if (day.trained) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
+    if (day.isToday) return 'bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/30 shadow-[0_0_10px_rgba(0,242,254,0.2)]';
+    return 'bg-transparent text-[var(--color-text-muted)]';
   }
 
   private buildHeatmap(trained: Set<string>, now: Date) {

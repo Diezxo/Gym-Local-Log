@@ -5,75 +5,76 @@ import { Component, input, output, signal, computed, OnDestroy, OnInit } from '@
   standalone: true,
   template: `
     <div
-      class="flex flex-col items-center gap-3 rounded-2xl bg-[#141414] p-4 border transition-all duration-300"
+      class="flex flex-col items-center gap-5 rounded-[32px] bg-[var(--color-bg-card)] p-8 border transition-all duration-300 shadow-xl"
       [class]="contenedorClases()"
     >
-      <span class="text-xs uppercase tracking-widest text-[#737373]">Descanso</span>
+      <span class="text-xs uppercase tracking-widest text-[var(--color-text-muted)] font-black">Descanso</span>
 
       <!-- SVG Circular Progress -->
-      <div class="relative flex items-center justify-center" style="width:120px;height:120px">
-        <svg class="absolute inset-0 -rotate-90" viewBox="0 0 120 120">
+      <div class="relative flex items-center justify-center" style="width:140px;height:140px">
+        <svg class="absolute inset-0 -rotate-90" viewBox="0 0 140 140">
           <circle
-            cx="60" cy="60" r="52"
+            cx="70" cy="70" r="62"
             fill="none"
-            stroke="#1e1e1e"
-            stroke-width="8"
+            stroke="var(--color-bg-input)"
+            stroke-width="10"
           />
           <circle
-            cx="60" cy="60" r="52"
+            cx="70" cy="70" r="62"
             fill="none"
-            [attr.stroke]="terminado() ? '#f43f5e' : '#22d3ee'"
-            stroke-width="8"
+            [attr.stroke]="terminado() ? '#f43f5e' : '#00f2fe'"
+            stroke-width="10"
             stroke-linecap="round"
             [attr.stroke-dasharray]="circumferencia"
             [attr.stroke-dashoffset]="dashOffset()"
-            class="transition-all duration-300"
+            class="transition-all duration-300 drop-shadow-[0_0_8px_currentColor]"
           />
         </svg>
         <span
-          class="text-3xl font-mono font-bold z-10"
-          [class.text-cyan-400]="!terminado() && activo()"
+          class="text-4xl font-mono font-black z-10 drop-shadow-[0_0_8px_currentColor]"
+          [class.text-[#00f2fe]]="!terminado() && activo()"
           [class.text-rose-500]="terminado()"
-          [class.text-[#f5f5f5]]="!activo() && !terminado()"
+          [class.text-[var(--color-text-primary)]]="!activo() && !terminado()"
         >
           {{ tiempoFormateado() }}
         </span>
       </div>
 
       <!-- Botones -->
-      <div class="flex items-center justify-center gap-3 mt-6 w-full px-6">
-        <button (click)="adjustTime(-30)" class="h-12 flex-1 rounded-xl bg-[#1e1e1e] text-[#a3a3a3] text-sm font-semibold active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]">-30s</button>
+      <div class="flex items-center justify-center gap-4 mt-4 w-full px-2">
+        <button (click)="adjustTime(-30)" class="h-[60px] flex-1 rounded-[20px] bg-[var(--color-bg-input)] text-[var(--color-text-muted)] text-base font-bold active:scale-95 transition-all duration-300 hover:bg-[#00f2fe]/10 hover:text-[#00f2fe] border border-[var(--color-border)] hover:border-[#00f2fe]/30">-30s</button>
         
-        <button (click)="reiniciar()" class="h-12 w-12 shrink-0 flex items-center justify-center rounded-xl bg-[#1e1e1e] text-[#a3a3a3] active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]" aria-label="Reiniciar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button (click)="reiniciar()" class="h-[60px] w-[60px] shrink-0 flex items-center justify-center rounded-[20px] bg-[var(--color-bg-input)] text-[var(--color-text-muted)] active:scale-95 transition-all duration-300 hover:bg-rose-500/10 hover:text-rose-400 border border-[var(--color-border)] hover:border-rose-500/30" aria-label="Reiniciar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
         
-        <button (click)="toggleTimer()" class="h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl bg-cyan-400 text-[#0a0a0a] active:scale-90 transition-all duration-300 shadow-lg shadow-cyan-400/20 hover:bg-cyan-300" aria-label="Play/Pause">
+        <button (click)="toggleTimer()" class="h-[72px] w-[72px] shrink-0 flex items-center justify-center rounded-[24px] bg-gradient-to-br from-[#00f2fe] to-[#4facfe] text-[#0a0a0a] active:scale-90 transition-all duration-300 shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)]" aria-label="Play/Pause">
           @if (activo()) {
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
           } @else {
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           }
         </button>
 
-        <button (click)="adjustTime(30)" class="h-12 flex-1 rounded-xl bg-[#1e1e1e] text-[#a3a3a3] text-sm font-semibold active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a] hover:text-[#f5f5f5]">+30s</button>
+        <button (click)="adjustTime(30)" class="h-[60px] flex-1 rounded-[20px] bg-[var(--color-bg-input)] text-[var(--color-text-muted)] text-base font-bold active:scale-95 transition-all duration-300 hover:bg-[#00f2fe]/10 hover:text-[#00f2fe] border border-[var(--color-border)] hover:border-[#00f2fe]/30">+30s</button>
       </div>
     </div>
   `,
   styles: [`
     @keyframes pulse-border {
       0%, 100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); background-color: rgba(244, 63, 94, 0.05); }
-      50% { border-color: #fb7185; box-shadow: 0 0 20px 8px rgba(244, 63, 94, 0.3); background-color: rgba(244, 63, 94, 0.15); }
+      50% { border-color: #fb7185; box-shadow: 0 0 30px 10px rgba(244, 63, 94, 0.4); background-color: rgba(244, 63, 94, 0.15); }
     }
     :host .timer-finished {
-      animation: pulse-border 0.8s ease-in-out infinite;
+      animation: pulse-border 1s ease-in-out infinite;
       border-color: #f43f5e;
     }
     :host .timer-active {
-      border-color: #22d3ee;
+      border-color: #00f2fe;
+      box-shadow: 0 0 20px rgba(0,242,254,0.1);
     }
     :host .timer-idle {
-      border-color: #1e1e1e;
+      border-color: var(--color-border);
     }
   `],
 })
@@ -89,7 +90,7 @@ export class RestTimerComponent implements OnInit, OnDestroy {
   terminado = signal(false);
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
-  readonly circumferencia = 2 * Math.PI * 52; // ~326.73
+  readonly circumferencia = 2 * Math.PI * 62; // ~389.55
 
   // ─── Computed ───
   tiempoFormateado = computed(() => {

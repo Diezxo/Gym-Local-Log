@@ -36,56 +36,56 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
     ExerciseCardioComponent,
   ],
   template: `
-    <div class="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] pb-28">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] pb-36">
 
       <!-- Header -->
-      <header class="px-5 pt-7 pb-4">
-        <p class="text-xs text-[#404040] uppercase tracking-[0.2em] mb-1">Entrenar</p>
-        <h1 class="text-2xl font-bold capitalize">{{ fechaDisplay() }}</h1>
+      <header class="px-6 pt-12 pb-6">
+        <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">Entrenar</p>
+        <h1 class="text-[40px] leading-tight font-black capitalize tracking-tight">{{ fechaDisplay() }}</h1>
       </header>
 
       <!-- ── Vista: Selección de template ── -->
       @if (!logActivo()) {
-        <div class="px-5 space-y-3 animate-fade-in">
-          <p class="text-sm font-semibold text-[#404040] uppercase tracking-wider mb-4">Elige tu rutina</p>
+        <div class="px-6 flex flex-col gap-5 animate-fade-in">
+          <p class="text-base font-black text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Elige tu rutina</p>
 
           @if (templates().length === 0) {
-            <div class="rounded-2xl bg-[#111] border border-[#1a1a1a] p-10 text-center space-y-2">
-              <p class="text-[#404040] text-sm">No tienes plantillas creadas.</p>
-              <p class="text-[#2a2a2a] text-xs">Ve a Rutinas para crear una.</p>
+            <div class="rounded-[32px] bg-[var(--color-bg-card)] border border-[var(--color-border)] p-12 text-center flex flex-col gap-3 shadow-lg">
+              <p class="text-[var(--color-text-primary)] text-lg font-bold">No tienes plantillas creadas.</p>
+              <p class="text-[var(--color-text-muted)] text-sm font-medium">Ve a Rutinas para crear una.</p>
             </div>
           }
 
           @for (tmpl of templates(); track tmpl.id) {
             <button
               (click)="seleccionarTemplate(tmpl)"
-              class="w-full text-left bg-[#111] border border-[#1a1a1a] rounded-2xl overflow-hidden active:scale-[0.98] transition-all hover:border-[#222] group"
+              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group shadow-lg hover:shadow-xl"
             >
               <!-- Main content -->
-              <div class="flex items-center gap-4 p-4">
+              <div class="flex items-center gap-4 p-5">
                 <!-- Dumbbell icon -->
-                <div class="w-12 h-12 rounded-xl bg-[#1a1a1a] border border-[#222] flex items-center justify-center shrink-0 group-hover:border-cyan-400/30 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400/70 group-hover:text-cyan-400 transition-colors"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+                <div class="w-14 h-14 rounded-[20px] bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0 group-hover:border-[#00f2fe]/40 transition-colors shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(0,242,254,0.6)] transition-all"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
                 </div>
 
                 <div class="flex-1 min-w-0">
-                  <p class="text-[#f5f5f5] font-bold text-base truncate mb-0.5">{{ tmpl.nombre }}</p>
-                  <p class="text-[#404040] text-xs truncate">
+                  <p class="text-[var(--color-text-primary)] font-black text-lg truncate mb-1">{{ tmpl.nombre }}</p>
+                  <p class="text-[var(--color-text-muted)] text-sm truncate font-medium">
                     {{ tmpl.ejercicios.map(e => e.nombre).join(' · ') }}
                   </p>
                 </div>
 
-                <span class="shrink-0 text-xs font-bold text-[#404040] bg-[#1a1a1a] px-2 py-1 rounded-lg">
-                  {{ tmpl.ejercicios.length }}
+                <span class="shrink-0 text-xs font-bold text-[var(--color-text-secondary)] bg-[var(--color-bg-input)] px-3 py-1.5 rounded-xl border border-[var(--color-border)]">
+                  {{ tmpl.ejercicios.length }} ej.
                 </span>
               </div>
 
               <!-- Tags row -->
               @if (getTemplateTags(tmpl).length > 0) {
-                <div class="border-t border-[#1a1a1a] px-4 py-2.5 flex flex-wrap gap-1.5">
+                <div class="border-t border-[var(--color-border)] px-5 py-3.5 flex flex-wrap gap-2">
                   @for (tag of getTemplateTags(tmpl); track tag) {
                     <span
-                      class="px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                      class="px-3 py-1 rounded-full text-[10px] font-bold border"
                       [style.background]="getTagColor(tag).bg"
                       [style.borderColor]="getTagColor(tag).border"
                       [style.color]="getTagColor(tag).text"
@@ -100,35 +100,35 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- ── Vista: Entrenamiento activo ── -->
       @if (logActivo()) {
-        <div class="px-5 space-y-4 animate-scale-in">
+        <div class="px-6 flex flex-col gap-6 animate-scale-in">
 
           <!-- Active header: template name + timer + cancel -->
-          <div class="flex items-center justify-between gap-3 py-1">
+          <div class="flex items-center justify-between gap-3 pt-2">
             <button
               (click)="cancelarEntrenamiento()"
-              class="text-xs text-[#404040] hover:text-rose-500 transition-colors flex items-center gap-1 active:scale-95"
+              class="text-sm font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5 active:scale-95 bg-[var(--color-bg-input)] px-4 py-2 rounded-full border border-[var(--color-border)]"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
               Cancelar
             </button>
 
             <!-- Session timer -->
-            <div class="flex items-center gap-2 bg-[#111] border border-[#1a1a1a] rounded-xl px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-              <span class="font-mono text-sm font-bold text-[#f5f5f5]">{{ sessionTimerLabel() }}</span>
+            <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-full px-4 py-2 shadow-inner">
+              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+              <span class="font-mono text-base font-black text-[var(--color-text-primary)] tracking-tight">{{ sessionTimerLabel() }}</span>
             </div>
 
-            <span class="text-[10px] font-bold text-cyan-400 bg-cyan-400/10 px-2.5 py-1 rounded-lg border border-cyan-400/20">En curso</span>
+            <span class="text-xs font-black text-[#00f2fe] bg-[#00f2fe]/10 px-4 py-2 rounded-full border border-[#00f2fe]/30 shadow-[0_0_10px_rgba(0,242,254,0.15)]">En curso</span>
           </div>
 
           <!-- Template name + tags -->
-          <div class="pb-1">
-            <h2 class="text-lg font-bold text-[#f5f5f5] truncate mb-2">{{ activeTemplateName() }}</h2>
+          <div class="flex flex-col gap-3">
+            <h2 class="text-2xl font-black text-[var(--color-text-primary)] truncate">{{ activeTemplateName() }}</h2>
             @if (activeTemplateTags().length > 0) {
-              <div class="flex flex-wrap gap-1.5">
+              <div class="flex flex-wrap gap-2">
                 @for (tag of activeTemplateTags(); track tag) {
                   <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                    class="px-3 py-1 rounded-full text-[11px] font-bold border"
                     [style.background]="getTagColor(tag).bg"
                     [style.borderColor]="getTagColor(tag).border"
                     [style.color]="getTagColor(tag).text"
@@ -139,14 +139,14 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           </div>
 
           <!-- Barra de Progreso -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-[10px] text-[#404040] font-bold uppercase tracking-wider">
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">
               <span>Progreso</span>
-              <span class="text-cyan-400">{{ getCompletedExercisesCount() }} / {{ logActivo()!.ejercicios.length }} completados</span>
+              <span class="text-[#00f2fe]">{{ getCompletedExercisesCount() }} / {{ logActivo()!.ejercicios.length }} completados</span>
             </div>
-            <div class="w-full h-1.5 bg-[#111] rounded-full overflow-hidden border border-[#1a1a1a]">
+            <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden border border-[var(--color-border)] shadow-inner">
               <div
-                class="h-full bg-cyan-400 transition-all duration-500 ease-out shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+                class="h-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] transition-all duration-500 ease-out shadow-[0_0_12px_rgba(0,242,254,0.6)] rounded-full"
                 [style.width.%]="(getCompletedExercisesCount() / logActivo()!.ejercicios.length) * 100"
               ></div>
             </div>
@@ -179,21 +179,21 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           }
 
           <!-- Notas del día -->
-          <div class="space-y-2">
-            <label class="text-xs text-[#404040] uppercase tracking-wider">Notas del día</label>
+          <div class="flex flex-col gap-3">
+            <label class="text-sm text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Notas del día</label>
             <textarea
               [ngModel]="notasDelDia()"
               (ngModelChange)="actualizarNotas($event)"
               placeholder="¿Cómo te sentiste hoy?"
               rows="3"
-              class="w-full rounded-xl bg-[#111] border border-[#1a1a1a] px-4 py-3 text-sm text-[#f5f5f5] placeholder-[#404040] focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+              class="w-full rounded-[24px] bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none shadow-inner"
             ></textarea>
           </div>
 
           <!-- Botón Finalizar -->
           <button
             (click)="finalizarEntrenamiento()"
-            class="w-full min-h-16 rounded-2xl bg-emerald-500 text-white font-bold text-lg active:scale-[0.97] transition-transform shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+            class="btn-primary min-h-[72px] text-xl font-black w-full flex items-center justify-center gap-3 mt-4 shadow-[0_10px_30px_rgba(16,185,129,0.3)] bg-gradient-to-r from-emerald-400 to-emerald-600 hover:shadow-[0_15px_40px_rgba(16,185,129,0.5)] border-none"
           >
             ✓ Finalizar Entrenamiento
           </button>
