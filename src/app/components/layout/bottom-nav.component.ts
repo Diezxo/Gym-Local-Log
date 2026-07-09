@@ -15,11 +15,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="{ exact: item.exact }"
             #navLink="routerLinkActive"
-            class="group relative flex flex-col items-center justify-center flex-1 min-h-[72px] py-2 text-[var(--color-text-muted)] transition-all duration-300 active:scale-90"
+            class="group relative flex flex-col items-center justify-center flex-1 min-h-[56px] py-2 text-[var(--color-text-muted)] transition-all duration-300 active:scale-90"
           >
             <!-- Background Pill for Active State -->
             <div
-              class="absolute inset-0 m-auto h-11 w-16 rounded-2xl bg-gradient-to-r from-[#00f2fe]/15 to-[#a252ff]/15 scale-0 opacity-0 transition-all duration-300 group-[.is-active]:scale-100 group-[.is-active]:opacity-100 -z-10"
+              class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-11 w-16 rounded-xl bg-gradient-to-r from-[#00f2fe]/15 to-[#a252ff]/15 scale-0 opacity-0 transition-all duration-300 group-[.is-active]:scale-100 group-[.is-active]:opacity-100"
             ></div>
 
             <div

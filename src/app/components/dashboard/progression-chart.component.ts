@@ -15,8 +15,8 @@ interface DataPoint {
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[var(--color-bg-card)] rounded-[24px] p-6 sm:p-8 border border-[var(--color-border)] shadow-xl mt-8">
-      <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-6">Progreso de Ejercicio</h2>
+    <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 sm:p-8 border border-[var(--color-border)]  mt-8">
+      <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-6">Progreso de Ejercicio</h2>
       
       @if (uniqueExercises().length > 0) {
         <div class="flex flex-col gap-4 mb-6">
@@ -25,7 +25,7 @@ interface DataPoint {
             <select
               [ngModel]="selectedExercise()"
               (ngModelChange)="selectedExercise.set($event)"
-              class="w-full appearance-none rounded-[20px] bg-[var(--color-bg-input)] border border-[var(--color-border)] px-4 py-3 pr-10 text-sm font-bold text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] transition-colors"
+              class="w-full appearance-none rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-4 py-3 pr-10 text-sm font-bold text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] transition-colors"
             >
               @for (ex of uniqueExercises(); track ex) {
                 <option [value]="ex">{{ ex }}</option>

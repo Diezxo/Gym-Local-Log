@@ -8,7 +8,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
   selector: 'app-template-list',
   standalone: true,
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
 
       <!-- Header -->
       <div>
@@ -19,9 +19,9 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
       @if (templates().length === 0) {
         <!-- Empty state -->
         <div class="flex flex-col items-center justify-center mt-12 text-center px-4 animate-fade-in">
-          <div class="w-24 h-24 rounded-[32px] bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-xl flex items-center justify-center mb-6 relative overflow-hidden">
+          <div class="w-24 h-24 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)]  flex items-center justify-center mb-6 relative overflow-hidden">
              <div class="absolute inset-0 bg-gradient-to-br from-[#00f2fe]/10 to-[#a252ff]/10 z-0"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#neon-gradient)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="z-10 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#neon-gradient)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="z-10 drop-">
               <defs>
                 <linearGradient id="neon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="#00f2fe" />
@@ -35,7 +35,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
           <p class="text-[var(--color-text-muted)] text-base mb-10 leading-relaxed font-medium">Crea tu primera plantilla de entrenamiento para empezar.</p>
           <button
             (click)="loadDefaultTemplates()"
-            class="btn-secondary w-full max-w-[280px] min-h-[64px] text-lg rounded-full"
+            class="btn-secondary w-full max-w-[280px] min-h-[48px] text-lg rounded-full"
           >
             Cargar rutinas por defecto
           </button>
@@ -45,13 +45,13 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
         <div class="flex flex-col gap-4">
           @for (template of templates(); track template.id) {
             <div
-              class="bg-[var(--color-bg-card)] rounded-[32px] border border-[var(--color-border)] overflow-hidden transition-all shadow-lg hover:shadow-xl hover:border-[var(--color-border-active)]"
+              class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden transition-all  hover: hover:border-[var(--color-border-active)]"
             >
               <!-- Main row -->
-              <div class="flex items-start gap-4 p-5" (click)="editTemplate(template.id)">
+              <div class="flex items-start gap-4 p-4" (click)="editTemplate(template.id)">
                 <!-- Icon -->
-                <div class="w-14 h-14 rounded-[20px] bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.4)]"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+                <div class="w-14 h-14 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop-"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
                 </div>
 
                 <!-- Info -->
@@ -91,7 +91,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
       <!-- Delete confirmation modal -->
       @if (templateToDelete()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1121]/80 backdrop-blur-md px-6">
-          <div class="bg-[var(--color-bg-card)] rounded-[32px] p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
+          <div class="bg-[var(--color-bg-card)] rounded-2xl p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] mb-4">¿Eliminar rutina?</h3>
             <p class="text-[var(--color-text-muted)] text-base mb-10 leading-relaxed font-medium">
               Se eliminará <span class="text-[var(--color-text-primary)] font-bold">{{ templateToDelete()!.nombre }}</span> permanentemente.
@@ -99,11 +99,11 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
             <div class="flex flex-col gap-3">
               <button
                 (click)="deleteConfirmed()"
-                class="btn-danger rounded-full min-h-[64px]"
+                class="btn-danger rounded-full min-h-[48px]"
               >Eliminar</button>
               <button
                 (click)="templateToDelete.set(null)"
-                class="btn-secondary rounded-full min-h-[64px]"
+                class="btn-secondary rounded-full min-h-[48px]"
               >Cancelar</button>
             </div>
           </div>
@@ -113,7 +113,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
       <!-- FAB: Create new template -->
       <button
         (click)="createTemplate()"
-        class="fixed bottom-28 right-6 z-40 h-[72px] w-[72px] rounded-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] text-white shadow-[0_10px_25px_rgba(79,172,254,0.5)] flex items-center justify-center active:scale-90 transition-all duration-300"
+        class="fixed bottom-28 right-6 z-40 h-[72px] w-[72px] rounded-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] text-white  flex items-center justify-center active:scale-90 transition-all duration-300"
         aria-label="Crear nueva rutina"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>

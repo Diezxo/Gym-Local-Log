@@ -19,7 +19,7 @@ interface EjercicioConId extends EjercicioBase {
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-4">
       <!-- Header -->
       <div>
         <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">
@@ -34,22 +34,22 @@ interface EjercicioConId extends EjercicioBase {
           [ngModel]="templateName()"
           (ngModelChange)="templateName.set($event)"
           placeholder="Nombre de la rutina"
-          class="w-full min-h-[64px] px-5 rounded-[24px] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-lg placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors shadow-inner"
+          class="w-full min-h-[48px] px-5 rounded-2xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-lg placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors "
         />
       </div>
 
       <!-- Exercises list -->
-      <div class="flex flex-col gap-5" cdkDropList (cdkDropListDropped)="drop($event)">
+      <div class="flex flex-col gap-4" cdkDropList (cdkDropListDropped)="drop($event)">
         <!--
           BUG FIX: track by _uid (stable unique id per exercise object)
           instead of $index. Using $index causes Angular to recycle DOM nodes
           when the signal updates, which makes tag clicks fire on the wrong exercise.
         -->
         @for (ejercicio of ejercicios(); track ejercicio._uid) {
-          <div cdkDrag class="bg-[var(--color-bg-card)] rounded-[32px] border border-[var(--color-border)] overflow-hidden shadow-lg">
+          <div cdkDrag class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden ">
 
             <!-- Drag handle + exercise name row -->
-            <div class="flex items-center gap-4 p-5">
+            <div class="flex items-center gap-4 p-4">
               <!-- Drag Handle -->
               <div cdkDragHandle class="cursor-grab active:cursor-grabbing text-[var(--color-text-muted)] hover:text-[#00f2fe] transition-colors shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="16" y1="9" y2="9"/><line x1="8" x2="16" y1="15" y2="15"/></svg>
@@ -62,7 +62,7 @@ interface EjercicioConId extends EjercicioBase {
                 [ngModel]="ejercicio.nombre"
                 (ngModelChange)="updateExerciseName(ejercicio._uid, $event)"
                 placeholder="Nombre del ejercicio"
-                class="flex-1 min-h-[56px] px-4 rounded-[20px] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm font-bold placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors shadow-inner"
+                class="flex-1 min-h-[56px] px-4 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm font-bold placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors "
               />
 
               <button
@@ -85,7 +85,7 @@ interface EjercicioConId extends EjercicioBase {
                   (click)="setExerciseType(ejercicio._uid, 'fuerza'); $event.stopPropagation()"
                   class="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'fuerza'
-                    ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 shadow-[0_0_10px_rgba(0,242,254,0.15)]'
+                    ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                     : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
@@ -96,7 +96,7 @@ interface EjercicioConId extends EjercicioBase {
                   (click)="setExerciseType(ejercicio._uid, 'cardio'); $event.stopPropagation()"
                   class="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'cardio'
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 '
                     : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -106,7 +106,7 @@ interface EjercicioConId extends EjercicioBase {
 
               <!-- Muscle Tags -->
               <div>
-                <p class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] mb-3 font-bold">Grupo muscular</p>
+                <p class="text-[10px]  text-[var(--color-text-muted)] mb-3 font-bold">Grupo muscular</p>
                 <div class="flex flex-wrap gap-2">
                   @for (tag of allTags; track tag) {
                     <button
@@ -129,7 +129,7 @@ interface EjercicioConId extends EjercicioBase {
       <button
         type="button"
         (click)="addExercise()"
-        class="w-full flex items-center justify-center gap-2 min-h-[64px] rounded-[24px] border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-base font-bold active:scale-95 transition-all hover:border-[#00f2fe] hover:text-[#00f2fe] bg-[var(--color-bg-card)]/50"
+        class="w-full flex items-center justify-center gap-2 min-h-[48px] rounded-2xl border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-base font-bold active:scale-95 transition-all hover:border-[#00f2fe] hover:text-[#00f2fe] bg-[var(--color-bg-card)]/50"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
         Añadir ejercicio
@@ -137,7 +137,7 @@ interface EjercicioConId extends EjercicioBase {
 
       <!-- Error message -->
       @if (errorMessage()) {
-        <div class="px-5 py-4 rounded-[20px] bg-rose-500/15 border border-rose-500/30 text-rose-400 text-sm font-medium">
+        <div class="px-5 py-4 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-sm font-medium">
           {{ errorMessage() }}
         </div>
       }
@@ -146,13 +146,13 @@ interface EjercicioConId extends EjercicioBase {
       <div class="flex flex-col gap-4 mt-4">
         <button
           (click)="saveTemplate()"
-          class="btn-primary min-h-[64px] text-lg font-black"
+          class="btn-primary min-h-[48px] text-lg font-black"
         >
           Guardar Rutina
         </button>
         <button
           (click)="cancel()"
-          class="btn-secondary min-h-[64px] rounded-full text-lg font-bold"
+          class="btn-secondary min-h-[48px] rounded-full text-lg font-bold"
         >
           Cancelar
         </button>

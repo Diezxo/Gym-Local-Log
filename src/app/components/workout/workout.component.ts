@@ -44,11 +44,11 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- ── Vista: Selección de template ── -->
       @if (!logActivo()) {
-        <div class="px-6 flex flex-col gap-5 animate-fade-in">
-          <p class="text-base font-black text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Elige tu rutina</p>
+        <div class="px-6 flex flex-col gap-4 animate-fade-in">
+          <p class="text-base font-black text-[var(--color-text-muted)]  mb-2">Elige tu rutina</p>
 
           @if (templates().length === 0) {
-            <div class="rounded-[32px] bg-[var(--color-bg-card)] border border-[var(--color-border)] p-12 text-center flex flex-col gap-3 shadow-lg">
+            <div class="rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] p-12 text-center flex flex-col gap-3 ">
               <p class="text-[var(--color-text-primary)] text-lg font-bold">No tienes plantillas creadas.</p>
               <p class="text-[var(--color-text-muted)] text-sm font-medium">Ve a Rutinas para crear una.</p>
             </div>
@@ -57,13 +57,13 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           @for (tmpl of templates(); track tmpl.id) {
             <button
               (click)="seleccionarTemplate(tmpl)"
-              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group shadow-lg hover:shadow-xl"
+              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group  hover:"
             >
               <!-- Main content -->
-              <div class="flex items-center gap-4 p-5">
+              <div class="flex items-center gap-4 p-4">
                 <!-- Dumbbell icon -->
-                <div class="w-14 h-14 rounded-[20px] bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0 group-hover:border-[#00f2fe]/40 transition-colors shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(0,242,254,0.6)] transition-all"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+                <div class="w-14 h-14 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0 group-hover:border-[#00f2fe]/40 transition-colors ">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop- group-hover:drop- transition-all"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
                 </div>
 
                 <div class="flex-1 min-w-0">
@@ -98,7 +98,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- ── Vista: Entrenamiento activo ── -->
       @if (logActivo()) {
-        <div class="px-6 flex flex-col gap-6 animate-scale-in">
+        <div class="px-6 flex flex-col gap-4 animate-scale-in">
 
           <!-- Active header: template name + timer + cancel -->
           <div class="flex items-center justify-between gap-3 pt-2">
@@ -111,12 +111,12 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
             </button>
 
             <!-- Session timer -->
-            <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-full px-4 py-2 shadow-inner">
-              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+            <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-full px-4 py-2 ">
+              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse "></div>
               <span class="font-mono text-base font-black text-[var(--color-text-primary)] tracking-tight">{{ sessionTimerLabel() }}</span>
             </div>
 
-            <span class="text-xs font-black text-[#00f2fe] bg-[#00f2fe]/10 px-4 py-2 rounded-full border border-[#00f2fe]/30 shadow-[0_0_10px_rgba(0,242,254,0.15)]">En curso</span>
+            <span class="text-xs font-black text-[#00f2fe] bg-[#00f2fe]/10 px-4 py-2 rounded-full border border-[#00f2fe]/30 ">En curso</span>
           </div>
 
           <!-- Template name + tags -->
@@ -138,13 +138,13 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           <!-- Barra de Progreso -->
           <div class="flex flex-col gap-2">
-            <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">
+            <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-bold ">
               <span>Progreso</span>
               <span class="text-[#00f2fe]">{{ getCompletedExercisesCount() }} / {{ logActivo()!.ejercicios.length }} completados</span>
             </div>
-            <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden border border-[var(--color-border)] shadow-inner">
+            <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden border border-[var(--color-border)] ">
               <div
-                class="h-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] transition-all duration-500 ease-out shadow-[0_0_12px_rgba(0,242,254,0.6)] rounded-full"
+                class="h-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] transition-all duration-500 ease-out  rounded-full"
                 [style.width.%]="(getCompletedExercisesCount() / logActivo()!.ejercicios.length) * 100"
               ></div>
             </div>
@@ -178,20 +178,20 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           <!-- Notas del día -->
           <div class="flex flex-col gap-3">
-            <label class="text-sm text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Notas del día</label>
+            <label class="text-sm text-[var(--color-text-muted)] font-bold ">Notas del día</label>
             <textarea
               [ngModel]="notasDelDia()"
               (ngModelChange)="actualizarNotas($event)"
               placeholder="¿Cómo te sentiste hoy?"
               rows="3"
-              class="w-full rounded-[24px] bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none shadow-inner"
+              class="w-full rounded-2xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none "
             ></textarea>
           </div>
 
           <!-- Botón Finalizar -->
           <button
             (click)="finalizarEntrenamiento()"
-            class="btn-primary min-h-[72px] text-xl font-black w-full flex items-center justify-center gap-3 mt-4 shadow-[0_10px_30px_rgba(16,185,129,0.3)] bg-gradient-to-r from-emerald-400 to-emerald-600 hover:shadow-[0_15px_40px_rgba(16,185,129,0.5)] border-none"
+            class="btn-primary min-h-[56px] text-xl font-black w-full flex items-center justify-center gap-3 mt-4  bg-gradient-to-r from-emerald-400 to-emerald-600 hover: border-none"
           >
             ✓ Finalizar Entrenamiento
           </button>
@@ -200,7 +200,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Toast de éxito -->
       @if (mostrarToast()) {
-        <div class="fixed bottom-28 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-6 py-4 flex items-center justify-center gap-3 text-white shadow-xl animate-slide-up">
+        <div class="fixed bottom-28 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-6 py-4 flex items-center justify-center gap-3 text-white  animate-slide-up">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           <span class="font-bold text-sm tracking-wide">¡Entrenamiento guardado!</span>
         </div>

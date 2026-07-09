@@ -16,7 +16,7 @@ interface MonthStats {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
 
       <!-- Header -->
       <div>
@@ -26,17 +26,17 @@ interface MonthStats {
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-3 gap-4">
-        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
           <span class="text-[36px] font-black text-[#00f2fe] leading-none">{{ stats().sesiones }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Sesiones</span>
+          <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Sesiones</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
           <span class="text-[28px] font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center">{{ formatVol(stats().volumenKg) }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Vol. Fuerza</span>
+          <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Vol. Fuerza</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
           <span class="text-[24px] font-black text-emerald-400 leading-none truncate w-full text-center">{{ stats().distanciaKm > 0 ? stats().distanciaKm + ' km' : '—' }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Cardio</span>
+          <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Cardio</span>
         </div>
       </div>
 
@@ -55,9 +55,9 @@ interface MonthStats {
       }
 
       <!-- Workout List -->
-      <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-4">
         @for (log of allLogs(); track log.fecha + log.templateId) {
-          <div class="bg-[var(--color-bg-card)] rounded-[32px] border border-[var(--color-border)] overflow-hidden shadow-lg hover:border-[var(--color-border-active)] transition-colors">
+          <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden  hover:border-[var(--color-border-active)] transition-colors">
 
             <!-- Date + Tags row -->
             <div class="flex items-center gap-4 px-5 pt-5 pb-3">
@@ -106,7 +106,7 @@ interface MonthStats {
 
             <!-- Volume footer -->
             @if (getLogVolumen(log) > 0 || getLogDistancia(log) > 0) {
-              <div class="border-t border-[var(--color-border)] px-5 py-3 flex gap-5 bg-[var(--color-bg-input)]/50">
+              <div class="border-t border-[var(--color-border)] px-5 py-3 flex gap-4 bg-[var(--color-bg-input)]/50">
                 @if (getLogVolumen(log) > 0) {
                   <span class="text-xs text-[var(--color-text-muted)] font-bold">
                     Vol: <span class="text-[var(--color-text-primary)]">{{ formatVol(getLogVolumen(log)) }}</span>
@@ -139,16 +139,16 @@ interface MonthStats {
 
       <!-- Exportar -->
       <div class="mt-8">
-        <h2 class="text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Exportar Datos</h2>
+        <h2 class="text-sm font-bold text-[var(--color-text-muted)]  mb-4">Exportar Datos</h2>
         <div class="flex gap-4 mb-4">
-          <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[64px] rounded-[24px]">
+          <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl">
             JSON
           </button>
-          <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[64px] rounded-[24px]">
+          <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-2xl">
             CSV
           </button>
         </div>
-        <button (click)="fileInput.click()" class="w-full min-h-[64px] flex items-center justify-center gap-2 rounded-[24px] border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-sm font-bold active:scale-95 transition-all hover:border-[var(--color-text-primary)] hover:text-[var(--color-text-primary)]">
+        <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-sm font-bold active:scale-95 transition-all hover:border-[var(--color-text-primary)] hover:text-[var(--color-text-primary)]">
           Importar (.json)
         </button>
       </div>
@@ -157,7 +157,7 @@ interface MonthStats {
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1121]/80 backdrop-blur-md px-6">
-          <div class="bg-[var(--color-bg-card)] rounded-[32px] p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
+          <div class="bg-[var(--color-bg-card)] rounded-2xl p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] mb-4">¿Eliminar registro?</h3>
             <p class="text-[var(--color-text-muted)] text-base mb-10 leading-relaxed font-medium">
               Se eliminará el entrenamiento del <span class="text-[var(--color-text-primary)] font-bold">{{ logToDelete()!.fecha }}</span> permanentemente.
@@ -165,11 +165,11 @@ interface MonthStats {
             <div class="flex flex-col gap-3">
               <button
                 (click)="deleteLogConfirmed()"
-                class="btn-danger rounded-full min-h-[64px]"
+                class="btn-danger rounded-full min-h-[48px]"
               >Eliminar</button>
               <button
                 (click)="logToDelete.set(null)"
-                class="btn-secondary rounded-full min-h-[64px]"
+                class="btn-secondary rounded-full min-h-[48px]"
               >Cancelar</button>
             </div>
           </div>

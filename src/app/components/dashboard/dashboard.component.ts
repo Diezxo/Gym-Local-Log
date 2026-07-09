@@ -27,7 +27,7 @@ interface HeatDay {
   standalone: true,
   imports: [CommonModule, ProgressionChartComponent],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
 
       <!-- ── Header ── -->
       <div>
@@ -38,13 +38,13 @@ interface HeatDay {
       <!-- ── Semana Actual ── -->
       <div>
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Esta semana</h2>
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] ">Esta semana</h2>
           <span class="text-sm text-[var(--color-text-secondary)] font-medium">{{ weekRangeLabel() }}</span>
         </div>
-        <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-[32px] p-6 border border-[var(--color-border)] shadow-xl">
+        <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
           @for (day of weekDays(); track day.label) {
             <div class="flex flex-col items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider"
+              <span class="text-xs font-bold "
                 [class]="day.isToday ? 'text-[#00f2fe]' : 'text-[var(--color-text-muted)]'">
                 {{ day.label }}
               </span>
@@ -62,31 +62,31 @@ interface HeatDay {
       <!-- ── Streak + Stats Row ── -->
       <div class="grid grid-cols-3 gap-4">
         <!-- Racha -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
-          <span class="text-[36px] font-black text-amber-400 leading-none">{{ streak() }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Racha<br/>días</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
+          <span class="text-3xl font-black text-amber-400 leading-none">{{ streak() }}</span>
+          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium">Racha<br/>días</span>
         </div>
         <!-- Sesiones mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl relative overflow-hidden min-h-[110px]">
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  relative overflow-hidden min-h-[110px]">
           <div class="absolute inset-0 bg-gradient-to-br from-[#00f2fe]/10 to-[#a252ff]/10 z-0 pointer-events-none"></div>
-          <span class="text-[36px] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold z-10">Sesiones<br/>este mes</span>
+          <span class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
+          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium z-10">Sesiones<br/>este mes</span>
         </div>
         <!-- Días restantes del mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
-          <span class="text-[36px] font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Días<br/>restantes</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
+          <span class="text-3xl font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
+          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium">Días<br/>restantes</span>
         </div>
       </div>
 
       <!-- ── Volumen por Tag ── -->
       @if (tagVolumens().length > 0) {
         <div>
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Volumen este mes</h2>
+          <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-4">Volumen este mes</h2>
           <div class="flex flex-col gap-3">
             @for (tv of tagVolumens(); track tv.tag) {
               <div
-                class="flex items-center gap-4 rounded-[20px] px-5 py-4 border shadow-md"
+                class="flex items-center gap-4 rounded-xl px-5 py-4 border "
                 [style.background]="getTagColor(tv.tag).bg"
                 [style.borderColor]="getTagColor(tv.tag).border"
               >
@@ -107,17 +107,17 @@ interface HeatDay {
       <!-- ── Consistencia (30 días) ── -->
       <div>
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Consistencia</h2>
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] ">Consistencia</h2>
           <span class="text-sm font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-xl">
             {{ trainedCount() }} / 30 días
           </span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-[32px] border border-[var(--color-border)] p-6 shadow-xl">
+        <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] p-4 ">
           <div class="grid gap-2.5" style="grid-template-columns: repeat(10, 1fr)">
             @for (day of heatmap(); track day.date) {
               <div
                 class="aspect-square rounded-md transition-colors"
-                [class]="day.trained ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-[var(--color-bg-input)]'"
+                [class]="day.trained ? 'bg-emerald-500 ' : 'bg-[var(--color-bg-input)]'"
                 [title]="day.date"
               ></div>
             }
@@ -128,11 +128,11 @@ interface HeatDay {
       <!-- ── Último Entrenamiento ── -->
       @if (lastLog()) {
         <div class="mt-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Último entrenamiento</h2>
-          <div class="bg-[var(--color-bg-card)] rounded-[32px] p-6 border border-[var(--color-border)] shadow-xl">
+          <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-4">Último entrenamiento</h2>
+          <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
             <div class="flex items-center justify-between mb-5">
               <span class="text-[var(--color-text-primary)] font-black text-xl">{{ formatFecha(lastLog()!.fecha) }}</span>
-              <span class="text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-3 py-1 rounded-full">Hace {{ getDaysAgo(lastLog()!.fecha) }}</span>
+              <span class="text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-3 py-1 rounded-full">{{ getDaysAgo(lastLog()!.fecha) }}</span>
             </div>
             <div class="flex flex-wrap gap-2.5 mb-6">
               @for (tag of getLogTags(lastLog()!); track tag) {
@@ -146,7 +146,7 @@ interface HeatDay {
             </div>
             <button
               (click)="irAEntrenar()"
-              class="btn-primary min-h-[64px] text-lg font-black w-full"
+              class="btn-primary min-h-[48px] text-lg font-black w-full"
             >
               Iniciar nuevo entrenamiento →
             </button>
@@ -156,7 +156,7 @@ interface HeatDay {
         <div class="mt-4">
           <button
             (click)="irAEntrenar()"
-            class="btn-primary min-h-[72px] text-xl font-black w-full shadow-[0_10px_30px_rgba(0,242,254,0.4)] hover:shadow-[0_15px_40px_rgba(0,242,254,0.6)]"
+            class="btn-primary min-h-[56px] text-xl font-black w-full  hover:"
           >
             ¡Empieza tu primer entrenamiento!
           </button>
@@ -259,9 +259,9 @@ export class DashboardComponent implements OnInit {
   }
 
   getWeekDayClass(day: { isToday: boolean; trained: boolean; dayNum: number }): string {
-    if (day.trained && day.isToday) return 'bg-gradient-to-br from-[#00f2fe] to-[#a252ff] text-white shadow-[0_0_15px_rgba(79,172,254,0.5)]';
+    if (day.trained && day.isToday) return 'bg-gradient-to-br from-[#00f2fe] to-[#a252ff] text-white ';
     if (day.trained) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
-    if (day.isToday) return 'bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/30 shadow-[0_0_10px_rgba(0,242,254,0.2)]';
+    if (day.isToday) return 'bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/30 ';
     return 'bg-transparent text-[var(--color-text-muted)]';
   }
 
@@ -364,9 +364,9 @@ export class DashboardComponent implements OnInit {
     const now = new Date();
     const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diff = Math.round((todayLocal.getTime() - logDate.getTime()) / 86400000);
-    if (diff <= 0) return 'hoy';
-    if (diff === 1) return 'ayer';
-    return `${diff} días`;
+    if (diff <= 0) return 'Hoy';
+    if (diff === 1) return 'Ayer';
+    return `Hace ${diff} días`;
   }
 
   irAEntrenar() {
