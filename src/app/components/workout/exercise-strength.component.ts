@@ -42,8 +42,8 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
                 @for (record of history(); track record.fecha) {
                   <tr class="border-b border-[#2a2a2a]/50 last:border-0 text-[#f5f5f5]">
                     <td class="py-2">{{ record.fecha | slice:5:10 }}</td>
-                    <td class="py-2 text-cyan-400">{{ record.peso }}{{ unidadPeso() }} × {{ record.reps }}</td>
-                    <td class="py-2 text-right">{{ record.volumenTotal }}</td>
+                  <td class="py-2 text-cyan-400">{{ record.peso }}{{ unidadPeso() }} × {{ record.reps }}</td>
+                  <td class="py-2 text-right text-[#737373]">{{ record.volumenTotal }}{{ unidadPeso() }}</td>
                   </tr>
                 }
               </tbody>
@@ -87,9 +87,8 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
             [class.animate-pulse-success]="isLast && justAddedSet()"
           >
             <div class="text-center font-bold text-emerald-400">{{ serie.numero }}</div>
-            <div class="text-left text-[#737373] text-xs truncate">
-              <!-- Podríamos mostrar el historial real, por ahora simple '-' -->
-              -
+            <div class="text-left text-[#737373] text-xs leading-tight line-clamp-1 pr-1">
+              {{ sugerencia() ? (sugerencia()!.textoReferencia | slice:10) : '—' }}
             </div>
             <div class="text-center font-mono font-medium bg-[#1e1e1e]/60 py-1.5 rounded-lg">{{ serie.peso }}</div>
             <div class="text-center font-mono font-medium bg-[#1e1e1e]/60 py-1.5 rounded-lg">{{ serie.reps }}</div>

@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed, OnDestroy } from '@angular/core';
+import { Component, input, output, signal, computed, OnDestroy, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-rest-timer',
@@ -77,7 +77,7 @@ import { Component, input, output, signal, computed, OnDestroy } from '@angular/
     }
   `],
 })
-export class RestTimerComponent implements OnDestroy {
+export class RestTimerComponent implements OnInit, OnDestroy {
   // ─── Inputs / Outputs ───
   duracion = input<number>(90);
   timerFinished = output<void>();

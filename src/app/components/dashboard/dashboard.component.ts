@@ -111,10 +111,10 @@ interface HeatDay {
           </span>
         </div>
         <div class="bg-[#111] rounded-2xl border border-[#1a1a1a] p-4">
-          <div class="flex flex-wrap gap-1.5">
+          <div class="grid gap-1.5" style="grid-template-columns: repeat(10, 1fr)">
             @for (day of heatmap(); track day.date) {
               <div
-                class="w-[calc((100%-9*6px)/10)] aspect-square rounded-sm transition-colors"
+                class="aspect-square rounded-sm transition-colors"
                 [class]="day.trained ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]' : 'bg-[#1a1a1a]'"
                 [title]="day.date"
               ></div>
@@ -220,19 +220,17 @@ export class DashboardComponent implements OnInit {
 
   private buildWeek(trained: Set<string>, now: Date) {
     const days: { label: string; dayNum: number; isToday: boolean; trained: boolean }[] = [];
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = this.toLocalDateStr(now);
 
-    // Start of current week (Monday)
+    // Start of current week (Monday) — use local dates
     const dow = now.getDay(); // 0=Sun
     const startOffset = dow === 0 ? -6 : 1 - dow;
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() + startOffset);
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + startOffset);
 
     const weekLabels = ['L','M','X','J','V','S','D'];
     for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      const ds = d.toISOString().split('T')[0];
+      const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+      const ds = this.toLocalDateStr(d);
       days.push({
         label: weekLabels[i],
         dayNum: d.getDate(),
@@ -241,8 +239,7 @@ export class DashboardComponent implements OnInit {
       });
     }
 
-    const endOfWeek = new Date(weekStart);
-    endOfWeek.setDate(weekStart.getDate() + 6);
+    const endOfWeek = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
     this.weekRangeLabel.set(
       `${weekStart.getDate()} ${this.monthShort[weekStart.getMonth()]} – ${endOfWeek.getDate()} ${this.monthShort[endOfWeek.getMonth()]}`
     );
@@ -259,9 +256,8 @@ export class DashboardComponent implements OnInit {
   private buildHeatmap(trained: Set<string>, now: Date) {
     const days: HeatDay[] = [];
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const ds = d.toISOString().split('T')[0];
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const ds = this.toLocalDateStr(d);
       days.push({ date: ds, trained: trained.has(ds), dayNum: d.getDate() });
     }
     this.heatmap.set(days);
@@ -270,21 +266,29 @@ export class DashboardComponent implements OnInit {
 
   private calcStreak(sortedDays: string[], now: Date): number {
     if (sortedDays.length === 0) return 0;
+    const trainingSet = new Set(sortedDays);
     let streak = 0;
-    const today = now.toISOString().split('T')[0];
-    let check = today;
-
+    const todayStr = this.toLocalDateStr(now);
+    // Start from today; if today wasn't trained, start from yesterday
+    let checkDate = new Date(now);
+    if (!trainingSet.has(todayStr)) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
     while (true) {
-      if (sortedDays.includes(check)) {
+      const ds = this.toLocalDateStr(checkDate);
+      if (trainingSet.has(ds)) {
         streak++;
-        const prev = new Date(check);
-        prev.setDate(prev.getDate() - 1);
-        check = prev.toISOString().split('T')[0];
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
         break;
       }
     }
     return streak;
+  }
+
+  /** Returns YYYY-MM-DD in LOCAL time (avoids UTC midnight shift) */
+  private toLocalDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private calcTagVolumens(logs: LogDiario[]) {
@@ -342,8 +346,13 @@ export class DashboardComponent implements OnInit {
   }
 
   getDaysAgo(fecha: string): string {
-    const diff = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
-    if (diff === 0) return 'hoy';
+    // Compare calendar dates in local time to avoid UTC midnight off-by-one
+    const [y, m, d] = fecha.split('-').map(Number);
+    const logDate = new Date(y, m - 1, d);
+    const now = new Date();
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((todayLocal.getTime() - logDate.getTime()) / 86400000);
+    if (diff <= 0) return 'hoy';
     if (diff === 1) return 'ayer';
     return `${diff} días`;
   }

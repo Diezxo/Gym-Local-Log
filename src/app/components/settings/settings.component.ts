@@ -178,7 +178,14 @@ export class SettingsComponent implements OnInit {
   }
 
   async updateSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {
-    this.settings.update(s => ({ ...s, [key]: value }));
+    // Safely parse numeric fields to avoid storing NaN
+    let safeValue: UserSettings[K] = value;
+    if (key === 'incrementoPeso' || key === 'tiempoDescanso') {
+      const parsed = parseFloat(value as string);
+      if (isNaN(parsed) || parsed <= 0) return; // silently ignore invalid inputs
+      safeValue = parsed as UserSettings[K];
+    }
+    this.settings.update(s => ({ ...s, [key]: safeValue }));
     await this.db.saveSettings(this.settings());
 
     // Show confirmation

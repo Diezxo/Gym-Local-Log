@@ -27,8 +27,17 @@ export class ProgressionService {
     mesId: string,
     settings: UserSettings
   ): Promise<Sugerencia | null> {
-    const lastLog = await this.db.getLastExerciseLog(nombreEjercicio, mesId);
+    let lastLog = await this.db.getLastExerciseLog(nombreEjercicio, mesId);
 
+    // If no data this month, check the previous month (common at start of month)
+    if (!lastLog || !lastLog.series || lastLog.series.length === 0) {
+      const [year, month] = mesId.split('-').map(Number);
+      const prevDate = new Date(year, month - 2, 1); // month-1 = current month index, month-2 = previous
+      const prevMesId = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+      lastLog = await this.db.getLastExerciseLog(nombreEjercicio, prevMesId);
+    }
+
+    // No data found in current or previous month
     if (!lastLog || !lastLog.series || lastLog.series.length === 0) {
       return null;
     }
