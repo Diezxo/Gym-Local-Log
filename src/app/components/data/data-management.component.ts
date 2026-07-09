@@ -2,12 +2,13 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExportService } from '../../services/export.service';
 import { DbService } from '../../services/db.service';
-import { LogDiario } from '../../models/interfaces';
+import { LogDiario, MuscleTag, TAG_COLORS, EjercicioLog } from '../../models/interfaces';
 
-interface HistoryStats {
-  workouts: number;
-  duration: string; // "10h 43m"
-  volume: string; // "11,895kg"
+interface MonthStats {
+  sesiones: number;
+  volumenKg: number;
+  distanciaKm: number;
+  tagSesiones: { tag: MuscleTag; count: number }[];
 }
 
 @Component({
@@ -15,75 +16,146 @@ interface HistoryStats {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[#0a0a0a] px-6 pt-8 pb-32">
-      <!-- Header -->
-      <h1 class="text-3xl font-bold text-[#f5f5f5] mb-2 tracking-tight">Historial</h1>
-      <p class="text-[#737373] text-base mb-8">{{ currentMonthLabel() }}</p>
+    <div class="min-h-screen bg-[#0a0a0a] px-5 pt-8 pb-32">
 
-      <!-- Stats Summary -->
-      <div class="flex items-center justify-between bg-[#141414] rounded-2xl p-4 mb-8 border border-[#1e1e1e]">
-        <div class="flex flex-col items-center">
-          <span class="text-2xl font-bold text-cyan-400">{{ stats().workouts }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[#737373] mt-1">Workouts</span>
+      <!-- Header -->
+      <div class="mb-8">
+        <p class="text-xs text-[#404040] uppercase tracking-[0.2em] mb-1">{{ currentMonthLabel() }}</p>
+        <h1 class="text-3xl font-bold text-[#f5f5f5] tracking-tight">Historial</h1>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-3 gap-2.5 mb-8">
+        <div class="bg-[#111] rounded-2xl p-3.5 border border-[#1a1a1a] flex flex-col items-center gap-1">
+          <span class="text-2xl font-black text-cyan-400">{{ stats().sesiones }}</span>
+          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Sesiones</span>
         </div>
-        <div class="w-px h-10 bg-[#2a2a2a]"></div>
-        <div class="flex flex-col items-center">
-          <span class="text-xl font-bold text-cyan-400">{{ stats().duration }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[#737373] mt-1">Duration</span>
+        <div class="bg-[#111] rounded-2xl p-3.5 border border-[#1a1a1a] flex flex-col items-center gap-1">
+          <span class="text-xl font-black text-[#f5f5f5]">{{ formatVol(stats().volumenKg) }}</span>
+          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Vol. Fuerza</span>
         </div>
-        <div class="w-px h-10 bg-[#2a2a2a]"></div>
-        <div class="flex flex-col items-center">
-          <span class="text-xl font-bold text-cyan-400">{{ stats().volume }}</span>
-          <span class="text-[10px] uppercase tracking-wider text-[#737373] mt-1">Volume</span>
+        <div class="bg-[#111] rounded-2xl p-3.5 border border-[#1a1a1a] flex flex-col items-center gap-1">
+          <span class="text-xl font-black text-emerald-400">{{ stats().distanciaKm > 0 ? stats().distanciaKm + ' km' : '—' }}</span>
+          <span class="text-[9px] uppercase tracking-wider text-[#404040] text-center leading-tight">Cardio</span>
         </div>
       </div>
 
+      <!-- Tags breakdown -->
+      @if (stats().tagSesiones.length > 0) {
+        <div class="flex gap-2 flex-wrap mb-7">
+          @for (ts of stats().tagSesiones; track ts.tag) {
+            <span
+              class="px-2.5 py-1 rounded-full text-[11px] font-bold border"
+              [style.background]="getTagColor(ts.tag).bg"
+              [style.borderColor]="getTagColor(ts.tag).border"
+              [style.color]="getTagColor(ts.tag).text"
+            >{{ ts.tag }} · {{ ts.count }}</span>
+          }
+        </div>
+      }
+
       <!-- Workout List -->
-      <div class="flex flex-col gap-4 mb-12">
+      <div class="flex flex-col gap-3 mb-10">
         @for (log of allLogs(); track log.fecha + log.templateId) {
-          <div class="bg-[#141414] rounded-3xl p-5 border border-[#1e1e1e] flex gap-4 items-start relative overflow-hidden transition-all hover:border-[#2a2a2a]">
-            <!-- Date Box -->
-            <div class="flex flex-col items-center justify-center bg-cyan-500/10 rounded-xl min-w-[50px] min-h-[55px] border border-cyan-500/20 shrink-0">
-              <span class="text-cyan-400 font-bold text-lg leading-none">{{ log.fecha | slice:8:10 }}</span>
-              <span class="text-cyan-400/80 text-xs font-medium uppercase mt-0.5">{{ getMonthShort(log.fecha) }}</span>
+          <div class="bg-[#111] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+
+            <!-- Date + Tags row -->
+            <div class="flex items-center gap-3 px-4 pt-4 pb-2.5">
+              <div class="flex flex-col items-center justify-center bg-cyan-500/10 rounded-xl w-12 h-12 border border-cyan-500/20 shrink-0">
+                <span class="text-cyan-400 font-black text-base leading-none">{{ log.fecha | slice:8:10 }}</span>
+                <span class="text-cyan-400/70 text-[9px] font-semibold uppercase mt-0.5">{{ getMonthShort(log.fecha) }}</span>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap gap-1 mb-1">
+                  @for (tag of getLogTags(log); track tag) {
+                    <span
+                      class="px-1.5 py-0.5 rounded-md text-[10px] font-bold border"
+                      [style.background]="getTagColor(tag).bg"
+                      [style.borderColor]="getTagColor(tag).border"
+                      [style.color]="getTagColor(tag).text"
+                    >{{ tag }}</span>
+                  }
+                  @if (getLogTags(log).length === 0) {
+                    <span class="text-[#404040] text-xs">Sin etiquetas</span>
+                  }
+                </div>
+                <p class="text-[#404040] text-[10px]">{{ log.ejercicios.length }} ejercicio{{ log.ejercicios.length !== 1 ? 's' : '' }}</p>
+              </div>
+
+              <button
+                (click)="confirmDeleteLog(log)"
+                class="text-[#2a2a2a] hover:text-rose-500 transition-colors p-2 active:scale-90 shrink-0"
+                aria-label="Eliminar entrenamiento"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
             </div>
-            
-            <!-- Workout Info -->
-            <div class="flex-1 min-w-0 pr-10">
-              <h3 class="text-[#f5f5f5] font-bold text-lg mb-0.5 truncate">{{ getWorkoutName(log) }}</h3>
-              <p class="text-[#737373] text-xs truncate mb-2">
-                {{ getMusclesString(log) }}
-              </p>
-              
-              <!-- Exercise Summary -->
-              <div class="flex flex-col gap-1 text-sm text-[#a3a3a3]">
-                @for (ej of log.ejercicios; track ej.nombre) {
-                  <span class="truncate">
-                    {{ ej.series?.length || 0 }}x {{ ej.nombre }}
+
+            <!-- Exercise lines -->
+            <div class="border-t border-[#1a1a1a] px-4 pt-2.5 pb-3 flex flex-col gap-1.5">
+              @for (ej of log.ejercicios; track ej.nombre) {
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[#a3a3a3] text-sm truncate flex-1">{{ ej.nombre }}</span>
+                  <span class="text-sm font-bold text-[#f5f5f5] shrink-0 font-mono">
+                    {{ getEjercicioResumen(ej) }}
+                  </span>
+                </div>
+              }
+            </div>
+
+            <!-- Volume footer -->
+            @if (getLogVolumen(log) > 0 || getLogDistancia(log) > 0) {
+              <div class="border-t border-[#1a1a1a] px-4 py-2 flex gap-4">
+                @if (getLogVolumen(log) > 0) {
+                  <span class="text-xs text-[#404040]">
+                    Vol: <span class="text-[#737373] font-semibold">{{ formatVol(getLogVolumen(log)) }}</span>
+                  </span>
+                }
+                @if (getLogDistancia(log) > 0) {
+                  <span class="text-xs text-[#404040]">
+                    Cardio: <span class="text-cyan-400/70 font-semibold">{{ getLogDistancia(log) }} km</span>
                   </span>
                 }
               </div>
-            </div>
-            
-            <!-- Delete Button -->
-            <button
-              (click)="confirmDeleteLog(log)"
-              class="absolute right-4 top-4 text-[#404040] hover:text-rose-500 transition-colors p-2 active:scale-90"
-              aria-label="Eliminar entrenamiento"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-            </button>
+            }
           </div>
         }
+
         @if (allLogs().length === 0) {
-          <p class="text-center text-[#737373] text-sm mt-4">No hay entrenamientos este mes.</p>
+          <div class="text-center py-16">
+            <p class="text-[#2a2a2a] text-5xl mb-3">📭</p>
+            <p class="text-[#404040] text-sm">No hay entrenamientos este mes.</p>
+          </div>
         }
       </div>
 
+      <!-- Feedback message -->
+      @if (feedbackMessage()) {
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm" [class]="feedbackIsError() ? 'bg-rose-500/15 border border-rose-500/30 text-rose-400' : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'">
+          {{ feedbackMessage() }}
+        </div>
+      }
+
+      <!-- Exportar -->
+      <h2 class="text-sm font-semibold text-[#737373] uppercase tracking-wider mb-3">Exportar Datos</h2>
+      <div class="flex gap-3 mb-4">
+        <button (click)="exportJSON()" class="flex-1 min-h-12 flex items-center justify-center gap-2 rounded-xl bg-[#111] text-cyan-400 text-sm font-medium border border-[#1a1a1a] active:scale-95 transition-all hover:border-cyan-400/40">
+          JSON
+        </button>
+        <button (click)="exportCSV()" class="flex-1 min-h-12 flex items-center justify-center gap-2 rounded-xl bg-[#111] text-emerald-400 text-sm font-medium border border-[#1a1a1a] active:scale-95 transition-all hover:border-emerald-400/40">
+          CSV
+        </button>
+      </div>
+      <button (click)="fileInput.click()" class="w-full min-h-12 flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#2a2a2a] text-[#404040] text-sm font-medium active:scale-95 transition-all hover:border-[#737373] hover:text-[#737373]">
+        Importar (.json)
+      </button>
+      <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" />
+
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm px-6 transition-opacity">
-          <div class="bg-[#141414] rounded-3xl p-8 w-full max-w-sm border border-[#1e1e1e] shadow-2xl animate-scale-in">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm px-6">
+          <div class="bg-[#141414] rounded-3xl p-8 w-full max-w-sm border border-[#1e1e1e] shadow-2xl">
             <h3 class="text-xl font-bold text-[#f5f5f5] mb-3">¿Eliminar registro?</h3>
             <p class="text-[#a3a3a3] text-base mb-8 leading-relaxed">
               Se eliminará el entrenamiento del <span class="text-[#f5f5f5] font-semibold">{{ logToDelete()!.fecha }}</span> permanentemente.
@@ -91,42 +163,16 @@ interface HistoryStats {
             <div class="flex gap-4">
               <button
                 (click)="logToDelete.set(null)"
-                class="flex-1 min-h-14 rounded-2xl bg-[#1e1e1e] text-[#f5f5f5] font-medium active:scale-95 transition-all duration-300 hover:bg-[#2a2a2a]"
-              >
-                Cancelar
-              </button>
+                class="flex-1 min-h-14 rounded-2xl bg-[#1e1e1e] text-[#f5f5f5] font-medium active:scale-95 transition-all"
+              >Cancelar</button>
               <button
                 (click)="deleteLogConfirmed()"
-                class="flex-1 min-h-14 rounded-2xl bg-rose-500 text-white font-semibold active:scale-95 transition-all duration-300 shadow-lg shadow-rose-500/20 hover:bg-rose-600"
-              >
-                Eliminar
-              </button>
+                class="flex-1 min-h-14 rounded-2xl bg-rose-500 text-white font-semibold active:scale-95 transition-all shadow-lg shadow-rose-500/20"
+              >Eliminar</button>
             </div>
           </div>
         </div>
       }
-
-      <!-- Feedback message -->
-      @if (feedbackMessage()) {
-        <div class="mb-4 px-4 py-3 rounded-xl text-sm" [class]="feedbackIsError() ? 'bg-rose-500/15 border border-rose-500/30 text-rose-400' : 'bg-green-500/15 border border-green-500/30 text-green-400'">
-          {{ feedbackMessage() }}
-        </div>
-      }
-
-      <!-- Action cards (Export) -->
-      <h2 class="text-xl font-bold text-[#f5f5f5] mb-4">Exportar Datos</h2>
-      <div class="flex gap-3 mb-6">
-        <button (click)="exportJSON()" class="flex-1 min-h-12 flex items-center justify-center gap-2 rounded-xl bg-[#141414] text-cyan-400 text-sm font-medium border border-[#1e1e1e] active:scale-95 transition-all hover:border-cyan-400/50">
-          Exportar JSON
-        </button>
-        <button (click)="exportCSV()" class="flex-1 min-h-12 flex items-center justify-center gap-2 rounded-xl bg-[#141414] text-green-400 text-sm font-medium border border-[#1e1e1e] active:scale-95 transition-all hover:border-green-500/50">
-          Exportar CSV
-        </button>
-      </div>
-      <button (click)="fileInput.click()" class="w-full min-h-12 flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#2a2a2a] text-[#737373] text-sm font-medium active:scale-95 transition-all hover:border-[#f5f5f5] hover:text-[#f5f5f5]">
-        Importar Historial (.json)
-      </button>
-      <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" />
     </div>
   `,
   styles: [``],
@@ -141,7 +187,7 @@ export class DataManagementComponent implements OnInit {
   feedbackIsError = signal(false);
 
   allLogs = signal<LogDiario[]>([]);
-  stats = signal<HistoryStats>({ workouts: 0, duration: '0h 0m', volume: '0kg' });
+  stats = signal<MonthStats>({ sesiones: 0, volumenKg: 0, distanciaKm: 0, tagSesiones: [] });
   logToDelete = signal<LogDiario | null>(null);
 
   private monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -152,54 +198,111 @@ export class DataManagementComponent implements OnInit {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     this.currentMesId.set(`${year}-${month}`);
     this.currentMonthLabel.set(`${this.monthNames[now.getMonth()]} ${year}`);
-    
     await this.loadHistory();
   }
 
   async loadHistory() {
-    // Only load current month for simplicity, or we could flatten all months.
     const archive = await this.db.getMonthlyArchive(this.currentMesId());
-    if (archive && archive.logs) {
-      const logsDescending = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
-      this.allLogs.set(logsDescending);
-      
-      // Calculate Stats
-      const workouts = logsDescending.length;
-      let totalVolume = 0;
-      
-      for (const log of logsDescending) {
-        for (const ej of log.ejercicios) {
-          if (ej.tipo === 'fuerza' && ej.series) {
-            for (const serie of ej.series) {
-              totalVolume += (serie.peso * serie.reps);
-            }
-          }
-        }
-      }
-      
-      this.stats.set({
-        workouts,
-        duration: '1h 15m', // Placeholder as we aren't tracking duration natively right now
-        volume: totalVolume.toLocaleString() + 'kg'
-      });
+    if (archive?.logs) {
+      const logs = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      this.allLogs.set(logs);
+      this.calcStats(logs);
+    } else {
+      this.allLogs.set([]);
+      this.calcStats([]);
     }
   }
 
+  private calcStats(logs: LogDiario[]) {
+    let volumen = 0;
+    let distancia = 0;
+    const tagCount = new Map<MuscleTag, Set<string>>();
+
+    for (const log of logs) {
+      for (const ej of log.ejercicios) {
+        if (ej.tipo === 'fuerza' && ej.series) {
+          volumen += ej.series.reduce((s, r) => s + r.peso * r.reps, 0);
+        } else if (ej.cardio) {
+          distancia += ej.cardio.distanciaKm ?? 0;
+        }
+        for (const tag of (ej.tags ?? [])) {
+          if (!tagCount.has(tag)) tagCount.set(tag, new Set());
+          tagCount.get(tag)!.add(log.fecha);
+        }
+      }
+    }
+
+    const tagSesiones = Array.from(tagCount.entries())
+      .map(([tag, dates]) => ({ tag, count: dates.size }))
+      .sort((a, b) => b.count - a.count);
+
+    this.stats.set({
+      sesiones: logs.length,
+      volumenKg: Math.round(volumen),
+      distanciaKm: Math.round(distancia * 10) / 10,
+      tagSesiones,
+    });
+  }
+
+  // ── Helpers ──
+
   getMonthShort(fecha: string): string {
-    const [year, month] = fecha.split('-');
+    const [, month] = fecha.split('-');
     return this.monthNames[parseInt(month, 10) - 1] || '';
   }
 
-  getWorkoutName(log: LogDiario): string {
-    // If it was based on a template, we could show it, otherwise Fallback
-    return 'Entrenamiento';
+  getLogTags(log: LogDiario): MuscleTag[] {
+    const tags = new Set<MuscleTag>();
+    log.ejercicios.forEach(e => e.tags?.forEach(t => tags.add(t)));
+    return Array.from(tags);
   }
 
-  getMusclesString(log: LogDiario): string {
-    // Collect unique muscles (if we had them), for now return exercise types
-    const types = new Set(log.ejercicios.map(e => e.tipo === 'fuerza' ? 'Fuerza' : 'Cardio'));
-    return Array.from(types).join(', ');
+  getTagColor(tag: MuscleTag) {
+    return TAG_COLORS[tag] ?? { bg: 'rgba(255,255,255,0.05)', text: '#a3a3a3', border: 'rgba(255,255,255,0.1)' };
   }
+
+  /** Devuelve línea de resumen por ejercicio: '3×8 @ 80kg' o '5.2 km · 32 min' o '0×—' */
+  getEjercicioResumen(ej: EjercicioLog): string {
+    if (ej.tipo === 'fuerza') {
+      const series = ej.series ?? [];
+      if (series.length === 0) return '0×—';
+      // Best set (highest volume per set)
+      const best = series.reduce((prev, cur) =>
+        cur.peso * cur.reps > prev.peso * prev.reps ? cur : prev
+      );
+      return `${series.length}×${best.reps} @ ${best.peso}kg`;
+    } else {
+      const km = ej.cardio?.distanciaKm ?? 0;
+      const min = ej.cardio?.tiempoMinutos ?? 0;
+      if (km === 0 && min === 0) return '—';
+      const parts: string[] = [];
+      if (km > 0) parts.push(`${km} km`);
+      if (min > 0) parts.push(`${min} min`);
+      return parts.join(' · ');
+    }
+  }
+
+  getLogVolumen(log: LogDiario): number {
+    return log.ejercicios
+      .filter(e => e.tipo === 'fuerza' && e.series)
+      .reduce((s, e) => s + e.series!.reduce((ss, r) => ss + r.peso * r.reps, 0), 0);
+  }
+
+  getLogDistancia(log: LogDiario): number {
+    return Math.round(
+      log.ejercicios
+        .filter(e => e.tipo === 'cardio' && e.cardio)
+        .reduce((s, e) => s + (e.cardio?.distanciaKm ?? 0), 0) * 10
+    ) / 10;
+  }
+
+  formatVol(kg: number): string {
+    if (kg === 0) return '—';
+    if (kg >= 1000) return `${(kg / 1000).toFixed(1)}t`;
+    return `${kg.toLocaleString()} kg`;
+  }
+
+  // ── Actions ──
 
   confirmDeleteLog(log: LogDiario) {
     this.logToDelete.set(log);
@@ -230,7 +333,7 @@ export class DataManagementComponent implements OnInit {
       } else {
         await this.exportService.exportCSV(mesId);
       }
-      this.showFeedback(`Exportado correctamente.`, false);
+      this.showFeedback('Exportado correctamente.', false);
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al exportar.', true);
     }
@@ -240,10 +343,9 @@ export class DataManagementComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-
     try {
       await this.exportService.importJSON(file);
-      this.showFeedback(`Importado correctamente`, false);
+      this.showFeedback('Importado correctamente', false);
       await this.loadHistory();
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al importar.', true);
