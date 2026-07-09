@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DbService } from '../../services/db.service';
@@ -7,6 +7,7 @@ import {
   MuscleTag,
   TAG_COLORS,
 } from '../../models/interfaces';
+import { ProgressionChartComponent } from './progression-chart.component';
 
 interface TagVolumen {
   tag: MuscleTag;
@@ -24,7 +25,7 @@ interface HeatDay {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProgressionChartComponent],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8">
 
@@ -61,20 +62,20 @@ interface HeatDay {
       <!-- ── Streak + Stats Row ── -->
       <div class="grid grid-cols-3 gap-4">
         <!-- Racha -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
-          <span class="text-[40px] font-black text-amber-400 leading-none">{{ streak() }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Racha<br/>días</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+          <span class="text-[36px] font-black text-amber-400 leading-none">{{ streak() }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Racha<br/>días</span>
         </div>
         <!-- Sesiones mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl relative overflow-hidden min-h-[120px]">
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl relative overflow-hidden min-h-[110px]">
           <div class="absolute inset-0 bg-gradient-to-br from-[#00f2fe]/10 to-[#a252ff]/10 z-0 pointer-events-none"></div>
-          <span class="text-[40px] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold z-10">Sesiones<br/>este mes</span>
+          <span class="text-[36px] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold z-10">Sesiones<br/>este mes</span>
         </div>
         <!-- Días restantes del mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
-          <span class="text-[40px] font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Días<br/>restantes</span>
+        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+          <span class="text-[36px] font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Días<br/>restantes</span>
         </div>
       </div>
 
@@ -161,9 +162,13 @@ interface HeatDay {
           </button>
         </div>
       }
+
+      <!-- Chart Integration -->
+      <app-progression-chart [logs]="monthLogs()"></app-progression-chart>
+
     </div>
   `,
-  styles: [],
+  styles: [], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit {
   private db = inject(DbService);
@@ -179,6 +184,7 @@ export class DashboardComponent implements OnInit {
   heatmap = signal<HeatDay[]>([]);
   trainedCount = signal(0);
   lastLog = signal<LogDiario | null>(null);
+  monthLogs = signal<LogDiario[]>([]);
 
   private readonly monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   private readonly monthShort = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -215,10 +221,13 @@ export class DashboardComponent implements OnInit {
     // ── Stats del mes ──
     const mesId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const currentArchive = archives.find(a => a.mesId === mesId);
-    this.monthSessions.set(currentArchive?.logs.length ?? 0);
+    const logsThisMonth = currentArchive?.logs ?? [];
+    
+    this.monthSessions.set(logsThisMonth.length);
+    this.monthLogs.set(logsThisMonth);
 
     // ── Volumen por tag ──
-    this.calcTagVolumens(currentArchive?.logs ?? []);
+    this.calcTagVolumens(logsThisMonth);
   }
 
   private buildWeek(trained: Set<string>, now: Date) {

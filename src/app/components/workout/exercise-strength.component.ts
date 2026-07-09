@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EjercicioLog, SerieFuerza, Sugerencia } from '../../models/interfaces';
@@ -134,7 +134,7 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
       </div>
     </div>
   `,
-  styles: [``],
+  styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExerciseStrengthComponent implements OnInit {
   private progressionService = inject(ProgressionService);

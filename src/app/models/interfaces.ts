@@ -6,18 +6,24 @@ export type MuscleTag =
   | 'Pecho'
   | 'Espalda'
   | 'Piernas'
-  | 'Cardio';
+  | 'Brazos'
+  | 'Core'
+  | 'Cardio'
+  | 'Calentamiento';
 
 export const MUSCLE_TAGS: MuscleTag[] = [
-  'Pecho', 'Espalda', 'Piernas', 'Cardio',
+  'Pecho', 'Espalda', 'Piernas', 'Brazos', 'Core', 'Cardio', 'Calentamiento',
 ];
 
 // Colores para cada tag
 export const TAG_COLORS: Record<MuscleTag, { bg: string; text: string; border: string }> = {
-  'Pecho':     { bg: 'rgba(239,68,68,0.12)',   text: '#f87171', border: 'rgba(239,68,68,0.25)' },
-  'Espalda':   { bg: 'rgba(59,130,246,0.12)',  text: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
-  'Piernas':   { bg: 'rgba(168,85,247,0.12)',  text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
-  'Cardio':    { bg: 'rgba(34,211,238,0.12)',  text: '#22d3ee', border: 'rgba(34,211,238,0.25)' },
+  'Pecho':         { bg: 'rgba(239,68,68,0.12)',   text: '#f87171', border: 'rgba(239,68,68,0.25)' },
+  'Espalda':       { bg: 'rgba(59,130,246,0.12)',  text: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
+  'Piernas':       { bg: 'rgba(168,85,247,0.12)',  text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
+  'Brazos':        { bg: 'rgba(245,158,11,0.12)',  text: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
+  'Core':          { bg: 'rgba(236,72,153,0.12)',  text: '#f472b6', border: 'rgba(236,72,153,0.25)' },
+  'Cardio':        { bg: 'rgba(34,211,238,0.12)',  text: '#22d3ee', border: 'rgba(34,211,238,0.25)' },
+  'Calentamiento': { bg: 'rgba(16,185,129,0.12)',  text: '#34d399', border: 'rgba(16,185,129,0.25)' },
 };
 
 // ─── Unidades ───

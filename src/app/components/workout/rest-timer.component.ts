@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed, OnDestroy, OnInit } from '@angular/core';
+import { Component, input, output, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-rest-timer',
@@ -76,7 +76,7 @@ import { Component, input, output, signal, computed, OnDestroy, OnInit } from '@
     :host .timer-idle {
       border-color: var(--color-border);
     }
-  `],
+  `], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestTimerComponent implements OnInit, OnDestroy {
   // ─── Inputs / Outputs ───

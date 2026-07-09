@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -159,7 +159,7 @@ interface EjercicioConId extends EjercicioBase {
       </div>
     </div>
   `,
-  styles: `:host { display: block; }`,
+  styles: `:host { display: block; }`, changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TemplateEditorComponent implements OnInit {
   private db = inject(DbService);

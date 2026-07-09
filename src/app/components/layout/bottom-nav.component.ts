@@ -7,8 +7,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)]/80 backdrop-blur-2xl border-t border-[var(--color-border)] pb-safe pt-1">
-      <div class="flex items-stretch justify-around max-w-lg mx-auto px-2">
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50 bg-[var(--color-bg-primary)]/80 backdrop-blur-2xl border-t border-[var(--color-border)] pb-safe pt-1">
+      <div class="flex items-stretch justify-around w-full px-2">
         @for (item of navItems; track item.route) {
           <a
             [routerLink]="item.route"

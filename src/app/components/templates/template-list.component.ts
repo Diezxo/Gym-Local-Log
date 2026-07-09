@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { DbService } from '../../services/db.service';
 import { Template } from '../../models/interfaces';
@@ -128,6 +128,8 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
       overflow: hidden;
     }
   `]
+,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TemplateListComponent implements OnInit {
   private db = inject(DbService);

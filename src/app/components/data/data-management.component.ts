@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExportService } from '../../services/export.service';
 import { DbService } from '../../services/db.service';
@@ -26,17 +26,17 @@ interface MonthStats {
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-3 gap-4">
-        <div class="bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
-          <span class="text-[40px] font-black text-[#00f2fe] leading-none">{{ stats().sesiones }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Sesiones</span>
+        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+          <span class="text-[36px] font-black text-[#00f2fe] leading-none">{{ stats().sesiones }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Sesiones</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
-          <span class="text-[32px] font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center">{{ formatVol(stats().volumenKg) }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Vol. Fuerza</span>
+        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+          <span class="text-[28px] font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center">{{ formatVol(stats().volumenKg) }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Vol. Fuerza</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-[32px] p-5 border border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-xl min-h-[120px]">
-          <span class="text-[28px] font-black text-emerald-400 leading-none truncate w-full text-center">{{ stats().distanciaKm > 0 ? stats().distanciaKm + ' km' : '—' }}</span>
-          <span class="text-xs uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Cardio</span>
+        <div class="bg-[var(--color-bg-card)] rounded-[24px] p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5 shadow-xl min-h-[110px]">
+          <span class="text-[24px] font-black text-emerald-400 leading-none truncate w-full text-center">{{ stats().distanciaKm > 0 ? stats().distanciaKm + ' km' : '—' }}</span>
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] text-center leading-tight font-bold">Cardio</span>
         </div>
       </div>
 
@@ -177,7 +177,7 @@ interface MonthStats {
       }
     </div>
   `,
-  styles: [``],
+  styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataManagementComponent implements OnInit {
   private exportService = inject(ExportService);

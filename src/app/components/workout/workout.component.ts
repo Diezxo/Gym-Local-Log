@@ -1,11 +1,9 @@
-import {
-  Component,
+import { Component,
   inject,
   signal,
   OnInit,
   OnDestroy,
-  ViewChild,
-} from '@angular/core';
+  ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -160,7 +158,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           />
 
           <!-- Ejercicios -->
-          @for (ejLog of logActivo()!.ejercicios; track ejLog.nombre; let i = $index) {
+          @for (ejLog of logActivo()!.ejercicios; track $index; let i = $index) {
             @if (ejLog.tipo === 'fuerza') {
               <app-exercise-strength
                 [ejercicioLog]="ejLog"
@@ -217,7 +215,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
     :host .animate-slide-up {
       animation: slide-up 0.3s ease-out;
     }
-  `],
+  `], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkoutComponent implements OnInit, OnDestroy {
   private db = inject(DbService);

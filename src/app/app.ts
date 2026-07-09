@@ -17,6 +17,10 @@ import { BottomNavComponent } from './components/layout/bottom-nav.component';
       min-height: 100dvh;
       padding-bottom: 80px;
       background-color: var(--color-bg-primary);
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
     }
   `],
 })

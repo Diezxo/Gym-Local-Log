@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EjercicioLog } from '../../models/interfaces';
 
@@ -19,7 +19,9 @@ import { EjercicioLog } from '../../models/interfaces';
       <!-- Distancia -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-[var(--color-text-muted)] uppercase tracking-widest font-bold">
-          Distancia ({{ unidadDistancia() }})
+          Distancia ({{ unidadDistancia() },
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
         </label>
         <input
           type="text"
