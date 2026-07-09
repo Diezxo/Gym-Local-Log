@@ -5,11 +5,11 @@ export const DEFAULT_TEMPLATES: Template[] = [
     id: 'lunes-full-body-vertical',
     nombre: 'Lunes: Full Body (Vertical)',
     ejercicios: [
-      { nombre: 'Dominadas o Jalón al pecho',          tipo: 'fuerza', tags: ['Espalda', 'Bíceps'] },
-      { nombre: 'Press militar (mancuernas/máquina)',  tipo: 'fuerza', tags: ['Hombros', 'Tríceps'] },
-      { nombre: 'Elevaciones laterales',               tipo: 'fuerza', tags: ['Hombros'] },
+      { nombre: 'Dominadas o Jalón al pecho',          tipo: 'fuerza', tags: ['Espalda'] },
+      { nombre: 'Press militar (mancuernas/máquina)',  tipo: 'fuerza', tags: ['Pecho'] },
+      { nombre: 'Elevaciones laterales',               tipo: 'fuerza', tags: ['Pecho'] },
       { nombre: 'Prensa',                              tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Curl de bíceps',                     tipo: 'fuerza', tags: ['Bíceps'] },
+      { nombre: 'Curl de bíceps',                     tipo: 'fuerza', tags: ['Espalda'] },
     ],
   },
   {
@@ -24,11 +24,11 @@ export const DEFAULT_TEMPLATES: Template[] = [
     id: 'miercoles-pierna-core',
     nombre: 'Miércoles: Pierna y Core',
     ejercicios: [
-      { nombre: 'Hip Thrust',                       tipo: 'fuerza', tags: ['Glúteos', 'Piernas'] },
+      { nombre: 'Hip Thrust',                       tipo: 'fuerza', tags: ['Piernas'] },
       { nombre: 'Curl Femoral',                     tipo: 'fuerza', tags: ['Piernas'] },
       { nombre: 'Extensiones de Cuádriceps',        tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Adductores y Abductores',          tipo: 'fuerza', tags: ['Piernas', 'Glúteos'] },
-      { nombre: 'Trabajo de Abs (Planchas, etc)',   tipo: 'fuerza', tags: ['Core'] },
+      { nombre: 'Adductores y Abductores',          tipo: 'fuerza', tags: ['Piernas'] },
+      { nombre: 'Trabajo de Abs (Planchas, etc)',   tipo: 'fuerza', tags: [] },
     ],
   },
   {
@@ -44,11 +44,11 @@ export const DEFAULT_TEMPLATES: Template[] = [
     id: 'viernes-full-body-horizontal',
     nombre: 'Viernes: Full Body (Horizontal)',
     ejercicios: [
-      { nombre: 'Press plano (máquina/mancuernas)',       tipo: 'fuerza', tags: ['Pecho', 'Tríceps'] },
-      { nombre: 'Remo en máquina (apoyo pecho)',          tipo: 'fuerza', tags: ['Espalda', 'Bíceps'] },
+      { nombre: 'Press plano (máquina/mancuernas)',       tipo: 'fuerza', tags: ['Pecho'] },
+      { nombre: 'Remo en máquina (apoyo pecho)',          tipo: 'fuerza', tags: ['Espalda'] },
       { nombre: 'Flyes (Aperturas)',                      tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Extensión de tríceps en polea',         tipo: 'fuerza', tags: ['Tríceps'] },
-      { nombre: 'Peso muerto rumano o Curl femoral',     tipo: 'fuerza', tags: ['Piernas', 'Glúteos'] },
+      { nombre: 'Extensión de tríceps en polea',         tipo: 'fuerza', tags: ['Pecho'] },
+      { nombre: 'Peso muerto rumano o Curl femoral',     tipo: 'fuerza', tags: ['Piernas'] },
     ],
   },
   {

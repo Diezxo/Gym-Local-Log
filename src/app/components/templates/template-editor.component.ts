@@ -66,7 +66,8 @@ interface EjercicioConId extends EjercicioBase {
               />
 
               <button
-                (click)="removeExercise(ejercicio._uid)"
+                type="button"
+                (click)="removeExercise(ejercicio._uid); $event.stopPropagation()"
                 class="text-[#2a2a2a] hover:text-rose-500 transition-colors p-1 active:scale-90 shrink-0"
                 aria-label="Eliminar ejercicio"
               >
@@ -80,7 +81,8 @@ interface EjercicioConId extends EjercicioBase {
               <!-- Type toggle -->
               <div class="flex gap-2">
                 <button
-                  (click)="setExerciseType(ejercicio._uid, 'fuerza')"
+                  type="button"
+                  (click)="setExerciseType(ejercicio._uid, 'fuerza'); $event.stopPropagation()"
                   class="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'fuerza'
                     ? 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/30'
@@ -90,7 +92,8 @@ interface EjercicioConId extends EjercicioBase {
                   Fuerza
                 </button>
                 <button
-                  (click)="setExerciseType(ejercicio._uid, 'cardio')"
+                  type="button"
+                  (click)="setExerciseType(ejercicio._uid, 'cardio'); $event.stopPropagation()"
                   class="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
                   [class]="ejercicio.tipo === 'cardio'
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -107,7 +110,8 @@ interface EjercicioConId extends EjercicioBase {
                 <div class="flex flex-wrap gap-1.5">
                   @for (tag of allTags; track tag) {
                     <button
-                      (click)="toggleTag(ejercicio._uid, tag)"
+                      type="button"
+                      (click)="toggleTag(ejercicio._uid, tag); $event.stopPropagation()"
                       class="px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95"
                       [style.background]="hasTag(ejercicio, tag) ? getTagColor(tag).bg : 'rgba(255,255,255,0.03)'"
                       [style.border-color]="hasTag(ejercicio, tag) ? getTagColor(tag).border : 'rgba(255,255,255,0.06)'"
@@ -123,6 +127,7 @@ interface EjercicioConId extends EjercicioBase {
 
       <!-- Add exercise button -->
       <button
+        type="button"
         (click)="addExercise()"
         class="w-full flex items-center justify-center gap-2 min-h-12 rounded-xl border border-dashed border-[#222] text-[#404040] text-sm font-medium active:scale-95 transition-all hover:border-cyan-400/50 hover:text-cyan-400 mb-8"
       >
