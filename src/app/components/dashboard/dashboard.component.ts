@@ -1,10 +1,11 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { DbService } from '../../services/db.service';
+
+import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UnitConversionService } from '../../services/unit-conversion.service';
 import {
-  DailyLog,
+  WorkoutSession,
   MonthlyArchive,
   MuscleTag,
   TAG_COLORS,
@@ -218,7 +219,7 @@ interface PRRecord {
   styles: [], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit {
-  private db = inject(DbService);
+  private workoutUseCases = inject(WorkoutUseCases);
   private router = inject(Router);
   unitSvc = inject(UnitConversionService);
 
@@ -231,10 +232,10 @@ export class DashboardComponent implements OnInit {
   tagVolumens = signal<TagVolumen[]>([]);
   heatmap = signal<HeatDay[]>([]);
   trainedCount = signal(0);
-  lastLog = signal<DailyLog | null>(null);
-  monthLogs = signal<DailyLog[]>([]);
+  lastLog = signal<WorkoutSession | null>(null);
+  monthLogs = signal<WorkoutSession[]>([]);
   /** All logs from all months — used to feed the cross-month progression chart */
-  allLogs = signal<DailyLog[]>([]);
+  allLogs = signal<WorkoutSession[]>([]);
 
   // New signals
   weeklyCardioDistance = signal(0);
@@ -249,8 +250,10 @@ export class DashboardComponent implements OnInit {
   private readonly dayNamesFull = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
   async ngOnInit() {
-    const archives = await this.db.getAllMonthlyArchives();
-    const months = archives.map(a => a.monthId);
+    const allSessions = await this.workoutUseCases.getAllWorkouts();
+    const monthsSet = new Set<string>();
+    allSessions.forEach(s => monthsSet.add(s.date.substring(0, 7)));
+    const months = Array.from(monthsSet);
     
     const now = new Date();
     const currentMes = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -316,21 +319,19 @@ export class DashboardComponent implements OnInit {
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
     this.daysLeftInMonth.set(daysLeft);
 
-    const [archives, lastLog] = await Promise.all([
-      this.db.getAllMonthlyArchives(),
-      this.db.getLastLog(),
+    const [allSessions, lastLog] = await Promise.all([
+      this.workoutUseCases.getAllWorkouts(),
+      this.workoutUseCases.getLastWorkout(),
     ]);
 
     this.lastLog.set(lastLog);
 
     const allTrainingDays = new Set<string>();
-    archives.forEach(a => a.logs.forEach(l => allTrainingDays.add(l.date)));
+    allSessions.forEach(s => allTrainingDays.add(s.date));
     const sortedDays = Array.from(allTrainingDays).sort();
 
     // ── All logs (chronological) for the cross-month progression chart ──
-    const allLogsList = archives
-      .flatMap(a => a.logs)
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const allLogsList = [...allSessions].sort((a, b) => a.date.localeCompare(b.date));
     this.allLogs.set(allLogsList);
 
     // ── Streak ──
@@ -344,8 +345,7 @@ export class DashboardComponent implements OnInit {
 
     // ── Stats del mes ──
     const monthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const currentArchive = archives.find(a => a.monthId === monthId);
-    const logsThisMonth = currentArchive?.logs ?? [];
+    const logsThisMonth = allSessions.filter(s => s.date.startsWith(monthId));
     
     this.monthSessions.set(logsThisMonth.length);
     this.monthLogs.set(logsThisMonth);
@@ -354,27 +354,25 @@ export class DashboardComponent implements OnInit {
     this.calcTagVolumens(logsThisMonth);
 
     // ── Distancia cardio esta semana (últimos 7 días, todos los meses) ──
-    this.weeklyCardioDistance.set(this.calcWeeklyCardioDistance(archives, now));
+    this.weeklyCardioDistance.set(this.calcWeeklyCardioDistance(allSessions, now));
 
     // ── Último PR (máximo histórico cross-month) ──
-    this.lastPR.set(this.calcLastPR(archives));
+    this.lastPR.set(this.calcLastPR(allSessions));
   }
 
   // ─── Weekly Cardio Distance ───
 
-  private calcWeeklyCardioDistance(archives: MonthlyArchive[], now: Date): number {
+  private calcWeeklyCardioDistance(sessions: WorkoutSession[], now: Date): number {
     const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
     const weekAgoStr = this.toLocalDateStr(weekAgo);
     const todayStr = this.toLocalDateStr(now);
     
     let totalMeters = 0;
-    for (const archive of archives) {
-      for (const log of archive.logs) {
-        if (log.date >= weekAgoStr && log.date <= todayStr) {
-          for (const ej of log.exercises) {
-            if (ej.type === 'cardio' && ej.cardio) {
-              totalMeters += ej.cardio.distanceMeters ?? 0;
-            }
+    for (const log of sessions) {
+      if (log.date >= weekAgoStr && log.date <= todayStr) {
+        for (const ej of log.exercises) {
+          if (ej.type === 'cardio' && ej.cardio) {
+            totalMeters += ej.cardio.distanceMeters ?? 0;
           }
         }
       }
@@ -387,26 +385,23 @@ export class DashboardComponent implements OnInit {
 
   // ─── Last PR (most recently set personal record across all time) ───
 
-  private calcLastPR(archives: MonthlyArchive[]): PRRecord | null {
-    // Sort archives chronologically (oldest first) to track progression accurately
-    const sortedArchives = [...archives].sort((a, b) => a.monthId.localeCompare(b.monthId));
+  private calcLastPR(sessions: WorkoutSession[]): PRRecord | null {
+    // Sort chronologically (oldest first) to track progression accurately
+    const sortedLogs = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
     const bestByExercise = new Map<string, { weight: number; reps: number }>();
     let latestPR: PRRecord | null = null;
 
-    for (const archive of sortedArchives) {
-      const sortedLogs = [...archive.logs].sort((a, b) => a.date.localeCompare(b.date));
-      for (const log of sortedLogs) {
-        for (const ej of log.exercises) {
-          if (ej.type !== 'strength' || !ej.sets) continue;
-          for (const serie of ej.sets) {
-            const prev = bestByExercise.get(ej.name);
-            const isNewPR = !prev
-              || serie.weight > prev.weight
-              || (serie.weight === prev.weight && serie.reps > prev.reps);
-            if (isNewPR) {
-              bestByExercise.set(ej.name, { weight: serie.weight, reps: serie.reps });
-              latestPR = { exercise: ej.name, weight: serie.weight, reps: serie.reps, date: log.date };
-            }
+    for (const log of sortedLogs) {
+      for (const ej of log.exercises) {
+        if (ej.type !== 'strength' || !ej.sets) continue;
+        for (const serie of ej.sets) {
+          const prev = bestByExercise.get(ej.name);
+          const isNewPR = !prev
+            || serie.weight > prev.weight
+            || (serie.weight === prev.weight && serie.reps > prev.reps);
+          if (isNewPR) {
+            bestByExercise.set(ej.name, { weight: serie.weight, reps: serie.reps });
+            latestPR = { exercise: ej.name, weight: serie.weight, reps: serie.reps, date: log.date };
           }
         }
       }
@@ -487,7 +482,7 @@ export class DashboardComponent implements OnInit {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  private calcTagVolumens(logs: DailyLog[]) {
+  private calcTagVolumens(logs: WorkoutSession[]) {
     const tagMap = new Map<MuscleTag, { seriesCount: number; distanceMeters: number; sesiones: Set<string> }>();
 
     for (const log of logs) {
@@ -540,7 +535,7 @@ export class DashboardComponent implements OnInit {
     return `${tv.valor} series`;
   }
 
-  getLogTags(log: DailyLog): MuscleTag[] {
+  getLogTags(log: WorkoutSession): MuscleTag[] {
     const tags = new Set<MuscleTag>();
     log.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);

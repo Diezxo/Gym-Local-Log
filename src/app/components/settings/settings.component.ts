@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DbService } from '../../services/db.service';
+import { STORAGE_PORT, StoragePort } from '../../ports/storage.port';
+import { SyncUseCases } from '../../use-cases/sync.use-cases';
 import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
 
 import { FileSystemService } from '../../services/file-system.service';
@@ -164,7 +165,8 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
   `,
 })
 export class SettingsComponent implements OnInit {
-  private db = inject(DbService);
+  private storage = inject<StoragePort>(STORAGE_PORT);
+  private syncUseCases = inject(SyncUseCases);
   private fs = inject(FileSystemService);
   private unitSvc = inject(UnitConversionService);
 
@@ -177,7 +179,7 @@ export class SettingsComponent implements OnInit {
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   async ngOnInit() {
-    const loaded = await this.db.getSettings();
+    const loaded = await this.storage.getSettings();
     this.settings.set(loaded);
   }
 
@@ -191,7 +193,7 @@ export class SettingsComponent implements OnInit {
     }
     const newSettings = { ...this.settings(), [key]: safeValue };
     this.settings.set(newSettings);
-    await this.db.saveSettings(newSettings);
+    await this.storage.saveSettings(newSettings);
     
     // Explicitly notify UnitConversionService about the update
     if (key === 'weightUnit' || key === 'distanceUnit') {
@@ -210,7 +212,7 @@ export class SettingsComponent implements OnInit {
       const success = await this.fs.connectFolder();
       if (success) {
         // Enforce a sync from IndexedDB to the folder for existing data
-        await this.db.syncToFileSystem();
+        await this.syncUseCases.exportAllData();
       }
     } catch (e: any) {
       this.fsError.set(e.message || 'Error al conectar carpeta.');

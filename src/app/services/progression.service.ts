@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { DbService } from './db.service';
-import { Suggestion } from '../models/interfaces';
+import { WorkoutUseCases } from '../use-cases/workout.use-cases';
+import { Suggestion, ExerciseLog } from '../models/interfaces';
 import { UnitConversionService } from './unit-conversion.service';
 
 export interface ExerciseHistoryRecord {
@@ -14,7 +14,7 @@ export interface ExerciseHistoryRecord {
 @Injectable({ providedIn: 'root' })
 export class ProgressionService {
   constructor(
-    private db: DbService,
+    private workoutUseCases: WorkoutUseCases,
     private unitSvc: UnitConversionService
   ) {}
 
@@ -29,19 +29,21 @@ export class ProgressionService {
    */
   async getSuggestion(
     exerciseName: string,
-    monthId: string
+    monthId: string // No longer strictly needed for fetching but keeping for API compatibility
   ): Promise<Suggestion | null> {
-    let lastLog = await this.db.getLastExerciseLog(exerciseName, monthId);
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    // Sort descending
+    allWorkouts.sort((a, b) => b.date.localeCompare(a.date));
 
-    // If no data this month, check the previous month (common at start of month)
-    if (!lastLog || !lastLog.sets || lastLog.sets.length === 0) {
-      const [year, month] = monthId.split('-').map(Number);
-      const prevDate = new Date(year, month - 2, 1); // month-1 = current month index, month-2 = previous
-      const prevMonthId = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-      lastLog = await this.db.getLastExerciseLog(exerciseName, prevMonthId);
+    let lastLog: ExerciseLog | undefined;
+    for (const w of allWorkouts) {
+      const ex = w.exercises.find(e => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength');
+      if (ex) {
+        lastLog = ex;
+        break;
+      }
     }
 
-    // No data found in current or previous month
     if (!lastLog || !lastLog.sets || lastLog.sets.length === 0) {
       return null;
     }
@@ -86,37 +88,33 @@ export class ProgressionService {
   }
 
   async getExerciseHistory(exerciseName: string, limit: number = 5): Promise<ExerciseHistoryRecord[]> {
-    const archives = await this.db.getAllMonthlyArchives();
-    archives.sort((a, b) => b.monthId.localeCompare(a.monthId));
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    const logsDescending = [...allWorkouts].sort((a, b) => b.date.localeCompare(a.date));
 
     const history: ExerciseHistoryRecord[] = [];
 
-    for (const archive of archives) {
-      const logsDescending = [...archive.logs].sort((a, b) => b.date.localeCompare(a.date));
+    for (const log of logsDescending) {
+      const exercise = log.exercises.find(
+        (e) => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength'
+      );
       
-      for (const log of logsDescending) {
-        const exercise = log.exercises.find(
-          (e) => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength'
-        );
+      if (exercise && exercise.sets && exercise.sets.length > 0) {
+        const bestSet = [...exercise.sets].sort((a, b) => {
+           if (b.weight !== a.weight) return b.weight - a.weight;
+           return b.reps - a.reps;
+        })[0];
         
-        if (exercise && exercise.sets && exercise.sets.length > 0) {
-          const bestSet = [...exercise.sets].sort((a, b) => {
-             if (b.weight !== a.weight) return b.weight - a.weight;
-             return b.reps - a.reps;
-          })[0];
-          
-          const totalVolume = exercise.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
-          
-          history.push({
-            date: log.date,
-            weight: bestSet.weight,
-            reps: bestSet.reps,
-            totalVolume,
-            sets: exercise.sets.map(s => ({ weight: s.weight, reps: s.reps })),
-          });
-          
-          if (history.length >= limit) return history;
-        }
+        const totalVolume = exercise.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
+        
+        history.push({
+          date: log.date,
+          weight: bestSet.weight,
+          reps: bestSet.reps,
+          totalVolume,
+          sets: exercise.sets.map(s => ({ weight: s.weight, reps: s.reps })),
+        });
+        
+        if (history.length >= limit) return history;
       }
     }
 

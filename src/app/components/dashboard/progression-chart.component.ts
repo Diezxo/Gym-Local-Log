@@ -1,7 +1,7 @@
 import { Component, Input, signal, computed, inject, ChangeDetectionStrategy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DailyLog } from '../../models/interfaces';
+import { WorkoutSession } from '../../models/interfaces';
 import { UnitConversionService } from '../../services/unit-conversion.service';
 
 interface DataPoint {
@@ -138,7 +138,7 @@ interface DataPoint {
   `]
 })
 export class ProgressionChartComponent implements OnChanges {
-  @Input() logs: DailyLog[] = [];
+  @Input() logs: WorkoutSession[] = [];
   
   unitSvc = inject(UnitConversionService);
 

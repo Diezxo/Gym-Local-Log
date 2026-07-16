@@ -8,8 +8,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  Template,
-  DailyLog,
+  Routine,
+  WorkoutSession,
   ExerciseLog,
   StrengthSet,
   Suggestion,
@@ -18,7 +18,9 @@ import {
   TAG_COLORS,
   MuscleTag,
 } from '../../models/interfaces';
-import { DbService } from '../../services/db.service';
+import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
+import { RoutineUseCases } from '../../use-cases/routine.use-cases';
+import { STORAGE_PORT, StoragePort } from '../../ports/storage.port';
 import { ProgressionService } from '../../services/progression.service';
 import { RestTimerComponent } from './rest-timer.component';
 import { ExerciseStrengthComponent } from './exercise-strength.component';
@@ -218,7 +220,9 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
   `], changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkoutComponent implements OnInit, OnDestroy {
-  private db = inject(DbService);
+  private workoutUseCases = inject(WorkoutUseCases);
+  private routineUseCases = inject(RoutineUseCases);
+  private storage = inject<StoragePort>(STORAGE_PORT);
   private progression = inject(ProgressionService);
   private router = inject(Router);
 
@@ -227,9 +231,9 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   // ─── State ───
   dateDisplay = signal('');
   dateISO = signal('');
-  templates = signal<Template[]>([]);
+  templates = signal<Routine[]>([]);
   settings = signal<UserSettings>({ ...DEFAULT_SETTINGS });
-  activeLog = signal<DailyLog | null>(null);
+  activeLog = signal<WorkoutSession | null>(null);
   activeTemplateName = signal('');
   activeTemplateTags = signal<MuscleTag[]>([]);
   suggestions = signal<(Suggestion | null)[]>([]);
@@ -254,8 +258,8 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     this.dateISO.set(`${y}-${m}-${d}`);
 
     const [tmpls, setts] = await Promise.all([
-      this.db.getTemplates(),
-      this.db.getSettings(),
+      this.routineUseCases.getAllRoutines(),
+      this.storage.getSettings()
     ]);
     this.templates.set(tmpls);
     this.settings.set(setts);
@@ -283,8 +287,9 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   // ─── Template Selection ───
-  async selectTemplate(tmpl: Template): Promise<void> {
+  async selectTemplate(tmpl: Routine): Promise<void> {
     const exercises: ExerciseLog[] = tmpl.exercises.map((ej) => ({
+      id: crypto.randomUUID(),
       name: ej.name,
       type: ej.type,
       tags: ej.tags ?? [],
@@ -292,9 +297,16 @@ export class WorkoutComponent implements OnInit, OnDestroy {
       cardio: ej.type === 'cardio' ? { distanceMeters: 0, timeMinutes: 0 } : undefined,
     }));
 
-    const log: DailyLog = {
+    const log: WorkoutSession = {
+      id: crypto.randomUUID(),
+      schemaVersion: 3,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      deviceId: 'local',
+      version: 1,
+      syncStatus: 'local_only',
       date: this.dateISO(),
-      templateId: tmpl.id,
+      routineId: tmpl.id,
       exercises,
       notes: '',
     };
@@ -308,8 +320,8 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     await this.loadSuggestions(log);
   }
 
-  private async loadSuggestions(log: DailyLog): Promise<void> {
-    const monthId = this.dateISO().substring(0, 7);
+  private async loadSuggestions(log: WorkoutSession): Promise<void> {
+    const monthId = this.dateISO().substring(0, 7); // Not strictly needed but API wants it
     const promesas = log.exercises.map((ej) =>
       ej.type === 'strength'
         ? this.progression.getSuggestion(ej.name, monthId)
@@ -319,7 +331,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   // ─── Helpers ───
-  getTemplateTags(tmpl: Template): MuscleTag[] {
+  getTemplateTags(tmpl: Routine): MuscleTag[] {
     const tags = new Set<MuscleTag>();
     tmpl.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
@@ -369,7 +381,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     const log = this.activeLog();
     if (!log) return;
     try {
-      await this.db.saveLog(log);
+      await this.workoutUseCases.updateWorkoutSession(log);
     } catch {}
   }
 
@@ -379,7 +391,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     if (!log) return;
 
     log.notes = this.dailyNotes();
-    await this.db.saveLog(log);
+    await this.workoutUseCases.updateWorkoutSession(log);
     this.stopTimer();
 
     this.showToast.set(true);

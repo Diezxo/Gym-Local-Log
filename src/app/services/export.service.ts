@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { DbService } from './db.service';
-import { MonthlyArchive, DailyLog, ExerciseLog } from '../models/interfaces';
+import { WorkoutUseCases } from '../use-cases/workout.use-cases';
+import { RoutineUseCases } from '../use-cases/routine.use-cases';
+import { MonthlyArchive, WorkoutSession, ExerciseLog } from '../models/interfaces';
 
 // ─── Import Result ───
 export interface ImportResult {
@@ -11,16 +12,27 @@ export interface ImportResult {
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
-  constructor(private db: DbService) {}
+  private workoutUseCases = inject(WorkoutUseCases);
+  private routineUseCases = inject(RoutineUseCases);
+
+  constructor() {}
 
   /**
    * Export monthly archive as JSON
    */
   async exportJSON(monthId: string): Promise<void> {
-    const archive = await this.db.getMonthlyArchive(monthId);
-    if (!archive) {
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    const monthWorkouts = allWorkouts.filter(w => w.date.startsWith(monthId));
+    
+    if (monthWorkouts.length === 0) {
       throw new Error(`No data for month ${monthId}`);
     }
+
+    const archive: MonthlyArchive = {
+      monthId,
+      schemaVersion: 3,
+      logs: monthWorkouts as any // Type issue with MonthlyArchive.logs expected DailyLog, but WorkoutSession is compatible
+    };
 
     const json = JSON.stringify(archive, null, 2);
     this.downloadFile(json, `${monthId}.json`, 'application/json');
@@ -30,11 +42,21 @@ export class ExportService {
    * Export all months as a single JSON
    */
   async exportAllJSON(): Promise<void> {
-    const archives = await this.db.getAllMonthlyArchives();
-    if (!archives || archives.length === 0) {
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    if (allWorkouts.length === 0) {
       throw new Error('No data to export');
     }
 
+    const archivesMap = new Map<string, MonthlyArchive>();
+    for (const w of allWorkouts) {
+      const monthId = w.date.substring(0, 7);
+      if (!archivesMap.has(monthId)) {
+        archivesMap.set(monthId, { monthId, schemaVersion: 3, logs: [] });
+      }
+      (archivesMap.get(monthId)!.logs as any).push(w);
+    }
+    
+    const archives = Array.from(archivesMap.values());
     const json = JSON.stringify(archives, null, 2);
     this.downloadFile(json, `gym_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
   }
@@ -43,8 +65,10 @@ export class ExportService {
    * Export monthly archive as CSV
    */
   async exportCSV(monthId: string): Promise<void> {
-    const archive = await this.db.getMonthlyArchive(monthId);
-    if (!archive) {
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    const monthWorkouts = allWorkouts.filter(w => w.date.startsWith(monthId));
+    
+    if (monthWorkouts.length === 0) {
       throw new Error(`No data for month ${monthId}`);
     }
 
@@ -52,8 +76,8 @@ export class ExportService {
     const rows: string[] = [];
     rows.push('Date,Routine,Exercise,Type,Set/Distance_m,Reps/Time_min,Weight_kg/Notes');
 
-    for (const log of archive.logs) {
-      const templateName = templateMap.get(log.templateId) ?? log.templateId;
+    for (const log of monthWorkouts) {
+      const templateName = templateMap.get(log.routineId) ?? log.routineId;
       rows.push(...this.logToCSVRows(log, templateName));
     }
 
@@ -65,8 +89,8 @@ export class ExportService {
    * Export all months as CSV
    */
   async exportAllCSV(): Promise<void> {
-    const archives = await this.db.getAllMonthlyArchives();
-    if (!archives || archives.length === 0) {
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    if (allWorkouts.length === 0) {
       throw new Error('No data to export');
     }
 
@@ -74,11 +98,9 @@ export class ExportService {
     const rows: string[] = [];
     rows.push('Date,Routine,Exercise,Type,Set/Distance_m,Reps/Time_min,Weight_kg/Notes');
 
-    for (const archive of archives) {
-      for (const log of archive.logs) {
-        const templateName = templateMap.get(log.templateId) ?? log.templateId;
-        rows.push(...this.logToCSVRows(log, templateName));
-      }
+    for (const log of allWorkouts) {
+      const templateName = templateMap.get(log.routineId) ?? log.routineId;
+      rows.push(...this.logToCSVRows(log, templateName));
     }
 
     const csv = rows.join('\n');
@@ -112,7 +134,23 @@ export class ExportService {
               return;
             }
             for (const monthData of data) {
-              await this.db.importMonthlyArchive(monthData);
+              for (const log of monthData.logs) {
+                // Generate id if missing for older formats
+                const session: WorkoutSession = {
+                  id: (log as any).id || crypto.randomUUID(),
+                  schemaVersion: 3,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                  version: (log as any).version || 1,
+                  syncStatus: (log as any).syncStatus || 'local_only',
+                  deviceId: (log as any).deviceId || 'local',
+                  date: log.date || log.fecha,
+                  routineId: log.routineId || log.templateId,
+                  notes: log.notes || log.notas || '',
+                  exercises: log.exercises || log.ejercicios || []
+                };
+                await this.workoutUseCases.updateWorkoutSession(session);
+              }
             }
             resolve('all');
           } else {
@@ -121,7 +159,22 @@ export class ExportService {
               reject(new Error(`Validation errors (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`));
               return;
             }
-            await this.db.importMonthlyArchive(data);
+            for (const log of data.logs) {
+              const session: WorkoutSession = {
+                id: (log as any).id || crypto.randomUUID(),
+                schemaVersion: 3,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                version: (log as any).version || 1,
+                syncStatus: (log as any).syncStatus || 'local_only',
+                deviceId: (log as any).deviceId || 'local',
+                date: log.date || log.fecha,
+                routineId: log.routineId || log.templateId,
+                notes: log.notes || log.notas || '',
+                exercises: log.exercises || log.ejercicios || []
+              };
+              await this.workoutUseCases.updateWorkoutSession(session);
+            }
             resolve(data.monthId || data.mesId);
           }
         } catch (err) {
@@ -156,12 +209,12 @@ export class ExportService {
             return;
           }
 
-          const templates = await this.db.getTemplates();
+          const templates = await this.routineUseCases.getAllRoutines();
           const templateMap = new Map(templates.map(t => [t.name.trim().toLowerCase(), t.id]));
 
           const errors: string[] = [];
           const rejectedRows: string[] = [];
-          const logMap = new Map<string, DailyLog>();
+          const logMap = new Map<string, WorkoutSession>();
 
           for (let i = 1; i < lines.length; i++) {
             const row = this.parseCSVRow(lines[i]);
@@ -174,15 +227,27 @@ export class ExportService {
               continue;
             }
 
-            const templateId = templateMap.get(routine.toLowerCase());
-            if (!templateId) {
+            const routineId = templateMap.get(routine.toLowerCase());
+            if (!routineId) {
               rejectedRows.push(`Row ${i + 1}: Routine "${routine}" not found — ignored`);
               continue;
             }
 
-            const key = `${date}|${templateId}`;
+            const key = `${date}|${routineId}`;
             if (!logMap.has(key)) {
-              logMap.set(key, { date, templateId, exercises: [], notes: '' });
+              logMap.set(key, { 
+                id: crypto.randomUUID(),
+                schemaVersion: 3,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                version: 1,
+                syncStatus: 'local_only',
+                deviceId: 'local',
+                date, 
+                routineId, 
+                exercises: [], 
+                notes: '' 
+              });
             }
             const log = logMap.get(key)!;
 
@@ -217,17 +282,8 @@ export class ExportService {
             }
           }
 
-          const monthArchives = new Map<string, MonthlyArchive>();
-          for (const log of logMap.values()) {
-            const monthId = log.date.substring(0, 7);
-            if (!monthArchives.has(monthId)) {
-              monthArchives.set(monthId, { monthId, schemaVersion: 2, logs: [] });
-            }
-            monthArchives.get(monthId)!.logs.push(log);
-          }
-
-          for (const archive of monthArchives.values()) {
-            await this.db.importMonthlyArchive(archive);
+          for (const session of logMap.values()) {
+            await this.workoutUseCases.updateWorkoutSession(session);
           }
 
           resolve({
@@ -245,11 +301,10 @@ export class ExportService {
   }
 
   async getAvailableMonths(): Promise<string[]> {
-    const archives = await this.db.getAllMonthlyArchives();
-    return archives
-      .map((a) => a.monthId)
-      .sort()
-      .reverse();
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    const months = new Set<string>();
+    allWorkouts.forEach(w => months.add(w.date.substring(0, 7)));
+    return Array.from(months).sort().reverse();
   }
 
   // ─── Validators ───
@@ -281,8 +336,8 @@ export class ExportService {
       if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         errors.push(`${logCtx}.date: invalid format (YYYY-MM-DD expected)`);
       }
-      if (!log.templateId || typeof log.templateId !== 'string') {
-        errors.push(`${logCtx}.templateId: required string`);
+      if (!(log.routineId || log.templateId) || typeof (log.routineId || log.templateId) !== 'string') {
+        errors.push(`${logCtx}.routineId: required string`);
       }
       const exercises = log.exercises || log.ejercicios;
       if (!Array.isArray(exercises)) {
@@ -341,11 +396,11 @@ export class ExportService {
   // ─── Helpers ───
 
   private async buildTemplateMap(): Promise<Map<string, string>> {
-    const templates = await this.db.getTemplates();
+    const templates = await this.routineUseCases.getAllRoutines();
     return new Map(templates.map(t => [t.id, t.name]));
   }
 
-  private logToCSVRows(log: DailyLog, templateName: string): string[] {
+  private logToCSVRows(log: WorkoutSession, templateName: string): string[] {
     const rows: string[] = [];
     for (const exercise of log.exercises) {
       if (exercise.type === 'strength' && exercise.sets) {

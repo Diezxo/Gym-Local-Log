@@ -49,46 +49,48 @@ export interface CardioLog {
   technicalNotes?: string;
 }
 
-// ─── Base Exercise (for templates) ───
+// ─── Base Exercise (for routines) ───
 export interface BaseExercise {
   name: string;
   type: ExerciseType;
   tags?: MuscleTag[]; // Muscle groups / type
 }
 
-// ─── Template ───
-export interface Template {
-  id: string;
+// ─── Routine (formerly Template) ───
+import { BaseEntity } from './sync';
+
+export interface Routine extends BaseEntity {
   name: string;
   exercises: BaseExercise[];
 }
 
 // ─── Individual Exercise Log ───
 export interface ExerciseLog {
+  id?: string; // Optional UUID for individual exercises if needed
   name: string;
   type: ExerciseType;
-  tags?: MuscleTag[]; // Copied from template when logging
+  tags?: MuscleTag[]; // Copied from routine when logging
   sets?: StrengthSet[];
   cardio?: CardioLog;
 }
 
-// ─── Daily Log ───
-export interface DailyLog {
+// ─── Workout Session (formerly DailyLog) ───
+export interface WorkoutSession extends BaseEntity {
   date: string; // Format YYYY-MM-DD
-  templateId: string;
+  routineId: string; // Corresponds to Routine.id
   exercises: ExerciseLog[];
   notes?: string;
 }
 
-// ─── Monthly Archive ───
+// ─── Monthly Archive (For Export/Import Only, Not internal DB structure anymore) ───
 export interface MonthlyArchive {
   monthId: string; // Format YYYY-MM
-  schemaVersion?: number; // 2 = English schema, kg/m base
-  logs: DailyLog[];
+  schemaVersion?: number; 
+  logs: WorkoutSession[];
 }
 
 // ─── User Settings ───
-export interface UserSettings {
+export interface UserSettings extends BaseEntity {
   weightUnit: WeightUnit;
   distanceUnit: DistanceUnit;
   language: Language;
@@ -97,6 +99,13 @@ export interface UserSettings {
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
+  id: 'user-settings',
+  schemaVersion: 3,
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  deviceId: 'local',
+  version: 1,
+  syncStatus: 'local_only',
   weightUnit: 'kg',
   distanceUnit: 'km',
   language: 'es',

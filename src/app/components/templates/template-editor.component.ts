@@ -2,9 +2,9 @@ import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { DbService } from '../../services/db.service';
+import { RoutineUseCases } from '../../use-cases/routine.use-cases';
 import {
-  Template, BaseExercise, ExerciseType,
+  Routine, BaseExercise, ExerciseType,
   MuscleTag, MUSCLE_TAGS, TAG_COLORS,
 } from '../../models/interfaces';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -162,7 +162,7 @@ interface ExerciseWithId extends BaseExercise {
   styles: `:host { display: block; }`, changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TemplateEditorComponent implements OnInit {
-  private db = inject(DbService);
+  private routineUseCases = inject(RoutineUseCases);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -180,7 +180,7 @@ export class TemplateEditorComponent implements OnInit {
     if (id) {
       this.isEditing.set(true);
       this.editingId.set(id);
-      const template = await this.db.getTemplate(id);
+      const template = await this.routineUseCases.getRoutine(id);
       if (template) {
         this.templateName.set(template.name);
         this.exercises.set(template.exercises.map(e => ({ ...e, _uid: crypto.randomUUID() })));
@@ -265,8 +265,14 @@ export class TemplateEditorComponent implements OnInit {
       return;
     }
 
-    const template: Template = {
+    const template: Routine = {
       id: this.editingId() ?? crypto.randomUUID(),
+      schemaVersion: 3,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      deviceId: 'local',
+      version: 1,
+      syncStatus: 'local_only',
       name: name,
       // Strip internal _uid before saving
       exercises: exercisesList.map(({ _uid: _discard, ...e }) => ({
@@ -276,7 +282,7 @@ export class TemplateEditorComponent implements OnInit {
       })),
     };
 
-    await this.db.saveTemplate(template);
+    await this.routineUseCases.updateRoutine(template);
     this.router.navigate(['/templates']);
   }
 

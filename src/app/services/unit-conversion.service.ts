@@ -1,11 +1,23 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import { UserSettings, WeightUnit, DistanceUnit } from '../models/interfaces';
+import { STORAGE_PORT, StoragePort } from '../ports/storage.port';
 
 @Injectable({ providedIn: 'root' })
 export class UnitConversionService {
   // We keep a signal of the current user settings to reactively update conversions in the UI
   // This will be fed by DbService when it loads or updates settings
   public currentSettings = signal<UserSettings | null>(null);
+  
+  private storage = inject<StoragePort>(STORAGE_PORT);
+
+  constructor() {
+    this.loadInitialSettings();
+  }
+
+  private async loadInitialSettings() {
+    const settings = await this.storage.getSettings();
+    this.currentSettings.set(settings);
+  }
 
   // Derived signals for convenience
   public currentWeightUnit = computed(() => this.currentSettings()?.weightUnit ?? 'kg');

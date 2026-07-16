@@ -1,9 +1,9 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExportService } from '../../services/export.service';
-import { DbService } from '../../services/db.service';
+import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UnitConversionService } from '../../services/unit-conversion.service';
-import { DailyLog, MuscleTag, TAG_COLORS, ExerciseLog, StrengthSet } from '../../models/interfaces';
+import { WorkoutSession, MuscleTag, TAG_COLORS, ExerciseLog, StrengthSet } from '../../models/interfaces';
 
 interface MonthStats {
   sesiones: number;
@@ -68,7 +68,7 @@ interface MonthStats {
 
       <!-- Workout List -->
       <div class="flex flex-col gap-4">
-        @for (log of allLogs(); track log.date + log.templateId) {
+        @for (log of allLogs(); track log.date + log.routineId) {
           <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden  hover:border-[var(--color-border-active)] transition-colors">
 
             <!-- Date + Tags row -->
@@ -228,7 +228,7 @@ interface MonthStats {
 })
 export class DataManagementComponent implements OnInit {
   private exportService = inject(ExportService);
-  private db = inject(DbService);
+  private workoutUseCases = inject(WorkoutUseCases);
   unitSvc = inject(UnitConversionService);
 
   currentMonthId = signal('');
@@ -236,9 +236,9 @@ export class DataManagementComponent implements OnInit {
   feedbackMessage = signal('');
   feedbackIsError = signal(false);
 
-  allLogs = signal<DailyLog[]>([]);
+  allLogs = signal<WorkoutSession[]>([]);
   stats = signal<MonthStats>({ sesiones: 0, volumenWeight: 0, distanceMeters: 0, tagSesiones: [] });
-  logToDelete = signal<DailyLog | null>(null);
+  logToDelete = signal<WorkoutSession | null>(null);
 
   private monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -293,9 +293,12 @@ export class DataManagementComponent implements OnInit {
   }
 
   async loadHistory() {
-    const archive = await this.db.getMonthlyArchive(this.currentMonthId());
-    if (archive?.logs) {
-      const logs = [...archive.logs].sort((a, b) => b.date.localeCompare(a.date));
+    const allWorkouts = await this.workoutUseCases.getAllWorkouts();
+    const currentMonth = this.currentMonthId();
+    const logs = allWorkouts.filter(w => w.date.startsWith(currentMonth));
+    
+    if (logs.length > 0) {
+      logs.sort((a, b) => b.date.localeCompare(a.date));
       this.allLogs.set(logs);
       this.calcStats(logs);
     } else {
@@ -304,7 +307,7 @@ export class DataManagementComponent implements OnInit {
     }
   }
 
-  private calcStats(logs: DailyLog[]) {
+  private calcStats(logs: WorkoutSession[]) {
     let volumen = 0;
     let distancia = 0;
     const tagCount = new Map<MuscleTag, Set<string>>();
@@ -342,7 +345,7 @@ export class DataManagementComponent implements OnInit {
     return this.monthNames[parseInt(month, 10) - 1] || '';
   }
 
-  getLogTags(log: DailyLog): MuscleTag[] {
+  getLogTags(log: WorkoutSession): MuscleTag[] {
     const tags = new Set<MuscleTag>();
     log.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
@@ -387,13 +390,13 @@ export class DataManagementComponent implements OnInit {
     return serie.weight === maxPeso;
   }
 
-  getLogVolumen(log: DailyLog): number {
+  getLogVolumen(log: WorkoutSession): number {
     return log.exercises
       .filter(e => e.type === 'strength' && e.sets)
       .reduce((s, e) => s + e.sets!.reduce((ss, r) => ss + r.weight * r.reps, 0), 0);
   }
 
-  getLogDistancia(log: DailyLog): number {
+  getLogDistancia(log: WorkoutSession): number {
     return log.exercises
       .filter(e => e.type === 'cardio' && e.cardio)
       .reduce((s, e) => s + (e.cardio?.distanceMeters ?? 0), 0);
@@ -408,14 +411,14 @@ export class DataManagementComponent implements OnInit {
 
   // ── Actions ──
 
-  confirmDeleteLog(log: DailyLog) {
+  confirmDeleteLog(log: WorkoutSession) {
     this.logToDelete.set(log);
   }
 
   async deleteLogConfirmed() {
     const log = this.logToDelete();
     if (log) {
-      await this.db.deleteLog(log.date, log.templateId);
+      await this.workoutUseCases.deleteWorkoutSession(log.id);
       this.logToDelete.set(null);
       await this.loadHistory();
       this.showFeedback('Registro eliminado.', false);

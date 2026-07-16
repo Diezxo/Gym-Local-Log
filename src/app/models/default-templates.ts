@@ -1,8 +1,16 @@
-import { Template } from './interfaces';
+import { Routine } from './interfaces';
 
-export const DEFAULT_TEMPLATES: Template[] = [
+const now = Date.now();
+
+export const DEFAULT_TEMPLATES: Routine[] = [
   {
     id: 'lunes-full-body-vertical',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Lunes: Full Body (Vertical)',
     exercises: [
       { name: 'Dominadas o Jalón al pecho',          type: 'strength', tags: ['Back'] },
@@ -14,6 +22,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'martes-recuperacion',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Martes: Recuperación Activa',
     exercises: [
       { name: 'Trote suave (4 Km)',          type: 'cardio', tags: ['Cardio'] },
@@ -22,6 +36,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'miercoles-pierna-core',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Miércoles: Pierna y Core',
     exercises: [
       { name: 'Hip Thrust',                       type: 'strength', tags: ['Legs'] },
@@ -33,6 +53,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'jueves-potencia',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Jueves: Potencia y Prevención',
     exercises: [
       { name: 'Carrera a intervalos (4 Km)', type: 'cardio', tags: ['Cardio'] },
@@ -42,6 +68,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'viernes-full-body-horizontal',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Viernes: Full Body (Horizontal)',
     exercises: [
       { name: 'Press plano (máquina/mancuernas)',       type: 'strength', tags: ['Chest'] },
@@ -53,6 +85,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'sabado-fondo',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Sábado: Fondo',
     exercises: [
       { name: 'Correr al aire libre', type: 'cardio', tags: ['Cardio'] },
@@ -60,6 +98,12 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
   {
     id: 'protocolo-carrera',
+    schemaVersion: 3,
+    createdAt: now,
+    updatedAt: now,
+    deviceId: 'local',
+    version: 1,
+    syncStatus: 'local_only',
     name: 'Protocolo: Calentamiento/Enfriamiento',
     exercises: [
       { name: 'Caminata de puntillas/talones',         type: 'cardio', tags: ['Cardio'] },

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { DbService } from '../../services/db.service';
-import { Template } from '../../models/interfaces';
+import { RoutineUseCases } from '../../use-cases/routine.use-cases';
+import { Routine } from '../../models/interfaces';
 import { DEFAULT_TEMPLATES } from '../../models/default-templates';
 
 @Component({
@@ -132,26 +132,26 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TemplateListComponent implements OnInit {
-  private db = inject(DbService);
+  private routineUseCases = inject(RoutineUseCases);
   private router = inject(Router);
 
-  templates = signal<Template[]>([]);
-  templateToDelete = signal<Template | null>(null);
+  templates = signal<Routine[]>([]);
+  templateToDelete = signal<Routine | null>(null);
 
   async ngOnInit() {
     await this.loadData();
   }
 
   async loadData() {
-    const data = await this.db.getTemplates();
+    const data = await this.routineUseCases.getAllRoutines();
     this.templates.set(data);
   }
 
-  getExercisesList(template: Template): string {
+  getExercisesList(template: Routine): string {
     return template.exercises.map(e => e.name).join(' · ');
   }
 
-  getTemplateTags(template: Template): string[] {
+  getTemplateTags(template: Routine): string[] {
     const tags = new Set<string>();
     template.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
@@ -165,14 +165,14 @@ export class TemplateListComponent implements OnInit {
     this.router.navigate(['/templates/edit', id]);
   }
 
-  confirmDelete(template: Template) {
+  confirmDelete(template: Routine) {
     this.templateToDelete.set(template);
   }
 
   async deleteConfirmed() {
     const t = this.templateToDelete();
     if (t) {
-      await this.db.deleteTemplate(t.id);
+      await this.routineUseCases.deleteRoutine(t.id);
       this.templateToDelete.set(null);
       await this.loadData();
     }
@@ -180,7 +180,17 @@ export class TemplateListComponent implements OnInit {
 
   async loadDefaultTemplates() {
     for (const t of DEFAULT_TEMPLATES) {
-      await this.db.saveTemplate({ ...t, id: t.id + '-' + Date.now() });
+      await this.routineUseCases.updateRoutine({
+        id: t.id + '-' + Date.now(),
+        schemaVersion: 3,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        deviceId: 'local',
+        version: 1,
+        syncStatus: 'local_only',
+        name: t.name,
+        exercises: t.exercises
+      });
     }
     await this.loadData();
   }
