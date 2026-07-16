@@ -29,24 +29,21 @@ interface GymDBSchemaV3 extends DBSchema {
 }
 
 const DB_NAME = 'gym-local-log';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocalStorageAdapter implements StoragePort {
-  private dbPromise: Promise<IDBPDatabase<GymDBSchemaV3>>;
-  private resolvedDb: IDBPDatabase<GymDBSchemaV3> | null = null;
+  private dbPromise: Promise<IDBPDatabase<any>>;
+  private resolvedDb: IDBPDatabase<any> | null = null;
   private fs = inject(FileSystemService);
 
   constructor() {
-    this.dbPromise = openDB<GymDBSchemaV3>(DB_NAME, DB_VERSION, {
+    this.dbPromise = openDB<any>(DB_NAME, DB_VERSION, {
       async upgrade(db, oldVersion, newVersion, transaction) {
-        // v1 -> v2 was handled in the old DbService. 
-        // We assume migrations up to v2 are already done or handled by migration runner.
-        // The migration-runner.ts will handle data migration from v2 stores to v3 stores.
-        // Here we just ensure the V3 schema stores exist.
         
+        // 1. Create new object stores if they don't exist
         if (!db.objectStoreNames.contains('routines')) {
           db.createObjectStore('routines', { keyPath: 'id' });
         }
@@ -61,6 +58,76 @@ export class LocalStorageAdapter implements StoragePort {
           const store = db.createObjectStore('pending_changes', { keyPath: 'eventId' });
           store.createIndex('by-occurred-at', 'occurredAt');
         }
+
+        // 2. Data Migration from older versions to V4
+        if (oldVersion > 0 && oldVersion < 4) {
+          
+          // Migrate templates -> routines
+          if (db.objectStoreNames.contains('templates')) {
+            const oldTemplates = await transaction.objectStore('templates').getAll();
+            const routineStore = transaction.objectStore('routines');
+            for (const t of oldTemplates) {
+              if (!t.schemaVersion || t.schemaVersion < 3) {
+                await routineStore.put({
+                  id: t.id,
+                  schemaVersion: 4,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                  deviceId: 'local',
+                  version: 1,
+                  syncStatus: 'local_only',
+                  name: t.name,
+                  exercises: t.exercises
+                });
+              }
+            }
+            db.deleteObjectStore('templates');
+          }
+
+          // Migrate monthly-archives -> workout_sessions
+          if (db.objectStoreNames.contains('monthly-archives')) {
+            const archives = await transaction.objectStore('monthly-archives').getAll();
+            const sessionStore = transaction.objectStore('workout_sessions');
+            for (const archive of archives) {
+              if (archive.logs) {
+                for (const log of archive.logs) {
+                  await sessionStore.put({
+                    id: crypto.randomUUID(), // Allowed since modern browsers support it
+                    schemaVersion: 4,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                    deviceId: 'local',
+                    version: 1,
+                    syncStatus: 'local_only',
+                    date: log.date,
+                    routineId: log.templateId,
+                    notes: log.notes,
+                    exercises: log.exercises
+                  });
+                }
+              }
+            }
+            db.deleteObjectStore('monthly-archives');
+          }
+
+          // Migrate settings
+          if (db.objectStoreNames.contains('settings')) {
+            const settingsStore = transaction.objectStore('settings');
+            const oldSettings = await settingsStore.get('user-settings');
+            if (oldSettings && (!oldSettings.schemaVersion || oldSettings.schemaVersion < 3)) {
+              await settingsStore.put({
+                ...oldSettings,
+                id: 'user-settings',
+                schemaVersion: 4,
+                createdAt: oldSettings.createdAt || Date.now(),
+                updatedAt: Date.now(),
+                deviceId: 'local',
+                version: (oldSettings.version || 0) + 1,
+                syncStatus: 'local_only',
+              });
+            }
+          }
+        }
       }
     }).then(db => {
       this.resolvedDb = db;
@@ -72,7 +139,7 @@ export class LocalStorageAdapter implements StoragePort {
     });
   }
 
-  private async getDb(): Promise<IDBPDatabase<GymDBSchemaV3>> {
+  private async getDb(): Promise<IDBPDatabase<any>> {
     return this.resolvedDb ?? this.dbPromise;
   }
 
