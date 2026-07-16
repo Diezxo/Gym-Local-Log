@@ -37,45 +37,45 @@ interface PRRecord {
   standalone: true,
   imports: [CommonModule, ProgressionChartComponent],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8 max-w-7xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
 
       <!-- ── Header ── -->
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm text-[var(--color-text-muted)] font-heading uppercase tracking-[0.1em] font-bold">{{ dayLabel() }}</p>
-          <h1 class="text-5xl uppercase font-heading font-black text-[var(--color-accent)] tracking-tight drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">Dashboard</h1>
+          <p class="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wider">{{ dayLabel() }}</p>
+          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mt-1">Dashboard</h1>
         </div>
         
         <div class="flex gap-2">
-          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-lg bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 hover:border-[var(--color-accent)] shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all" aria-label="Mes anterior">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-bg-card)] border border-white/5 text-[var(--color-text-primary)] disabled:opacity-30 hover:bg-[var(--color-bg-input)] active:scale-95 transition-all" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-lg bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 hover:border-[var(--color-accent)] shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all" aria-label="Mes siguiente">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-bg-card)] border border-white/5 text-[var(--color-text-primary)] disabled:opacity-30 hover:bg-[var(--color-bg-input)] active:scale-95 transition-all" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         
         <!-- Left Column -->
-        <div class="lg:col-span-7 flex flex-col gap-8">
+        <div class="lg:col-span-7 flex flex-col gap-6 sm:gap-8">
           
           <!-- ── Semana Actual ── -->
           <div>
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)]">Esta semana</h2>
-              <span class="text-sm font-heading tracking-widest text-[var(--color-text-muted)] font-medium">{{ weekRangeLabel() }}</span>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">Esta semana</h2>
+              <span class="text-xs font-medium text-[var(--color-text-muted)]">{{ weekRangeLabel() }}</span>
             </div>
-            <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+            <div class="grid grid-cols-7 gap-1 sm:gap-2 bg-[var(--color-bg-card)] rounded-3xl p-3 sm:p-4 border border-white/5 shadow-sm">
               @for (day of weekDays(); track day.label) {
-                <div class="flex flex-col items-center gap-2">
-                  <span class="text-xs font-heading font-bold"
+                <div class="flex flex-col items-center gap-1.5">
+                  <span class="text-[10px] sm:text-xs font-medium uppercase tracking-wide"
                     [class]="day.isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'">
                     {{ day.label }}
                   </span>
                   <div
-                    class="w-10 h-10 rounded-lg border-2 flex items-center justify-center text-lg font-heading font-bold transition-all"
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-semibold transition-all"
                     [class]="getWeekDayClass(day)"
                   >
                     {{ day.dayNum }}
@@ -85,7 +85,7 @@ interface PRRecord {
             </div>
             @if (weeklyCardioDistance() > 0) {
               <div class="flex justify-start mt-3">
-                <span class="text-sm font-bold font-heading uppercase tracking-wider text-[var(--color-accent-success)] border-2 border-[var(--color-accent-success)] bg-[#111827] px-4 py-1.5 rounded-lg shadow-[2px_2px_0px_rgba(34,197,94,0.3)]">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-accent-success)] bg-[var(--color-accent-success)]/10 px-3 py-1.5 rounded-full">
                   🏃 {{ weeklyCardioDistance() }} {{ unitSvc.currentDistanceUnit() }} esta semana
                 </span>
               </div>
@@ -93,64 +93,63 @@ interface PRRecord {
           </div>
 
           <!-- ── Streak + Stats Row ── -->
-          <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
-              <span class="text-4xl font-heading font-black text-amber-500 leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ streak() }}</span>
-              <span class="text-xs text-[var(--color-text-muted)] text-center font-heading uppercase tracking-widest font-bold">Racha<br/>días</span>
+          <div class="grid grid-cols-3 gap-3 sm:gap-4">
+            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-3xl p-4 sm:p-5 border border-white/5 flex flex-col items-center justify-center gap-1 sm:gap-2 shadow-sm min-h-[100px] sm:min-h-[120px]">
+              <span class="text-3xl sm:text-4xl font-bold text-amber-500 leading-none tracking-tight">{{ streak() }}</span>
+              <span class="text-[10px] sm:text-xs text-[var(--color-text-muted)] text-center font-medium uppercase tracking-wider">Racha<br/>días</span>
             </div>
-            <div class="col-span-1 bg-[var(--color-accent)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
-              <span class="text-4xl font-heading font-black text-[#111827] leading-none drop-shadow-[1px_1px_0_rgba(255,255,255,0.2)]">{{ monthSessions() }}</span>
-              <span class="text-xs text-[#111827] text-center font-heading uppercase tracking-widest font-bold">Sesiones<br/>mes</span>
+            <div class="col-span-1 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-secondary)] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-1 sm:gap-2 shadow-[0_4px_12px_rgba(59,130,246,0.3)] min-h-[100px] sm:min-h-[120px]">
+              <span class="text-3xl sm:text-4xl font-bold text-white leading-none tracking-tight">{{ monthSessions() }}</span>
+              <span class="text-[10px] sm:text-xs text-white/80 text-center font-medium uppercase tracking-wider">Sesiones<br/>mes</span>
             </div>
-            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
-              <span class="text-4xl font-heading font-black text-[var(--color-text-primary)] leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ daysLeftInMonth() }}</span>
-              <span class="text-xs text-[var(--color-text-muted)] text-center font-heading uppercase tracking-widest font-bold">Días<br/>restantes</span>
+            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-3xl p-4 sm:p-5 border border-white/5 flex flex-col items-center justify-center gap-1 sm:gap-2 shadow-sm min-h-[100px] sm:min-h-[120px]">
+              <span class="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] leading-none tracking-tight">{{ daysLeftInMonth() }}</span>
+              <span class="text-[10px] sm:text-xs text-[var(--color-text-muted)] text-center font-medium uppercase tracking-wider">Días<br/>restantes</span>
             </div>
           </div>
 
           <!-- ── Último PR ── -->
           @if (lastPR()) {
             <div>
-              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Último PR</h2>
-              <div class="bg-[var(--color-bg-card)] rounded-xl p-5 border-2 border-amber-500/50 shadow-[4px_4px_0px_rgba(245,158,11,0.2)] flex items-center justify-between gap-4">
+              <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Último PR</h2>
+              <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 border border-amber-500/20 shadow-sm flex items-center justify-between gap-4">
                 <div class="flex-1 min-w-0">
-                  <p class="text-amber-500 text-xs font-heading font-bold uppercase tracking-widest mb-1">Récord personal</p>
-                  <p class="text-[var(--color-text-primary)] font-heading uppercase font-black text-2xl leading-tight truncate">{{ lastPR()!.exercise }}</p>
-                  <p class="text-[var(--color-text-muted)] text-sm font-medium mt-1">{{ getDaysAgo(lastPR()!.date) }}</p>
+                  <p class="text-amber-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Récord personal</p>
+                  <p class="text-[var(--color-text-primary)] font-semibold text-lg sm:text-xl leading-tight truncate">{{ lastPR()!.exercise }}</p>
+                  <p class="text-[var(--color-text-muted)] text-xs font-medium mt-1">{{ getDaysAgo(lastPR()!.date) }}</p>
                 </div>
                 <div class="text-right shrink-0">
-                  <p class="text-4xl font-heading font-black text-amber-500 leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ unitSvc.kgToUser(lastPR()!.weight) }}<span class="text-xl">{{ unitSvc.currentWeightUnit() }}</span></p>
-                  <p class="text-sm text-[var(--color-text-muted)] font-bold mt-1">× {{ lastPR()!.reps }} reps</p>
+                  <p class="text-2xl sm:text-3xl font-bold text-amber-500 leading-none tracking-tight">{{ unitSvc.kgToUser(lastPR()!.weight) }}<span class="text-base sm:text-lg text-amber-500/70 ml-0.5">{{ unitSvc.currentWeightUnit() }}</span></p>
+                  <p class="text-xs text-[var(--color-text-muted)] font-medium mt-1.5">× {{ lastPR()!.reps }} reps</p>
                 </div>
               </div>
             </div>
           }
 
           <!-- ── Chart Integration ── -->
-          <div class="mt-4">
-             <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Progresión del Volumen</h2>
+          <div class="mt-2">
+             <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Progresión del Volumen</h2>
              <app-progression-chart [logs]="allLogs()"></app-progression-chart>
           </div>
         </div>
 
         <!-- Right Column -->
-        <div class="lg:col-span-5 flex flex-col gap-8">
+        <div class="lg:col-span-5 flex flex-col gap-6 sm:gap-8">
           
           <!-- ── Último Entrenamiento ── -->
           @if (lastLog()) {
             <div>
-              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Último entrenamiento</h2>
-              <div class="bg-[var(--color-bg-card)] rounded-xl p-5 border-2 border-[var(--color-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+              <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Último entrenamiento</h2>
+              <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 border border-white/5 shadow-sm">
                 <div class="flex items-center justify-between mb-5">
-                  <span class="text-[var(--color-text-primary)] font-heading uppercase font-black text-2xl drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ formatFecha(lastLog()!.date) }}</span>
-                  <span class="text-xs font-heading tracking-widest uppercase font-bold text-[var(--color-text-primary)] bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] px-3 py-1 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">{{ getDaysAgo(lastLog()!.date) }}</span>
+                  <span class="text-[var(--color-text-primary)] font-semibold text-xl tracking-tight">{{ formatFecha(lastLog()!.date) }}</span>
+                  <span class="text-[10px] font-medium tracking-wider uppercase text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-2.5 py-1 rounded-full">{{ getDaysAgo(lastLog()!.date) }}</span>
                 </div>
-                <div class="flex flex-wrap gap-2.5 mb-6">
+                <div class="flex flex-wrap gap-2 mb-6">
                   @for (tag of getLogTags(lastLog()!); track tag) {
                     <span
-                      class="px-3 py-1 rounded-lg text-xs font-heading tracking-wider uppercase font-bold border-2"
+                      class="px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase"
                       [style.background]="getTagColor(tag).bg"
-                      [style.borderColor]="getTagColor(tag).border"
                       [style.color]="getTagColor(tag).text"
                     >{{ tag }}</span>
                   }
@@ -167,7 +166,7 @@ interface PRRecord {
             <div>
               <button
                 (click)="irAEntrenar()"
-                class="btn-primary text-2xl h-20"
+                class="btn-primary"
               >
                 ¡Primer Entrenamiento!
               </button>
@@ -177,19 +176,17 @@ interface PRRecord {
           <!-- ── Volumen por Tag ── -->
           @if (tagVolumens().length > 0) {
             <div>
-              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Volumen mensual</h2>
+              <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Volumen mensual</h2>
               <div class="flex flex-col gap-3">
                 @for (tv of tagVolumens(); track tv.tag) {
                   <div
-                    class="flex items-center gap-4 rounded-xl px-4 py-3 border-2 shadow-[2px_2px_0px_rgba(0,0,0,0.3)]"
-                    [style.background]="getTagColor(tv.tag).bg"
-                    [style.borderColor]="getTagColor(tv.tag).border"
+                    class="flex items-center gap-4 rounded-2xl px-4 py-3.5 bg-[var(--color-bg-card)] border border-white/5 shadow-sm"
                   >
-                    <div class="w-3 h-3 border-2 rounded-sm flex-shrink-0" [style.background]="getTagColor(tv.tag).text" [style.borderColor]="getTagColor(tv.tag).border"></div>
-                    <span class="flex-1 text-lg font-heading uppercase font-bold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
+                    <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" [style.background]="getTagColor(tv.tag).text"></div>
+                    <span class="flex-1 text-sm font-semibold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
                     <div class="flex items-center gap-3">
-                      <span class="text-xs font-heading tracking-widest text-[var(--color-text-muted)] font-bold">{{ tv.sesiones }} SES.</span>
-                      <span class="font-black font-heading text-xl" [style.color]="getTagColor(tv.tag).text">
+                      <span class="text-[10px] tracking-wider text-[var(--color-text-muted)] font-medium">{{ tv.sesiones }} SES.</span>
+                      <span class="font-semibold text-base" [style.color]="getTagColor(tv.tag).text">
                         {{ formatTagValue(tv) }}
                       </span>
                     </div>
@@ -201,18 +198,18 @@ interface PRRecord {
 
           <!-- ── Consistencia (30 días) ── -->
           <div>
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)]">Consistencia</h2>
-              <span class="text-xs font-heading tracking-widest font-bold text-[#111827] border-2 border-[var(--color-accent-success)] bg-[var(--color-accent-success)] px-3 py-1.5 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">Consistencia</h2>
+              <span class="text-[10px] font-medium tracking-wider text-white bg-[var(--color-accent-success)]/80 px-2.5 py-1 rounded-full">
                 {{ trainedCount() }} / 30 DÍAS
               </span>
             </div>
-            <div class="bg-[var(--color-bg-card)] rounded-xl border-2 border-[var(--color-border)] p-4 shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
-              <div class="grid gap-2" style="grid-template-columns: repeat(10, 1fr)">
+            <div class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 p-4 sm:p-5 shadow-sm">
+              <div class="grid gap-1.5 sm:gap-2" style="grid-template-columns: repeat(10, 1fr)">
                 @for (day of heatmap(); track day.date) {
                   <div
-                    class="aspect-square rounded border transition-colors"
-                    [class]="day.trained ? 'bg-[var(--color-accent-success)] border-[var(--color-accent-success)] shadow-[1px_1px_0px_rgba(0,0,0,0.2)]' : 'bg-[var(--color-bg-input)] border-[var(--color-border)]'"
+                    class="aspect-square rounded-sm sm:rounded transition-colors"
+                    [class]="day.trained ? 'bg-[var(--color-accent-success)]' : 'bg-[var(--color-bg-input)]/50'"
                     [title]="day.date"
                   ></div>
                 }

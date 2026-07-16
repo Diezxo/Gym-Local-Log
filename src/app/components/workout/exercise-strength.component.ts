@@ -10,16 +10,16 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="rounded-xl bg-[var(--color-bg-card)] p-4 sm:p-5 border-2 border-[var(--color-border)] flex flex-col gap-5 shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
+    <div class="rounded-3xl bg-[var(--color-bg-card)] p-4 sm:p-5 border border-white/5 flex flex-col gap-5 shadow-sm">
       <!-- Header -->
       <div
-        class="flex items-center justify-between cursor-pointer active:translate-y-[2px] transition-all group"
+        class="flex items-center justify-between cursor-pointer active:scale-95 transition-all group"
         (click)="toggleHistory()"
       >
-        <h3 class="text-xl sm:text-2xl font-heading font-black text-[var(--color-text-primary)] tracking-widest uppercase drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ exerciseLog().name }}</h3>
+        <h3 class="text-lg sm:text-xl font-bold text-white tracking-tight uppercase">{{ exerciseLog().name }}</h3>
         <svg
-          xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-          class="text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-110 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]"
+          xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-110"
           [class.rotate-180]="showHistory()"
         >
           <polyline points="6 9 12 15 18 9"></polyline>
@@ -28,16 +28,16 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
 
       <!-- In-Line History -->
       @if (showHistory()) {
-        <div class="animate-fade-in bg-[var(--color-bg-input)] rounded-lg p-4 border-2 border-[var(--color-border)] shadow-inner">
-          <h4 class="text-sm text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest mb-4">Últimas sesiones</h4>
+        <div class="animate-fade-in bg-[var(--color-bg-input)] rounded-2xl p-4 border border-white/5 shadow-inner">
+          <h4 class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider mb-4">Últimas sesiones</h4>
           @if (history().length > 0) {
             <div class="flex flex-col gap-4">
               @for (record of history(); track record.date) {
-                <div class="border-b-2 border-dashed border-[var(--color-border)] pb-3 last:border-0 last:pb-0">
+                <div class="border-b border-white/5 pb-3 last:border-0 last:pb-0">
                   <!-- Session date + volume -->
                   <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-heading font-black text-[var(--color-accent)] tracking-widest">{{ record.date | slice:5:10 }}</span>
-                    <span class="text-xs text-[var(--color-text-muted)] font-mono font-bold">{{ displayWeight(record.totalVolume) }} {{ unitSvc.currentWeightUnit() }} total</span>
+                    <span class="text-[11px] font-semibold text-[var(--color-accent)] tracking-wider">{{ record.date | slice:5:10 }}</span>
+                    <span class="text-[11px] text-[var(--color-text-muted)] font-mono font-medium">{{ displayWeight(record.totalVolume) }} {{ unitSvc.currentWeightUnit() }} total</span>
                   </div>
                   <!-- Individual sets -->
                   @if (hasProgressiveOverload(record.sets)) {
@@ -45,33 +45,33 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
                     <div class="flex flex-wrap gap-2">
                       @for (s of record.sets; track $index; let i = $index) {
                         <span
-                          class="text-xs font-mono font-bold px-2 py-1 rounded-md border-2"
+                          class="text-xs font-mono font-medium px-2 py-1 rounded-md"
                           [class]="s.weight === record.weight
-                            ? 'bg-[var(--color-accent)] border-[#111827] text-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.5)]'
-                            : 'bg-[#111827] border-[var(--color-border)] text-[var(--color-text-secondary)]'"
+                            ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                            : 'bg-[var(--color-bg-primary)] border border-white/5 text-[var(--color-text-muted)]'"
                         >S{{ i + 1 }}: {{ displayWeight(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
                       }
                     </div>
                   } @else {
                     <!-- All sets equal: compact summary -->
-                    <span class="text-sm font-mono font-bold text-[var(--color-accent)]">{{ record.sets.length }}×{{ record.sets[0]?.reps ?? record.reps }} @ {{ displayWeight(record.weight) }}{{ unitSvc.currentWeightUnit() }}</span>
+                    <span class="text-sm font-mono font-medium text-white">{{ record.sets.length }}×{{ record.sets[0]?.reps ?? record.reps }} @ {{ displayWeight(record.weight) }}{{ unitSvc.currentWeightUnit() }}</span>
                   }
                 </div>
               }
             </div>
           } @else {
-            <p class="text-[var(--color-text-muted)] text-sm font-heading font-bold uppercase tracking-widest text-center py-2">No hay historial previo.</p>
+            <p class="text-[var(--color-text-muted)] text-xs font-medium text-center py-2">No hay historial previo.</p>
           }
         </div>
       }
 
       <!-- Alerta de salto de carga -->
       @if (suggestion()?.isLoadAlert) {
-        <div class="rounded-lg bg-rose-500 border-2 border-rose-900 p-4 flex items-start gap-3 shadow-[4px_4px_0_rgba(0,0,0,0.5)] mt-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-rose-900 shrink-0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <div class="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3 mt-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-400 shrink-0 mt-0.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           <div>
-            <p class="text-rose-900 font-heading font-black text-lg uppercase tracking-widest drop-shadow-[1px_1px_0_rgba(255,255,255,0.3)]">¡Salto de carga!</p>
-            <p class="text-rose-100 text-sm mt-1 font-mono font-bold">
+            <p class="text-rose-400 font-semibold text-sm tracking-wide">¡Salto de carga!</p>
+            <p class="text-rose-200/80 text-xs mt-1 font-mono">
               Sugerido: {{ suggestion()!.suggestedWeight }}{{ unitSvc.currentWeightUnit() }} × {{ suggestion()!.suggestedReps }} reps
             </p>
           </div>
@@ -80,40 +80,40 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
 
       <!-- Completed Sets Header -->
       @if (exerciseLog().sets && exerciseLog().sets!.length > 0) {
-        <div class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 text-[10px] text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest text-center mt-2">
+        <div class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 text-[10px] text-[var(--color-text-muted)] font-medium uppercase tracking-wider text-center mt-2">
           <div>Set</div>
           <div class="text-left">Ant.</div>
           <div>{{ unitSvc.currentWeightUnit() }}</div>
           <div>Reps</div>
           <div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-emerald-500"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-[var(--color-accent-success)]"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <div>×</div>
+          <div></div>
         </div>
 
         <!-- Completed Sets -->
         <div class="flex flex-col gap-2">
         @for (set of exerciseLog().sets; track set.setNumber; let i = $index; let isLast = $last) {
           <div
-            class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 py-3 items-center text-[var(--color-text-primary)] bg-emerald-500/10 rounded-lg border-2 border-emerald-900 shadow-[2px_2px_0_rgba(16,185,129,0.3)] transition-all"
+            class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 py-2 items-center text-white bg-[var(--color-accent-success)]/10 rounded-2xl border border-[var(--color-accent-success)]/20 transition-all"
             [class.animate-pulse-success]="isLast && justAddedSet()"
           >
-            <div class="text-center font-heading font-black text-emerald-400 text-lg drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ set.setNumber }}</div>
-            <div class="text-left text-[var(--color-text-muted)] text-xs font-mono font-bold leading-tight line-clamp-1 pr-1">
+            <div class="text-center font-bold text-[var(--color-accent-success)]">{{ set.setNumber }}</div>
+            <div class="text-left text-[var(--color-text-muted)] text-[11px] font-mono font-medium leading-tight line-clamp-1 pr-1">
               {{ suggestion() ? (suggestion()!.referenceText | slice:10) : '—' }}
             </div>
-            <div class="text-center font-mono font-bold bg-[#111827] py-2 rounded-md border-2 border-emerald-900 text-sm shadow-inner">{{ displayWeight(set.weight) }}</div>
-            <div class="text-center font-mono font-bold bg-[#111827] py-2 rounded-md border-2 border-emerald-900 text-sm shadow-inner">{{ set.reps }}</div>
+            <div class="text-center font-mono font-semibold bg-[var(--color-bg-primary)] py-1.5 rounded-xl text-sm">{{ displayWeight(set.weight) }}</div>
+            <div class="text-center font-mono font-semibold bg-[var(--color-bg-primary)] py-1.5 rounded-xl text-sm">{{ set.reps }}</div>
             <div class="flex justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#10b981" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="var(--color-accent-success)" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
             </div>
             <div class="flex justify-center">
               <button
                 (click)="deleteSet(i); $event.stopPropagation()"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/20 active:translate-y-[2px] active:translate-x-[2px] transition-all border-2 border-transparent hover:border-rose-900 hover:shadow-[1px_1px_0_rgba(244,63,94,0.5)]"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all"
                 aria-label="Eliminar serie"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
               </button>
             </div>
           </div>
@@ -122,23 +122,23 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
       }
 
       <!-- Active Input Row -->
-      <div class="flex flex-col gap-3 border-t-2 border-dashed border-[var(--color-border)] pt-4 mt-2">
+      <div class="flex flex-col gap-3 border-t border-white/5 pt-4 mt-2">
         <!-- Reference line -->
-        <div class="flex items-center gap-2 px-1">
-          <span class="w-8 text-center text-[var(--color-accent)] font-heading font-black text-xl drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ (exerciseLog().sets?.length || 0) + 1 }}</span>
-          <span class="flex-1 text-[var(--color-text-muted)] text-xs font-heading font-bold uppercase tracking-widest leading-tight truncate">
+        <div class="flex items-center gap-2 px-2">
+          <span class="w-6 text-center text-[var(--color-accent)] font-bold text-lg">{{ (exerciseLog().sets?.length || 0) + 1 }}</span>
+          <span class="flex-1 text-[var(--color-text-muted)] text-[11px] font-medium uppercase tracking-wider leading-tight truncate">
             {{ suggestion() ? suggestion()!.referenceText.replace('Anterior: ', '') : 'Sin referencia previa' }}
           </span>
         </div>
         <!-- Stepper inputs -->
         <div class="flex items-center gap-2">
           <!-- Peso stepper -->
-          <div class="flex flex-col gap-1 flex-1">
-            <label class="text-[10px] font-heading font-black text-[var(--color-text-muted)] text-center uppercase tracking-widest">{{ unitSvc.currentWeightUnit() }}</label>
-            <div class="flex items-center gap-1">
+          <div class="flex flex-col gap-1.5 flex-1">
+            <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unitSvc.currentWeightUnit() }}</label>
+            <div class="flex items-center gap-1 bg-[var(--color-bg-input)] rounded-2xl p-1 border border-white/5">
               <button
                 (click)="decrementWeight()"
-                class="w-10 h-14 rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-xl flex items-center justify-center active:translate-y-[2px] active:translate-x-[2px] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none"
+                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Bajar peso"
               >−</button>
               <input
@@ -146,22 +146,22 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
                 inputmode="decimal"
                 [(ngModel)]="weightInput"
                 [placeholder]="suggestion() ? String(suggestion()!.suggestedWeight) : '—'"
-                class="flex-1 h-14 w-12 sm:w-auto rounded-md bg-[#111827] border-2 border-[var(--color-border)] text-center font-mono text-xl font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-all shadow-inner placeholder:text-[var(--color-text-muted)]"
+                class="flex-1 h-12 w-12 sm:w-auto rounded-xl bg-[var(--color-bg-primary)] text-center font-mono text-lg font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-all placeholder:text-white/20 shadow-inner"
               />
               <button
                 (click)="incrementWeight()"
-                class="w-10 h-14 rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-xl flex items-center justify-center active:translate-y-[2px] active:translate-x-[2px] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none"
+                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Subir peso"
               >+</button>
             </div>
           </div>
           <!-- Reps stepper -->
-          <div class="flex flex-col gap-1 flex-1">
-            <label class="text-[10px] font-heading font-black text-[var(--color-text-muted)] text-center uppercase tracking-widest">Reps</label>
-            <div class="flex items-center gap-1">
+          <div class="flex flex-col gap-1.5 flex-1">
+            <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">Reps</label>
+            <div class="flex items-center gap-1 bg-[var(--color-bg-input)] rounded-2xl p-1 border border-white/5">
               <button
                 (click)="decrementReps()"
-                class="w-10 h-14 rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-xl flex items-center justify-center active:translate-y-[2px] active:translate-x-[2px] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none"
+                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Bajar reps"
               >−</button>
               <input
@@ -169,31 +169,30 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
                 inputmode="numeric"
                 [(ngModel)]="repsInput"
                 [placeholder]="suggestion() ? String(suggestion()!.suggestedReps) : '—'"
-                class="flex-1 h-14 w-12 sm:w-auto rounded-md bg-[#111827] border-2 border-[var(--color-border)] text-center font-mono text-xl font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-all shadow-inner placeholder:text-[var(--color-text-muted)]"
+                class="flex-1 h-12 w-12 sm:w-auto rounded-xl bg-[var(--color-bg-primary)] text-center font-mono text-lg font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-all placeholder:text-white/20 shadow-inner"
               />
               <button
                 (click)="incrementReps()"
-                class="w-10 h-14 rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-xl flex items-center justify-center active:translate-y-[2px] active:translate-x-[2px] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none"
+                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Subir reps"
               >+</button>
             </div>
           </div>
           <!-- Complete button -->
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-black text-transparent text-center uppercase tracking-wider select-none">✓</label>
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <label class="text-[10px] font-bold text-transparent text-center uppercase tracking-wider select-none">✓</label>
             <button
               (click)="completeSet()"
               [disabled]="!isValidInput()"
-              class="w-14 h-14 shrink-0 flex items-center justify-center rounded-md border-2 transition-all group disabled:opacity-40 disabled:active:translate-y-0 disabled:active:translate-x-0"
-              [class]="isValidInput() ? 'bg-[var(--color-bg-card)] border-[var(--color-accent)] text-[var(--color-accent)] shadow-[4px_4px_0_rgba(249,115,22,0.5)] hover:bg-[var(--color-accent)] hover:text-[#111827] hover:shadow-none active:translate-y-[4px] active:translate-x-[4px] cursor-pointer' : 'bg-[var(--color-bg-input)] border-[var(--color-border)] text-[var(--color-text-muted)] cursor-not-allowed'"
+              class="w-14 h-14 flex items-center justify-center rounded-2xl transition-all disabled:opacity-30 disabled:scale-100"
+              [class]="isValidInput() ? 'bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-secondary)] text-white shadow-md hover:shadow-lg active:scale-95 cursor-pointer' : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-white/5 cursor-not-allowed'"
               aria-label="Completar serie"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </div>
         </div>
       </div>
-    </div>
   `,
   styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })

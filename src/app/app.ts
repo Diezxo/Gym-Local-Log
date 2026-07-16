@@ -7,17 +7,20 @@ import { BottomNavComponent } from './components/layout/bottom-nav.component';
   standalone: true,
   imports: [RouterOutlet, BottomNavComponent],
   template: `
-    <main class="app-shell">
-      <router-outlet />
-    </main>
-    <app-bottom-nav />
+    <div class="global-wrapper max-w-[480px] mx-auto min-h-[100dvh] bg-[var(--color-bg-primary)] sm:border-x border-[var(--color-border)] relative shadow-2xl flex flex-col">
+      <main class="app-shell flex-1 w-full pb-20">
+        <router-outlet />
+      </main>
+      <app-bottom-nav />
+    </div>
   `,
   styles: [`
-    .app-shell {
+    :host {
+      display: block;
       min-height: 100dvh;
-      padding-bottom: 80px;
-      background-color: var(--color-bg-primary);
-      width: 100%;
+      background-color: var(--color-bg-backdrop);
+    }
+    .app-shell {
       position: relative;
     }
   `],

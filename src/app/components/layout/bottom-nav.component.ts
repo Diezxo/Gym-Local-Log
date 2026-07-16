@@ -7,26 +7,26 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="fixed bottom-0 left-0 w-full z-50 bg-[var(--color-bg-card)] border-t-4 border-[var(--color-border)] pb-safe pt-1">
-      <div class="flex items-stretch justify-around w-full px-2 max-w-7xl mx-auto">
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-t border-white/10 pb-safe pt-1 sm:border-x">
+      <div class="flex items-stretch justify-around w-full px-2">
         @for (item of navItems; track item.route) {
           <a
             [routerLink]="item.route"
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="{ exact: item.exact }"
             #navLink="routerLinkActive"
-            class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-150 active:scale-95"
+            class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-200 active:scale-95"
           >
-            <!-- Active Indicator (Top Border) -->
-            <div class="absolute top-[-4px] left-1/2 -translate-x-1/2 w-0 h-[4px] bg-[var(--color-accent)] transition-all duration-200 group-[.is-active]:w-1/2"></div>
+            <!-- Active Indicator (Soft Glow) -->
+            <div class="absolute inset-0 bg-[var(--color-accent)]/10 opacity-0 group-[.is-active]:opacity-100 rounded-2xl scale-75 group-[.is-active]:scale-100 transition-all duration-300 -z-10"></div>
             
             <div
-              class="mb-1 transition-all duration-200 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-1"
+              class="mb-1 transition-all duration-300 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-0.5"
               [innerHTML]="getIconSvg(item.id)"
             ></div>
 
             <span
-              class="text-xs uppercase tracking-widest font-heading font-bold transition-colors duration-200 group-[.is-active]:text-[var(--color-accent)]"
+              class="text-[11px] font-medium transition-colors duration-300 group-[.is-active]:text-[var(--color-accent)]"
             >{{ item.label }}</span>
           </a>
         }

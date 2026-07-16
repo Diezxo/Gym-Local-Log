@@ -5,77 +5,84 @@ import { Component, input, output, signal, computed, OnDestroy, OnInit, ChangeDe
   standalone: true,
   template: `
     <div
-      class="flex flex-col items-center gap-4 rounded-xl bg-[var(--color-bg-card)] p-6 sm:p-8 border-2 transition-all duration-300"
+      class="flex flex-col items-center gap-4 rounded-3xl bg-[var(--color-bg-card)] p-6 sm:p-8 border border-white/5 shadow-sm transition-all duration-300"
       [class]="containerClasses()"
     >
-      <span class="text-xs text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">Descanso</span>
+      <span class="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wider">Descanso</span>
 
       <!-- SVG Circular Progress -->
       <div class="relative flex items-center justify-center" style="width:160px;height:160px">
         <svg class="absolute inset-0 -rotate-90" viewBox="0 0 160 160">
+          <defs>
+            <linearGradient id="timer-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--color-accent)" />
+              <stop offset="100%" stop-color="var(--color-accent-secondary)" />
+            </linearGradient>
+            <linearGradient id="timer-finished-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f43f5e" />
+              <stop offset="100%" stop-color="#fb7185" />
+            </linearGradient>
+          </defs>
           <circle
             cx="80" cy="80" r="72"
             fill="none"
             stroke="var(--color-bg-input)"
-            stroke-width="12"
+            stroke-width="8"
           />
           <circle
             cx="80" cy="80" r="72"
             fill="none"
-            [attr.stroke]="isFinished() ? '#f43f5e' : 'var(--color-accent)'"
-            stroke-width="12"
+            [attr.stroke]="isFinished() ? 'url(#timer-finished-grad)' : 'url(#timer-grad)'"
+            stroke-width="8"
             stroke-linecap="round"
             [attr.stroke-dasharray]="circumference"
             [attr.stroke-dashoffset]="dashOffset()"
-            class="transition-all duration-300 drop-shadow-[2px_2px_0_rgba(0,0,0,0.5)]"
+            class="transition-all duration-300"
           />
         </svg>
         <span
-          class="text-4xl font-mono font-black z-10 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
-          [class.text-[var(--color-accent)]]="!isFinished() && isActive()"
-          [class.text-rose-500]="isFinished()"
-          [class.text-[var(--color-text-primary)]]="!isActive() && !isFinished()"
+          class="text-4xl font-mono font-semibold z-10 transition-colors duration-300"
+          [class.text-[var(--color-text-primary)]]="!isFinished()"
+          [class.text-rose-400]="isFinished()"
         >
           {{ formattedTime() }}
         </span>
       </div>
 
       <!-- Botones -->
-      <div class="flex items-center justify-center gap-3 mt-4 w-full px-2 max-w-[280px]">
-        <button (click)="adjustTime(-30)" class="h-14 flex-1 rounded-md bg-[#111827] text-[var(--color-text-muted)] text-base font-heading font-black uppercase active:translate-y-[2px] active:translate-x-[2px] transition-all duration-200 hover:text-[var(--color-accent)] border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none">-30s</button>
+      <div class="flex items-center justify-center gap-4 mt-2 w-full px-2 max-w-[280px]">
+        <button (click)="adjustTime(-30)" class="h-12 flex-1 rounded-full bg-[var(--color-bg-input)] text-[var(--color-text-muted)] text-sm font-medium hover:text-white transition-all duration-200 hover:bg-[var(--color-bg-elevated)] active:scale-95">-30s</button>
         
-        <button (click)="restart()" class="h-14 w-14 shrink-0 flex items-center justify-center rounded-md bg-[#111827] text-[var(--color-text-muted)] active:translate-y-[2px] active:translate-x-[2px] transition-all duration-200 hover:text-rose-500 border-2 border-[var(--color-border)] hover:border-rose-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none" aria-label="Reiniciar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button (click)="restart()" class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full bg-[var(--color-bg-input)] text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 active:scale-95" aria-label="Reiniciar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
         
-        <button (click)="toggleTimer()" class="h-16 w-16 shrink-0 flex items-center justify-center rounded-lg bg-[var(--color-accent)] text-[#111827] active:translate-y-[4px] active:translate-x-[4px] transition-all duration-200 shadow-[4px_4px_0_rgba(249,115,22,0.5)] active:shadow-none border-2 border-[#111827]" aria-label="Play/Pause">
+        <button (click)="toggleTimer()" class="h-14 w-14 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-secondary)] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)] hover:opacity-90 active:scale-95 transition-all duration-200" aria-label="Play/Pause">
           @if (isActive()) {
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="4" height="16" x="6" y="4" rx="1"/><rect width="4" height="16" x="14" y="4" rx="1"/></svg>
           } @else {
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M6 4l14 8-14 8V4z"/></svg>
           }
         </button>
 
-        <button (click)="adjustTime(30)" class="h-14 flex-1 rounded-md bg-[#111827] text-[var(--color-text-muted)] text-base font-heading font-black uppercase active:translate-y-[2px] active:translate-x-[2px] transition-all duration-200 hover:text-[var(--color-accent)] border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none">+30s</button>
+        <button (click)="adjustTime(30)" class="h-12 flex-1 rounded-full bg-[var(--color-bg-input)] text-[var(--color-text-muted)] text-sm font-medium hover:text-white transition-all duration-200 hover:bg-[var(--color-bg-elevated)] active:scale-95">+30s</button>
       </div>
     </div>
   `,
   styles: [`
-    @keyframes pulse-border {
-      0%, 100% { border-color: #f43f5e; box-shadow: 6px 6px 0px rgba(244, 63, 94, 0.4); background-color: rgba(244, 63, 94, 0.05); }
-      50% { border-color: #fb7185; box-shadow: 6px 6px 0px rgba(244, 63, 94, 0.8); background-color: rgba(244, 63, 94, 0.15); }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.1); }
+      50% { box-shadow: 0 0 25px -3px rgba(244, 63, 94, 0.3); border-color: rgba(244, 63, 94, 0.3); }
     }
     :host .timer-finished {
-      animation: pulse-border 1s ease-in-out infinite;
-      border-color: #f43f5e;
+      animation: pulse-glow 1.5s ease-in-out infinite;
     }
     :host .timer-active {
-      border-color: var(--color-accent);
-      box-shadow: 4px 4px 0px rgba(249, 115, 22, 0.5);
+      border-color: rgba(59, 130, 246, 0.15);
+      box-shadow: 0 8px 20px -5px rgba(59, 130, 246, 0.1);
     }
     :host .timer-idle {
-      border-color: var(--color-border);
-      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+      /* default styles from tailwind classes */
     }
   `], changeDetection: ChangeDetectionStrategy.OnPush
 })

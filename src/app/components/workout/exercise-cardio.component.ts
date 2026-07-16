@@ -8,18 +8,18 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="rounded-xl bg-[var(--color-bg-card)] p-5 border-2 border-[var(--color-border)] flex flex-col gap-5 shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
+    <div class="rounded-3xl bg-[var(--color-bg-card)] p-5 border border-white/5 flex flex-col gap-5 shadow-sm">
       <!-- Header -->
       <div class="flex items-center justify-between h-8">
-        <h3 class="text-2xl font-heading font-black text-[var(--color-text-primary)] tracking-widest uppercase drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ exerciseLog().name }}</h3>
+        <h3 class="text-lg font-bold text-white tracking-tight uppercase">{{ exerciseLog().name }}</h3>
         @if (showSaved()) {
-          <svg class="text-[var(--color-accent)] animate-fade-in drop-shadow-[1px_1px_0_rgba(0,0,0,1)]" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg class="text-[var(--color-accent-success)] animate-fade-in" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         }
       </div>
 
       <!-- Distance -->
-      <div class="flex flex-col gap-2">
-        <label class="text-xs text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
           Distancia ({{ unitSvc.currentDistanceUnit() }})
         </label>
         <input
@@ -28,13 +28,13 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
           [ngModel]="distanceInput"
           (ngModelChange)="distanceInput = $event; updateLog()"
           placeholder="0"
-          class="w-full h-14 rounded-md bg-[#111827] border-2 border-[var(--color-border)] px-5 text-center text-2xl font-black font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors shadow-inner"
+          class="w-full h-12 rounded-xl bg-[var(--color-bg-primary)] border border-white/5 px-4 text-center text-xl font-semibold font-mono text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-all shadow-inner placeholder:text-white/20"
         />
       </div>
 
       <!-- Time -->
-      <div class="flex flex-col gap-2">
-        <label class="text-xs text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
           Tiempo (minutos)
         </label>
         <input
@@ -43,29 +43,29 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
           [ngModel]="timeInput"
           (ngModelChange)="timeInput = $event; updateLog()"
           placeholder="0"
-          class="w-full h-14 rounded-md bg-[#111827] border-2 border-[var(--color-border)] px-5 text-center text-2xl font-black font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors shadow-inner"
+          class="w-full h-12 rounded-xl bg-[var(--color-bg-primary)] border border-white/5 px-4 text-center text-xl font-semibold font-mono text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-all shadow-inner placeholder:text-white/20"
         />
       </div>
 
       <!-- Technical notes -->
-      <div class="flex flex-col gap-2">
-        <label class="text-xs text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
           Notas técnicas
         </label>
         <textarea
           [ngModel]="notesInput"
           (ngModelChange)="notesInput = $event; updateLog()"
           placeholder="Opcional..."
-          rows="3"
-          class="w-full rounded-md bg-[#111827] border-2 border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors resize-none shadow-[inset_2px_2px_0_rgba(0,0,0,0.5)]"
+          rows="2"
+          class="w-full rounded-xl bg-[var(--color-bg-primary)] border border-white/5 px-4 py-3 text-sm font-medium text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-all resize-none shadow-inner"
         ></textarea>
       </div>
 
       <!-- Summary -->
       @if (distanceInput || timeInput) {
-        <div class="rounded-md bg-[var(--color-bg-input)] px-5 py-4 flex items-center justify-between border-2 border-[var(--color-border)] shadow-[2px_2px_0_rgba(0,0,0,0.3)]">
-          <span class="text-xs text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">Resumen</span>
-          <span class="text-lg font-mono font-black text-[var(--color-text-primary)] drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+        <div class="rounded-xl bg-gradient-to-r from-[var(--color-bg-input)] to-transparent px-4 py-3 flex items-center justify-between border border-white/5 shadow-inner">
+          <span class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Resumen</span>
+          <span class="text-base font-mono font-semibold text-white">
             @if (distanceInput) {
               {{ distanceInput }} {{ unitSvc.currentDistanceUnit() }}
             }

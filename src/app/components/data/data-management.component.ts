@@ -17,38 +17,38 @@ interface MonthStats {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-xs text-[var(--color-accent)] font-heading font-black uppercase tracking-widest mb-1">{{ currentMonthLabel() }}</p>
-          <h1 class="text-4xl sm:text-5xl font-heading font-black text-[var(--color-text-primary)] tracking-widest uppercase drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">Historial</h1>
+          <p class="text-xs text-[var(--color-accent)] font-bold tracking-wider uppercase mb-1">{{ currentMonthLabel() }}</p>
+          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">Historial</h1>
         </div>
         
         <div class="flex gap-2">
-          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:translate-y-0 disabled:active:translate-x-0 active:translate-y-[2px] active:translate-x-[2px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:hover:border-[var(--color-border)] disabled:hover:shadow-[2px_2px_0_rgba(0,0,0,0.5)]" aria-label="Mes anterior">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-xl bg-[var(--color-bg-input)] border border-white/5 text-white disabled:opacity-30 disabled:scale-100 active:scale-95 transition-all shadow-inner hover:bg-white/5" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-md bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:translate-y-0 disabled:active:translate-x-0 active:translate-y-[2px] active:translate-x-[2px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:hover:border-[var(--color-border)] disabled:hover:shadow-[2px_2px_0_rgba(0,0,0,0.5)]" aria-label="Mes siguiente">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-xl bg-[var(--color-bg-input)] border border-white/5 text-white disabled:opacity-30 disabled:scale-100 active:scale-95 transition-all shadow-inner hover:bg-white/5" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
       </div>
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-3 gap-3">
-        <div class="bg-[var(--color-bg-card)] rounded-xl p-3 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-1 min-h-[110px] shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
-          <span class="text-4xl font-heading font-black text-[var(--color-accent)] leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ stats().sesiones }}</span>
-          <span class="text-[10px] font-heading font-black uppercase tracking-widest text-[var(--color-text-muted)] text-center mt-1">Sesiones</span>
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
+          <span class="text-3xl font-bold text-[var(--color-accent)] leading-none">{{ stats().sesiones }}</span>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Sesiones</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl p-3 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-1 min-h-[110px] shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
-          <span class="text-3xl font-heading font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ formatVol(stats().volumenWeight) }}</span>
-          <span class="text-[10px] font-heading font-black uppercase tracking-widest text-[var(--color-text-muted)] text-center mt-1">Vol. Fza</span>
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
+          <span class="text-2xl font-bold text-white leading-none truncate w-full text-center">{{ formatVol(stats().volumenWeight) }}</span>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Vol. Fza</span>
         </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl p-3 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-1 min-h-[110px] shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
-          <span class="text-3xl font-heading font-black text-emerald-400 leading-none truncate w-full text-center drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ stats().distanceMeters > 0 ? unitSvc.metersToUser(stats().distanceMeters) + ' ' + unitSvc.currentDistanceUnit() : '—' }}</span>
-          <span class="text-[10px] font-heading font-black uppercase tracking-widest text-[var(--color-text-muted)] text-center mt-1">Cardio</span>
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
+          <span class="text-2xl font-bold text-[var(--color-accent-success)] leading-none truncate w-full text-center">{{ stats().distanceMeters > 0 ? unitSvc.metersToUser(stats().distanceMeters) + ' ' + unitSvc.currentDistanceUnit() : '—' }}</span>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Cardio</span>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ interface MonthStats {
         <div class="flex gap-2 flex-wrap">
           @for (ts of stats().tagSesiones; track ts.tag) {
             <span
-              class="px-2 py-1 rounded-md text-[10px] font-heading font-black uppercase tracking-widest border-2 shadow-[2px_2px_0_rgba(0,0,0,0.3)]"
+              class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-white/5"
               [style.background]="getTagColor(ts.tag).bg"
               [style.borderColor]="getTagColor(ts.tag).border"
               [style.color]="getTagColor(ts.tag).text"
@@ -67,69 +67,69 @@ interface MonthStats {
       }
 
       <!-- Workout List -->
-      <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-4">
         @for (log of allLogs(); track log.date + log.routineId) {
-          <div class="bg-[var(--color-bg-card)] rounded-xl border-2 border-[var(--color-border)] overflow-hidden shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[4px_4px_0_rgba(249,115,22,0.3)] hover:border-[var(--color-accent)] transition-all">
+          <div class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 transition-all group">
 
             <!-- Date + Tags row -->
-            <div class="flex items-center gap-4 px-4 pt-4 pb-3">
-              <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-md w-14 h-14 border-2 border-[var(--color-border)] shrink-0 shadow-inner">
-                <span class="text-[var(--color-accent)] font-heading font-black text-2xl leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ log.date | slice:8:10 }}</span>
-                <span class="text-[var(--color-text-muted)] text-[10px] font-heading font-black uppercase tracking-widest mt-0.5">{{ getMonthShort(log.date) }}</span>
+            <div class="flex items-center gap-4 p-5">
+              <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
+                <span class="text-[var(--color-accent)] font-bold text-xl leading-none">{{ log.date | slice:8:10 }}</span>
+                <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
               </div>
 
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap gap-1.5 mb-1.5">
                   @for (tag of getLogTags(log); track tag) {
                     <span
-                      class="px-2 py-0.5 rounded-md text-[9px] font-heading font-black uppercase tracking-widest border-2 shadow-[1px_1px_0_rgba(0,0,0,0.3)]"
+                      class="px-2 py-0.5 rounded-md text-[9px] font-semibold uppercase tracking-wider border border-white/5"
                       [style.background]="getTagColor(tag).bg"
                       [style.borderColor]="getTagColor(tag).border"
                       [style.color]="getTagColor(tag).text"
                     >{{ tag }}</span>
                   }
                   @if (getLogTags(log).length === 0) {
-                    <span class="text-[var(--color-text-muted)] text-[10px] font-heading font-black uppercase tracking-widest">Sin etiquetas</span>
+                    <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider">Sin etiquetas</span>
                   }
                 </div>
-                <p class="text-[var(--color-text-muted)] text-xs font-mono font-bold">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
+                <p class="text-[var(--color-text-muted)] text-[11px] font-medium">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
               </div>
 
               <button
                 (click)="confirmDeleteLog(log)"
-                class="text-[var(--color-text-muted)] hover:text-rose-500 transition-colors p-1.5 active:translate-y-[2px] active:translate-x-[2px] bg-[var(--color-bg-input)] rounded-md border-2 border-[var(--color-border)] hover:border-rose-900 shadow-[2px_2px_0_rgba(0,0,0,0.5)] hover:shadow-none shrink-0"
+                class="text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
                 aria-label="Eliminar entrenamiento"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
 
             <!-- Exercise lines -->
-            <div class="border-t-2 border-dashed border-[var(--color-border)] px-4 pt-3 pb-4 flex flex-col gap-4">
+            <div class="border-t border-white/5 px-5 pt-4 pb-5 flex flex-col gap-4 bg-[var(--color-bg-input)]/20">
               @for (ej of log.exercises; track ej.name) {
                 <div class="flex flex-col gap-1.5">
-                  <span class="text-[var(--color-text-secondary)] text-sm font-heading font-black tracking-widest uppercase">{{ ej.name }}</span>
+                  <span class="text-white text-sm font-semibold tracking-wide uppercase">{{ ej.name }}</span>
                   @if (ej.type === 'strength' && ej.sets && ej.sets.length > 0) {
                     @if (hasProgressiveOverload(ej.sets)) {
                       <!-- Progressive overload: show each set as a chip -->
                       <div class="flex flex-wrap gap-2">
                         @for (s of ej.sets; track $index; let i = $index) {
                           <span
-                            class="text-[10px] font-mono font-bold px-2 py-1 rounded-md border-2"
+                            class="text-[11px] font-mono font-medium px-2 py-1 rounded-md border"
                             [class]="isMaxSet(s, ej.sets!)
-                              ? 'bg-[var(--color-accent)] border-[#111827] text-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.5)]'
-                              : 'bg-[#111827] border-[var(--color-border)] text-[var(--color-text-secondary)]'"
+                              ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30'
+                              : 'bg-[var(--color-bg-primary)] border-white/5 text-[var(--color-text-muted)]'"
                           >S{{ i + 1 }}: {{ unitSvc.kgToUser(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
                         }
                       </div>
                     } @else {
                       <!-- All sets equal: compact summary -->
-                      <span class="text-sm font-black text-[var(--color-text-primary)] font-mono">
+                      <span class="text-sm font-semibold text-[var(--color-text-muted)] font-mono">
                         {{ ej.sets.length }}×{{ ej.sets[0].reps }} @ {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
                       </span>
                     }
                   } @else if (ej.type === 'cardio') {
-                    <span class="text-sm font-black text-emerald-400 font-mono">{{ getEjercicioResumen(ej) }}</span>
+                    <span class="text-sm font-semibold text-[var(--color-accent-success)] font-mono">{{ getEjercicioResumen(ej) }}</span>
                   } @else {
                     <span class="text-sm text-[var(--color-text-muted)]">—</span>
                   }
@@ -139,15 +139,15 @@ interface MonthStats {
 
             <!-- Volume footer -->
             @if (getLogVolumen(log) > 0 || getLogDistancia(log) > 0) {
-              <div class="border-t-2 border-[var(--color-border)] px-4 py-3 flex gap-4 bg-[var(--color-bg-input)]">
+              <div class="border-t border-white/5 px-5 py-3.5 flex gap-4 bg-[var(--color-bg-input)]/50">
                 @if (getLogVolumen(log) > 0) {
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">
-                    Vol: <span class="text-[var(--color-text-primary)]">{{ formatVol(getLogVolumen(log)) }}</span>
+                  <span class="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
+                    Vol: <span class="text-white font-mono">{{ formatVol(getLogVolumen(log)) }}</span>
                   </span>
                 }
                 @if (getLogDistancia(log) > 0) {
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest">
-                    Cardio: <span class="text-emerald-400">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
+                  <span class="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
+                    Cardio: <span class="text-[var(--color-accent-success)] font-mono">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
                   </span>
                 }
               </div>
@@ -157,46 +157,46 @@ interface MonthStats {
 
         @if (allLogs().length === 0) {
           <div class="text-center py-16 flex flex-col items-center">
-            <div class="w-20 h-20 rounded-xl bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] shadow-[4px_4px_0_rgba(0,0,0,0.5)] flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-text-muted)]"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <div class="w-20 h-20 rounded-full bg-[var(--color-bg-input)] border border-white/5 shadow-inner flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-text-muted)]"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             </div>
-            <p class="text-[var(--color-text-muted)] text-sm font-heading font-bold uppercase tracking-widest">No hay entrenamientos este mes.</p>
+            <p class="text-[var(--color-text-muted)] text-sm font-semibold uppercase tracking-wider">No hay entrenamientos este mes.</p>
           </div>
         }
       </div>
 
       <!-- Feedback message -->
       @if (feedbackMessage()) {
-        <div class="mb-4 px-4 py-3 rounded-md border-2 text-xs font-heading font-black uppercase tracking-widest text-center shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-all" [class]="feedbackIsError() ? 'bg-rose-500 border-rose-900 text-[#111827] shadow-[4px_4px_0_rgba(244,63,94,0.5)]' : 'bg-emerald-500 border-emerald-900 text-[#111827] shadow-[4px_4px_0_rgba(16,185,129,0.5)]'">
+        <div class="mb-4 px-4 py-3.5 rounded-2xl text-xs font-semibold uppercase tracking-wider text-center shadow-sm transition-all" [class]="feedbackIsError() ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' : 'bg-[var(--color-accent-success)]/10 border border-[var(--color-accent-success)]/20 text-[var(--color-accent-success)]'">
           {{ feedbackMessage() }}
         </div>
       }
 
       <!-- Exportar -->
       <div class="mt-8">
-        <h2 class="text-lg font-heading font-black uppercase tracking-widest text-[var(--color-text-primary)] mb-4 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Exportar Datos</h2>
+        <h2 class="text-base font-bold uppercase tracking-wider text-white mb-4">Exportar Datos</h2>
         <div class="flex flex-col gap-3 mb-4">
           <div class="flex gap-3">
-            <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-md text-xs">
+            <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-xl text-[11px] uppercase tracking-wider">
               Mes (JSON)
             </button>
-            <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-md text-xs">
+            <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-xl text-[11px] uppercase tracking-wider">
               Mes (CSV)
             </button>
           </div>
           <div class="flex gap-3">
-            <button (click)="exportAllJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-md text-xs !bg-[#111827] !border-[var(--color-accent)] !text-[var(--color-accent)]">
+            <button (click)="exportAllJSON()" class="w-full bg-[var(--color-bg-input)] text-[var(--color-accent)] border border-[var(--color-accent)]/30 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-wider hover:bg-[var(--color-accent)]/10 active:scale-95 transition-all flex-1">
               Todo (JSON)
             </button>
-            <button (click)="exportAllCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-md text-xs !bg-[#111827] !border-emerald-500 !text-emerald-500">
+            <button (click)="exportAllCSV()" class="w-full bg-[var(--color-bg-input)] text-[var(--color-accent-success)] border border-[var(--color-accent-success)]/30 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-wider hover:bg-[var(--color-accent-success)]/10 active:scale-95 transition-all flex-1">
               Todo (CSV)
             </button>
           </div>
         </div>
-        <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-heading font-black uppercase tracking-widest active:translate-y-[2px] active:translate-x-[2px] transition-all hover:border-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-card)]">
+        <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] text-[11px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent)]/50 hover:text-[var(--color-accent)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)]">
           Importar (.json)
         </button>
-        <button (click)="csvInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-heading font-black uppercase tracking-widest active:translate-y-[2px] active:translate-x-[2px] transition-all hover:border-emerald-400 hover:text-emerald-400 bg-[var(--color-bg-card)] mt-3">
+        <button (click)="csvInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] text-[11px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent-success)]/50 hover:text-[var(--color-accent-success)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)] mt-3">
           Importar (.csv)
         </button>
       </div>
@@ -205,20 +205,20 @@ interface MonthStats {
 
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/90 px-4">
-          <div class="bg-[var(--color-bg-card)] rounded-xl p-6 w-full max-w-sm border-2 border-[var(--color-border)] shadow-[8px_8px_0_rgba(0,0,0,1)] animate-scale-in">
-            <h3 class="text-2xl font-heading font-black text-[var(--color-text-primary)] uppercase tracking-widest drop-shadow-[1px_1px_0_rgba(0,0,0,1)] mb-4">¿Eliminar registro?</h3>
-            <p class="text-[var(--color-text-muted)] text-sm font-mono font-bold mb-8 leading-relaxed">
-              Se eliminará el entrenamiento del <span class="text-[var(--color-accent)] font-bold">{{ logToDelete()!.date }}</span> permanentemente.
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in">
+            <h3 class="text-xl font-bold text-white tracking-tight mb-2">¿Eliminar registro?</h3>
+            <p class="text-[var(--color-text-muted)] text-sm font-medium mb-8 leading-relaxed">
+              Se eliminará el entrenamiento del <span class="text-white font-semibold">{{ logToDelete()!.date }}</span> permanentemente.
             </p>
             <div class="flex flex-col gap-3">
               <button
                 (click)="deleteLogConfirmed()"
-                class="btn-danger min-h-[48px]"
+                class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/20 py-3.5 rounded-2xl font-semibold hover:bg-rose-500/20 active:scale-95 transition-all"
               >Eliminar</button>
               <button
                 (click)="logToDelete.set(null)"
-                class="btn-secondary min-h-[48px]"
+                class="w-full bg-[var(--color-bg-input)] text-white border border-white/5 py-3.5 rounded-2xl font-semibold hover:bg-white/5 active:scale-95 transition-all"
               >Cancelar</button>
             </div>
           </div>
