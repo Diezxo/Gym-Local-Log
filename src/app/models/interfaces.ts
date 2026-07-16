@@ -78,6 +78,7 @@ export interface LogDiario {
 // ─── Archivo Mensual ───
 export interface ArchivoMensual {
   mesId: string; // Formato YYYY-MM
+  schemaVersion?: number; // 1 = formato inicial; permite migraciones futuras
   logs: LogDiario[];
 }
 

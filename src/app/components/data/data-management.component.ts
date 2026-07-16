@@ -172,8 +172,12 @@ interface MonthStats {
         <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-sm font-bold active:scale-95 transition-all hover:border-[var(--color-text-primary)] hover:text-[var(--color-text-primary)]">
           Importar (.json)
         </button>
+        <button (click)="csvInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--color-border-active)] text-[var(--color-text-muted)] text-sm font-bold active:scale-95 transition-all hover:border-emerald-400/50 hover:text-emerald-400">
+          Importar (.csv)
+        </button>
       </div>
       <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" />
+      <input #csvInput type="file" accept=".csv" (change)="onCSVSelected($event)" class="hidden" />
 
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
@@ -432,6 +436,25 @@ export class DataManagementComponent implements OnInit {
       await this.loadHistory();
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al importar.', true);
+    }
+    input.value = '';
+  }
+
+  async onCSVSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const result = await this.exportService.importCSV(file);
+      let msg = `CSV importado: ${result.imported} log${result.imported !== 1 ? 's' : ''}.`;
+      if (result.rejected > 0) {
+        msg += ` ${result.rejected} fila${result.rejected !== 1 ? 's' : ''} rechazada${result.rejected !== 1 ? 's' : ''} (rutina desconocida).`;
+      }
+      this.showFeedback(msg, result.rejected > 0 && result.imported === 0);
+      await this.refreshAvailableMonths(this.currentMesId());
+      await this.loadHistory();
+    } catch (err: any) {
+      this.showFeedback(err.message || 'Error al importar CSV.', true);
     }
     input.value = '';
   }

@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { get, set } from 'idb-keyval'; // Lightweight idb wrapper for simple key-val
 
+const MAX_BACKUPS = 7;
+
 @Injectable({ providedIn: 'root' })
 export class FileSystemService {
   // State
@@ -103,6 +105,59 @@ export class FileSystemService {
       if (e.name === 'NotFoundError') return null;
       console.error('Error reading from file system:', e);
       return null;
+    }
+  }
+
+  // 5. List all YYYY-MM.json monthly data files in the connected folder
+  async listMonthlyFiles(): Promise<string[]> {
+    if (!this.isConnected() || !this.dirHandle) return [];
+    const files: string[] = [];
+    const monthPattern = /^\d{4}-\d{2}\.json$/;
+    try {
+      for await (const [name] of (this.dirHandle as any).entries()) {
+        if (monthPattern.test(name)) {
+          files.push(name);
+        }
+      }
+    } catch (e) {
+      console.error('Error listing monthly files:', e);
+    }
+    return files;
+  }
+
+  // 6. Write a rotating backup for a monthly archive (max MAX_BACKUPS per month)
+  async writeBackupJson(mesId: string, data: any): Promise<void> {
+    if (!this.isConnected() || !this.dirHandle) return;
+    try {
+      // Timestamp format: YYYY-MM-DD_HH-MM-SS (safe for filenames)
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      const backupFilename = `${mesId}_bak_${ts}.json`;
+      await this.writeJsonFile(backupFilename, data);
+
+      // Rotate: keep only the MAX_BACKUPS most recent backups for this month
+      const backupPattern = new RegExp(`^${mesId}_bak_.*\\.json$`);
+      const backupFiles: string[] = [];
+
+      for await (const [name] of (this.dirHandle as any).entries()) {
+        if (backupPattern.test(name)) {
+          backupFiles.push(name);
+        }
+      }
+
+      // Sort lexicographically — because the timestamp is embedded, oldest are first
+      backupFiles.sort();
+
+      // Delete oldest if we exceed MAX_BACKUPS
+      while (backupFiles.length > MAX_BACKUPS) {
+        const oldest = backupFiles.shift()!;
+        try {
+          await (this.dirHandle as any).removeEntry(oldest);
+        } catch {
+          // Ignore deletion errors
+        }
+      }
+    } catch (e) {
+      console.error('Error writing backup:', e);
     }
   }
 }

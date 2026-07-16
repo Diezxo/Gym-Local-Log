@@ -8,6 +8,7 @@ import {
   UserSettings,
   DEFAULT_SETTINGS,
 } from '../models/interfaces';
+import { DEFAULT_TEMPLATES } from '../models/default-templates';
 import { FileSystemService } from './file-system.service';
 
 // ─── Schema de IndexedDB ───
@@ -28,6 +29,7 @@ interface GymDBSchema extends DBSchema {
 
 const DB_NAME = 'gym-local-log';
 const DB_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 1;
 
 @Injectable({ providedIn: 'root' })
 export class DbService {
@@ -55,17 +57,40 @@ export class DbService {
       return db;
     });
 
-    // Sync from FS on startup without blocking the constructor
-    setTimeout(() => {
-      if (this.fs.isConnected()) {
-        this.syncFromFileSystem();
-      }
-    }, 1000);
+    // After DB is ready: seed defaults and optionally sync from FS
+    this.dbPromise.then(() => {
+      this.initDefaultTemplates();
+      setTimeout(() => {
+        if (this.fs.isConnected()) {
+          this.syncFromFileSystem();
+        }
+      }, 1000);
+    });
   }
 
   /** Returns the DB, using the cached instance if already resolved */
   private async getDb(): Promise<IDBPDatabase<GymDBSchema>> {
     return this.resolvedDb ?? this.dbPromise;
+  }
+
+  // ─── Default Templates ───
+
+  /**
+   * On first launch (empty templates store), seeds the default templates.
+   * This ensures a new user immediately sees useful routines.
+   */
+  private async initDefaultTemplates(): Promise<void> {
+    try {
+      const database = await this.getDb();
+      const existing = await database.getAll('templates');
+      if (existing.length === 0) {
+        for (const template of DEFAULT_TEMPLATES) {
+          await database.put('templates', template);
+        }
+      }
+    } catch (e) {
+      console.warn('Error seeding default templates:', e);
+    }
   }
 
   // ─── Sync ───
@@ -82,10 +107,18 @@ export class DbService {
     await Promise.all([
       this.fs.writeJsonFile('templates.json', templates),
       this.fs.writeJsonFile('settings.json', settings),
-      ...logs.map(archive => this.fs.writeJsonFile(`${archive.mesId}.json`, archive)),
+      ...logs.map(async archive => {
+        await this.fs.writeJsonFile(`${archive.mesId}.json`, archive);
+        // Write rotating backup for each month during a full sync
+        await this.fs.writeBackupJson(archive.mesId, archive);
+      }),
     ]);
   }
 
+  /**
+   * Restores data from the connected FS folder into IndexedDB.
+   * Reads templates.json, settings.json, and all YYYY-MM.json files.
+   */
   async syncFromFileSystem(): Promise<void> {
     if (!this.fs.isConnected()) return;
     try {
@@ -105,6 +138,15 @@ export class DbService {
       }
 
       await Promise.all(ops);
+
+      // Restore monthly logs from all YYYY-MM.json files in the folder
+      const monthlyFiles = await this.fs.listMonthlyFiles();
+      for (const filename of monthlyFiles) {
+        const archive = await this.fs.readJsonFile<ArchivoMensual>(filename);
+        if (archive && archive.mesId && Array.isArray(archive.logs)) {
+          await this.importMonthlyArchive(archive);
+        }
+      }
     } catch (e) {
       console.warn('Error syncing from FS on startup:', e);
     }
@@ -150,7 +192,7 @@ export class DbService {
 
     let archive = await database.get('monthly-logs', mesId);
     if (!archive) {
-      archive = { mesId, logs: [] };
+      archive = { mesId, schemaVersion: CURRENT_SCHEMA_VERSION, logs: [] };
     }
 
     // Replace existing log for same date+template, or add new
@@ -243,9 +285,18 @@ export class DbService {
         }
       }
       existing.logs.sort((a, b) => a.fecha.localeCompare(b.fecha));
+      // Preserve/upgrade schemaVersion
+      if (!existing.schemaVersion) {
+        existing.schemaVersion = archive.schemaVersion ?? CURRENT_SCHEMA_VERSION;
+      }
       await database.put('monthly-logs', existing);
     } else {
-      await database.put('monthly-logs', archive);
+      // Ensure schemaVersion is set
+      const toStore: ArchivoMensual = {
+        ...archive,
+        schemaVersion: archive.schemaVersion ?? CURRENT_SCHEMA_VERSION,
+      };
+      await database.put('monthly-logs', toStore);
     }
   }
 

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { DbService } from '../../services/db.service';
 import {
   LogDiario,
+  ArchivoMensual,
   MuscleTag,
   TAG_COLORS,
 } from '../../models/interfaces';
@@ -11,7 +12,7 @@ import { ProgressionChartComponent } from './progression-chart.component';
 
 interface TagVolumen {
   tag: MuscleTag;
-  valor: number; // kg para fuerza, km para cardio
+  valor: number; // series para fuerza, km para cardio
   unidad: string;
   sesiones: number;
 }
@@ -20,6 +21,13 @@ interface HeatDay {
   date: string; // YYYY-MM-DD
   trained: boolean;
   dayNum: number;
+}
+
+interface PRRecord {
+  ejercicio: string;
+  peso: number;
+  reps: number;
+  fecha: string;
 }
 
 @Component({
@@ -68,6 +76,14 @@ interface HeatDay {
             </div>
           }
         </div>
+        <!-- Weekly cardio km badge -->
+        @if (weeklyCardioKm() > 0) {
+          <div class="flex justify-center mt-3">
+            <span class="text-sm font-bold text-emerald-400 bg-emerald-400/10 px-4 py-1.5 rounded-full border border-emerald-400/20">
+              🏃 {{ weeklyCardioKm() }} km esta semana
+            </span>
+          </div>
+        }
       </div>
 
       <!-- ── Streak + Stats Row ── -->
@@ -89,6 +105,25 @@ interface HeatDay {
           <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium">Días<br/>restantes</span>
         </div>
       </div>
+
+      <!-- ── Último PR ── -->
+      @if (lastPR()) {
+        <div>
+          <h2 class="text-base font-bold text-[var(--color-text-muted)] mb-4">Último PR</h2>
+          <div class="bg-[var(--color-bg-card)] rounded-2xl p-5 border border-[var(--color-border)] flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wider mb-1">Récord personal</p>
+              <p class="text-[var(--color-text-primary)] font-black text-lg leading-tight truncate">{{ lastPR()!.ejercicio }}</p>
+              <p class="text-[var(--color-text-muted)] text-xs font-medium mt-1">{{ getDaysAgo(lastPR()!.fecha) }}</p>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-3xl font-black text-amber-400 leading-none">{{ lastPR()!.peso }}<span class="text-lg">kg</span></p>
+              <p class="text-sm text-[var(--color-text-muted)] font-bold mt-1">× {{ lastPR()!.reps }} reps</p>
+            </div>
+            <div class="text-3xl shrink-0">🏆</div>
+          </div>
+        </div>
+      }
 
       <!-- ── Volumen por Tag ── -->
       @if (tagVolumens().length > 0) {
@@ -174,8 +209,8 @@ interface HeatDay {
         </div>
       }
 
-      <!-- Chart Integration -->
-      <app-progression-chart [logs]="monthLogs()"></app-progression-chart>
+      <!-- Chart Integration — recibe TODOS los meses para mostrar progresión histórica -->
+      <app-progression-chart [logs]="allLogs()"></app-progression-chart>
 
     </div>
   `,
@@ -196,6 +231,12 @@ export class DashboardComponent implements OnInit {
   trainedCount = signal(0);
   lastLog = signal<LogDiario | null>(null);
   monthLogs = signal<LogDiario[]>([]);
+  /** All logs from all months — used to feed the cross-month progression chart */
+  allLogs = signal<LogDiario[]>([]);
+
+  // New signals
+  weeklyCardioKm = signal(0);
+  lastPR = signal<PRRecord | null>(null);
 
   currentMesId = signal('');
   availableMonths = signal<string[]>([]);
@@ -284,6 +325,12 @@ export class DashboardComponent implements OnInit {
     archives.forEach(a => a.logs.forEach(l => allTrainingDays.add(l.fecha)));
     const sortedDays = Array.from(allTrainingDays).sort();
 
+    // ── All logs (chronological) for the cross-month progression chart ──
+    const allLogsList = archives
+      .flatMap(a => a.logs)
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+    this.allLogs.set(allLogsList);
+
     // ── Streak ──
     this.streak.set(this.calcStreak(sortedDays, now));
 
@@ -301,8 +348,65 @@ export class DashboardComponent implements OnInit {
     this.monthSessions.set(logsThisMonth.length);
     this.monthLogs.set(logsThisMonth);
 
-    // ── Volumen por tag ──
+    // ── Volumen por tag (mes actual) ──
     this.calcTagVolumens(logsThisMonth);
+
+    // ── Km cardio esta semana (últimos 7 días, todos los meses) ──
+    this.weeklyCardioKm.set(this.calcWeeklyCardioKm(archives, now));
+
+    // ── Último PR (máximo histórico cross-month) ──
+    this.lastPR.set(this.calcLastPR(archives));
+  }
+
+  // ─── Weekly Cardio Km ───
+
+  private calcWeeklyCardioKm(archives: ArchivoMensual[], now: Date): number {
+    const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    const weekAgoStr = this.toLocalDateStr(weekAgo);
+    const todayStr = this.toLocalDateStr(now);
+    
+    let totalKm = 0;
+    for (const archive of archives) {
+      for (const log of archive.logs) {
+        if (log.fecha >= weekAgoStr && log.fecha <= todayStr) {
+          for (const ej of log.ejercicios) {
+            if (ej.tipo === 'cardio' && ej.cardio) {
+              totalKm += ej.cardio.distanciaKm ?? 0;
+            }
+          }
+        }
+      }
+    }
+    return Math.round(totalKm * 10) / 10;
+  }
+
+  // ─── Last PR (most recently set personal record across all time) ───
+
+  private calcLastPR(archives: ArchivoMensual[]): PRRecord | null {
+    // Sort archives chronologically (oldest first) to track progression accurately
+    const sortedArchives = [...archives].sort((a, b) => a.mesId.localeCompare(b.mesId));
+    const bestByExercise = new Map<string, { peso: number; reps: number }>();
+    let latestPR: PRRecord | null = null;
+
+    for (const archive of sortedArchives) {
+      const sortedLogs = [...archive.logs].sort((a, b) => a.fecha.localeCompare(b.fecha));
+      for (const log of sortedLogs) {
+        for (const ej of log.ejercicios) {
+          if (ej.tipo !== 'fuerza' || !ej.series) continue;
+          for (const serie of ej.series) {
+            const prev = bestByExercise.get(ej.nombre);
+            const isNewPR = !prev
+              || serie.peso > prev.peso
+              || (serie.peso === prev.peso && serie.reps > prev.reps);
+            if (isNewPR) {
+              bestByExercise.set(ej.nombre, { peso: serie.peso, reps: serie.reps });
+              latestPR = { ejercicio: ej.nombre, peso: serie.peso, reps: serie.reps, fecha: log.fecha };
+            }
+          }
+        }
+      }
+    }
+    return latestPR;
   }
 
   private buildWeek(trained: Set<string>, now: Date) {

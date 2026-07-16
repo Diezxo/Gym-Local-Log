@@ -164,6 +164,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
                 [ejercicioLog]="ejLog"
                 [sugerencia]="sugerencias()[i] ?? null"
                 [unidadPeso]="settings().unidadPeso"
+                [incrementoPeso]="settings().incrementoPeso"
                 (serieCompletada)="onSerieCompletada($event)"
                 (logUpdated)="onLogUpdated($event)"
               />
@@ -247,7 +248,12 @@ export class WorkoutComponent implements OnInit, OnDestroy {
       weekday: 'long', day: 'numeric', month: 'long',
     };
     this.fechaDisplay.set(hoy.toLocaleDateString('es-ES', opciones));
-    this.fechaISO.set(hoy.toISOString().split('T')[0]);
+    // Fix: usar fecha local en lugar de toISOString() que devuelve UTC
+    // (en zonas UTC-N puede dar el día anterior)
+    const y = hoy.getFullYear();
+    const m = String(hoy.getMonth() + 1).padStart(2, '0');
+    const d = String(hoy.getDate()).padStart(2, '0');
+    this.fechaISO.set(`${y}-${m}-${d}`);
 
     const [tmpls, setts] = await Promise.all([
       this.db.getTemplates(),

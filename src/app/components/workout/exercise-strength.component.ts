@@ -54,9 +54,6 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
         </div>
       }
 
-      <!-- Sugerencia referencia -->
-      <!-- We remove the standalone text and integrate it into the active row if needed, except for alert -->
-      
       <!-- Alerta de salto de carga -->
       @if (sugerencia()?.esAlertaCarga) {
         <div class="rounded-xl bg-rose-500/15 border border-rose-500/30 p-4 flex items-start gap-3 ">
@@ -70,67 +67,118 @@ import { ProgressionService, ExerciseHistoryRecord } from '../../services/progre
         </div>
       }
 
-      <!-- Sets Header -->
-      <div class="grid grid-cols-[30px_1fr_64px_64px_50px] gap-2 px-2 mt-4 text-[10px]  text-[var(--color-text-muted)] font-black text-center mb-1">
-        <div>Set</div>
-        <div class="text-left">Anterior</div>
-        <div>{{ unidadPeso() }}</div>
-        <div>Reps</div>
-        <div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </div>
+      <!-- Completed Sets Header -->
+      @if (ejercicioLog().series && ejercicioLog().series!.length > 0) {
+        <div class="grid grid-cols-[28px_1fr_60px_60px_36px_36px] gap-1.5 px-2 text-[10px]  text-[var(--color-text-muted)] font-black text-center">
+          <div>Set</div>
+          <div class="text-left">Anterior</div>
+          <div>{{ unidadPeso() }}</div>
+          <div>Reps</div>
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>×</div>
+        </div>
 
-      <!-- Completed Sets -->
-      @if (ejercicioLog().series) {
-        @for (serie of ejercicioLog().series; track serie.numero; let isLast = $last) {
+        <!-- Completed Sets -->
+        @for (serie of ejercicioLog().series; track serie.numero; let i = $index; let isLast = $last) {
           <div 
-            class="grid grid-cols-[30px_1fr_64px_64px_50px] gap-2 px-2 py-2.5 items-center text-[var(--color-text-primary)] bg-emerald-500/10 rounded-[16px] mb-2 border border-emerald-500/20 transition-all "
+            class="grid grid-cols-[28px_1fr_60px_60px_36px_36px] gap-1.5 px-2 py-2.5 items-center text-[var(--color-text-primary)] bg-emerald-500/10 rounded-[16px] border border-emerald-500/20 transition-all"
             [class.animate-pulse-success]="isLast && justAddedSet()"
           >
-            <div class="text-center font-black text-emerald-400">{{ serie.numero }}</div>
+            <div class="text-center font-black text-emerald-400 text-sm">{{ serie.numero }}</div>
             <div class="text-left text-[var(--color-text-muted)] text-xs leading-tight line-clamp-1 pr-1 font-medium">
               {{ sugerencia() ? (sugerencia()!.textoReferencia | slice:10) : '—' }}
             </div>
-            <div class="text-center font-mono font-bold bg-[var(--color-bg-input)]/80 py-2 rounded-xl border border-[var(--color-border)]">{{ serie.peso }}</div>
-            <div class="text-center font-mono font-bold bg-[var(--color-bg-input)]/80 py-2 rounded-xl border border-[var(--color-border)]">{{ serie.reps }}</div>
+            <div class="text-center font-mono font-bold bg-[var(--color-bg-input)]/80 py-1.5 rounded-xl border border-[var(--color-border)] text-sm">{{ serie.peso }}</div>
+            <div class="text-center font-mono font-bold bg-[var(--color-bg-input)]/80 py-1.5 rounded-xl border border-[var(--color-border)] text-sm">{{ serie.reps }}</div>
             <div class="flex justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#10b981" stroke="none" class="drop-"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#10b981" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </div>
+            <div class="flex justify-center">
+              <button
+                (click)="deleteSerie(i); $event.stopPropagation()"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all"
+                aria-label="Eliminar serie"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+              </button>
             </div>
           </div>
         }
       }
 
-      <!-- Active Input Set -->
-      <div class="grid grid-cols-[30px_1fr_64px_64px_50px] gap-2 px-2 items-center mt-3 pb-2">
-        <div class="text-center font-black text-[var(--color-text-primary)]">{{ (ejercicioLog().series?.length || 0) + 1 }}</div>
-        
-        <div class="text-left text-[var(--color-text-muted)] text-[11px] leading-tight line-clamp-2 pr-1 font-bold">
-          {{ sugerencia() ? sugerencia()!.textoReferencia.replace('Anterior: ', '') : '-' }}
+      <!-- Active Input Row -->
+      <div class="flex flex-col gap-2 border-t border-[var(--color-border)] pt-3">
+        <!-- Reference line -->
+        <div class="flex items-center gap-2 px-1">
+          <span class="w-7 text-center text-[var(--color-text-primary)] font-black text-sm">{{ (ejercicioLog().series?.length || 0) + 1 }}</span>
+          <span class="flex-1 text-[var(--color-text-muted)] text-xs font-bold leading-tight truncate">
+            {{ sugerencia() ? sugerencia()!.textoReferencia.replace('Anterior: ', '') : 'Sin referencia previa' }}
+          </span>
         </div>
-        
-        <input
-          type="text"
-          inputmode="decimal"
-          [(ngModel)]="pesoInput"
-          [placeholder]="sugerencia() ? sugerencia()!.pesoSugerido : '-'"
-          class="w-full h-14 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-center font-mono text-lg font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] focus:ring-1 focus:ring-[#00f2fe]/50 placeholder:text-[var(--color-text-muted)] transition-all "
-        />
-        
-        <input
-          type="text"
-          inputmode="numeric"
-          [(ngModel)]="repsInput"
-          [placeholder]="sugerencia() ? sugerencia()!.repsSugeridas : '-'"
-          class="w-full h-14 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-center font-mono text-lg font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] focus:ring-1 focus:ring-[#00f2fe]/50 placeholder:text-[var(--color-text-muted)] transition-all "
-        />
-        
-        <button
-          (click)="terminarSerie()"
-          [disabled]="!isValidInput()"
-          class="h-14 w-full flex items-center justify-center rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] transition-all group disabled:opacity-50 disabled:active:scale-100 active:scale-90"
-          [class]="isValidInput() ? 'text-[#00f2fe] hover:bg-[#00f2fe]/10 hover:border-[#00f2fe] hover: cursor-pointer' : 'text-[var(--color-text-muted)] cursor-not-allowed'"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform drop-"><polyline points="20 6 9 17 4 12"/></svg>
-        </button>
+        <!-- Stepper inputs -->
+        <div class="flex items-center gap-2">
+          <!-- Peso stepper -->
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-[9px] font-black text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unidadPeso() }}</label>
+            <div class="flex items-center gap-1">
+              <button
+                (click)="decrementPeso()"
+                class="w-9 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-lg flex items-center justify-center active:scale-90 hover:text-[#00f2fe] hover:border-[#00f2fe]/40 transition-all"
+                aria-label="Bajar peso"
+              >−</button>
+              <input
+                type="text"
+                inputmode="decimal"
+                [(ngModel)]="pesoInput"
+                [placeholder]="sugerencia() ? String(sugerencia()!.pesoSugerido) : '—'"
+                class="flex-1 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-center font-mono text-base font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] focus:ring-1 focus:ring-[#00f2fe]/50 placeholder:text-[var(--color-text-muted)] transition-all "
+              />
+              <button
+                (click)="incrementPeso()"
+                class="w-9 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-lg flex items-center justify-center active:scale-90 hover:text-[#00f2fe] hover:border-[#00f2fe]/40 transition-all"
+                aria-label="Subir peso"
+              >+</button>
+            </div>
+          </div>
+          <!-- Reps stepper -->
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-[9px] font-black text-[var(--color-text-muted)] text-center uppercase tracking-wider">Reps</label>
+            <div class="flex items-center gap-1">
+              <button
+                (click)="decrementReps()"
+                class="w-9 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-lg flex items-center justify-center active:scale-90 hover:text-[#00f2fe] hover:border-[#00f2fe]/40 transition-all"
+                aria-label="Bajar reps"
+              >−</button>
+              <input
+                type="text"
+                inputmode="numeric"
+                [(ngModel)]="repsInput"
+                [placeholder]="sugerencia() ? String(sugerencia()!.repsSugeridas) : '—'"
+                class="flex-1 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-center font-mono text-base font-black text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] focus:ring-1 focus:ring-[#00f2fe]/50 placeholder:text-[var(--color-text-muted)] transition-all "
+              />
+              <button
+                (click)="incrementReps()"
+                class="w-9 h-12 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-black text-lg flex items-center justify-center active:scale-90 hover:text-[#00f2fe] hover:border-[#00f2fe]/40 transition-all"
+                aria-label="Subir reps"
+              >+</button>
+            </div>
+          </div>
+          <!-- Complete button -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[9px] font-black text-transparent text-center uppercase tracking-wider select-none">✓</label>
+            <button
+              (click)="terminarSerie()"
+              [disabled]="!isValidInput()"
+              class="w-12 h-12 flex items-center justify-center rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] transition-all group disabled:opacity-40 disabled:active:scale-100 active:scale-90"
+              [class]="isValidInput() ? 'text-[#00f2fe] hover:bg-[#00f2fe]/10 hover:border-[#00f2fe] cursor-pointer' : 'text-[var(--color-text-muted)] cursor-not-allowed'"
+              aria-label="Completar serie"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -143,6 +191,7 @@ export class ExerciseStrengthComponent implements OnInit {
   ejercicioLog = input.required<EjercicioLog>();
   sugerencia = input<Sugerencia | null>(null);
   unidadPeso = input<string>('kg');
+  incrementoPeso = input<number>(2.5);
 
   serieCompletada = output<SerieFuerza>();
   logUpdated = output<EjercicioLog>();
@@ -153,6 +202,9 @@ export class ExerciseStrengthComponent implements OnInit {
   showHistory = signal(false);
   history = signal<ExerciseHistoryRecord[]>([]);
   justAddedSet = signal(false);
+
+  // Expose String constructor for use in template
+  readonly String = String;
 
   async ngOnInit() {
     const records = await this.progressionService.getExerciseHistory(this.ejercicioLog().nombre);
@@ -169,7 +221,45 @@ export class ExerciseStrengthComponent implements OnInit {
     return peso > 0 || reps > 0;
   }
 
-  // ─── Actions ───
+  // ─── Peso steppers ───
+  incrementPeso(): void {
+    const current = parseFloat(this.pesoInput) || this.sugerencia()?.pesoSugerido || 0;
+    const next = Math.round((current + this.incrementoPeso()) * 100) / 100;
+    this.pesoInput = String(next);
+    this.vibrarShort();
+  }
+
+  decrementPeso(): void {
+    const current = parseFloat(this.pesoInput) || this.sugerencia()?.pesoSugerido || 0;
+    const next = Math.max(0, Math.round((current - this.incrementoPeso()) * 100) / 100);
+    this.pesoInput = String(next);
+    this.vibrarShort();
+  }
+
+  // ─── Reps steppers ───
+  incrementReps(): void {
+    const current = parseInt(this.repsInput, 10) || this.sugerencia()?.repsSugeridas || 0;
+    this.repsInput = String(current + 1);
+    this.vibrarShort();
+  }
+
+  decrementReps(): void {
+    const current = parseInt(this.repsInput, 10) || this.sugerencia()?.repsSugeridas || 1;
+    this.repsInput = String(Math.max(1, current - 1));
+    this.vibrarShort();
+  }
+
+  // ─── Delete a completed series ───
+  deleteSerie(index: number): void {
+    const log = this.ejercicioLog();
+    if (!log.series || log.series.length === 0) return;
+    log.series.splice(index, 1);
+    // Renumber remaining series
+    log.series.forEach((s, i) => (s.numero = i + 1));
+    this.logUpdated.emit(log);
+  }
+
+  // ─── Complete a set ───
   terminarSerie(): void {
     if (!this.isValidInput()) return;
 
