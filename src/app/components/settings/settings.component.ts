@@ -4,6 +4,7 @@ import { DbService } from '../../services/db.service';
 import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
 
 import { FileSystemService } from '../../services/file-system.service';
+import { UnitConversionService } from '../../services/unit-conversion.service';
 
 @Component({
   selector: 'app-settings',
@@ -30,18 +31,18 @@ import { FileSystemService } from '../../services/file-system.service';
           <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Selecciona kilogramos o libras.</p>
           <div class="flex gap-3">
             <button
-              (click)="updateSetting('unidadPeso', 'kg')"
+              (click)="updateSetting('weightUnit', 'kg')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().unidadPeso === 'kg'
+              [class]="settings().weightUnit === 'kg'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
               Kilogramos (kg)
             </button>
             <button
-              (click)="updateSetting('unidadPeso', 'lb')"
+              (click)="updateSetting('weightUnit', 'lb')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().unidadPeso === 'lb'
+              [class]="settings().weightUnit === 'lb'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
@@ -56,18 +57,18 @@ import { FileSystemService } from '../../services/file-system.service';
           <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Selecciona kilómetros o millas.</p>
           <div class="flex gap-3">
             <button
-              (click)="updateSetting('unidadDistancia', 'km')"
+              (click)="updateSetting('distanceUnit', 'km')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().unidadDistancia === 'km'
+              [class]="settings().distanceUnit === 'km'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
               Kilómetros (km)
             </button>
             <button
-              (click)="updateSetting('unidadDistancia', 'mi')"
+              (click)="updateSetting('distanceUnit', 'mi')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().unidadDistancia === 'mi'
+              [class]="settings().distanceUnit === 'mi'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
@@ -79,12 +80,12 @@ import { FileSystemService } from '../../services/file-system.service';
         <!-- Weight increment -->
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
           <h3 class="text-[var(--color-text-primary)] font-black text-lg mb-1">Incremento de Peso</h3>
-          <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Incremento sugerido para progresión ({{ settings().unidadPeso }}).</p>
+          <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Incremento sugerido para progresión ({{ settings().weightUnit }}).</p>
           <input
             type="text"
             inputmode="decimal"
-            [ngModel]="settings().incrementoPeso"
-            (ngModelChange)="updateSetting('incrementoPeso', $event)"
+            [ngModel]="settings().weightIncrement"
+            (ngModelChange)="updateSetting('weightIncrement', $event)"
             class="w-full min-h-[48px] px-5 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-2xl font-black text-center focus:outline-none focus:border-[#00f2fe] transition-colors "
           />
         </div>
@@ -96,8 +97,8 @@ import { FileSystemService } from '../../services/file-system.service';
           <input
             type="text"
             inputmode="numeric"
-            [ngModel]="settings().tiempoDescanso"
-            (ngModelChange)="updateSetting('tiempoDescanso', $event)"
+            [ngModel]="settings().restTime"
+            (ngModelChange)="updateSetting('restTime', $event)"
             class="w-full min-h-[48px] px-5 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-2xl font-black text-center focus:outline-none focus:border-[#00f2fe] transition-colors "
           />
         </div>
@@ -108,18 +109,18 @@ import { FileSystemService } from '../../services/file-system.service';
           <p class="text-[var(--color-text-muted)] text-sm mb-5 font-medium">Próximamente más idiomas disponibles.</p>
           <div class="flex gap-3">
             <button
-              (click)="updateSetting('idioma', 'es')"
+              (click)="updateSetting('language', 'es')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().idioma === 'es'
+              [class]="settings().language === 'es'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
               Español
             </button>
             <button
-              (click)="updateSetting('idioma', 'en')"
+              (click)="updateSetting('language', 'en')"
               class="flex-1 min-h-[48px] rounded-xl font-bold transition-all text-base"
-              [class]="settings().idioma === 'en'
+              [class]="settings().language === 'en'
                 ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                 : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
             >
@@ -165,6 +166,7 @@ import { FileSystemService } from '../../services/file-system.service';
 export class SettingsComponent implements OnInit {
   private db = inject(DbService);
   private fs = inject(FileSystemService);
+  private unitSvc = inject(UnitConversionService);
 
   settings = signal<UserSettings>({ ...DEFAULT_SETTINGS });
   showSaved = signal(false);
@@ -182,13 +184,19 @@ export class SettingsComponent implements OnInit {
   async updateSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {
     // Safely parse numeric fields to avoid storing NaN
     let safeValue: UserSettings[K] = value;
-    if (key === 'incrementoPeso' || key === 'tiempoDescanso') {
+    if (key === 'weightIncrement' || key === 'restTime') {
       const parsed = parseFloat(value as string);
       if (isNaN(parsed) || parsed <= 0) return; // silently ignore invalid inputs
       safeValue = parsed as UserSettings[K];
     }
-    this.settings.update(s => ({ ...s, [key]: safeValue }));
-    await this.db.saveSettings(this.settings());
+    const newSettings = { ...this.settings(), [key]: safeValue };
+    this.settings.set(newSettings);
+    await this.db.saveSettings(newSettings);
+    
+    // Explicitly notify UnitConversionService about the update
+    if (key === 'weightUnit' || key === 'distanceUnit') {
+      this.unitSvc.currentSettings.set(newSettings);
+    }
 
     // Show confirmation
     this.showSaved.set(true);

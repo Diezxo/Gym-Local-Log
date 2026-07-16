@@ -1,6 +1,7 @@
-import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EjercicioLog } from '../../models/interfaces';
+import { ExerciseLog } from '../../models/interfaces';
+import { UnitConversionService } from '../../services/unit-conversion.service';
 
 @Component({
   selector: 'app-exercise-cardio',
@@ -10,69 +11,69 @@ import { EjercicioLog } from '../../models/interfaces';
     <div class="rounded-2xl bg-[var(--color-bg-card)] p-4  border border-[var(--color-border)] flex flex-col gap-4">
       <!-- Header -->
       <div class="flex items-center justify-between h-8">
-        <h3 class="text-xl font-black text-[var(--color-text-primary)] tracking-tight">{{ ejercicioLog().nombre }}</h3>
+        <h3 class="text-xl font-black text-[var(--color-text-primary)] tracking-tight">{{ exerciseLog().name }}</h3>
         @if (showSaved()) {
           <svg class="text-emerald-400 animate-fade-in drop-" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         }
       </div>
 
-      <!-- Distancia -->
+      <!-- Distance -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-[var(--color-text-muted)]  font-bold">
-          Distancia ({{ unidadDistancia() }})
+          Distance ({{ unitSvc.currentDistanceUnit() }})
         </label>
         <input
           type="text"
           inputmode="decimal"
-          [ngModel]="distancia"
-          (ngModelChange)="distancia = $event; actualizarLog()"
+          [ngModel]="distanceInput"
+          (ngModelChange)="distanceInput = $event; updateLog()"
           placeholder="0"
           class="w-full min-h-[48px] rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 text-center text-2xl font-black font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] transition-colors "
         />
       </div>
 
-      <!-- Tiempo -->
+      <!-- Time -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-[var(--color-text-muted)]  font-bold">
-          Tiempo (minutos)
+          Time (minutes)
         </label>
         <input
           type="text"
           inputmode="decimal"
-          [ngModel]="tiempo"
-          (ngModelChange)="tiempo = $event; actualizarLog()"
+          [ngModel]="timeInput"
+          (ngModelChange)="timeInput = $event; updateLog()"
           placeholder="0"
           class="w-full min-h-[48px] rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 text-center text-2xl font-black font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] transition-colors "
         />
       </div>
 
-      <!-- Notas de técnica -->
+      <!-- Technical notes -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-[var(--color-text-muted)]  font-bold">
-          Notas de técnica
+          Technical notes
         </label>
         <textarea
-          [ngModel]="notas"
-          (ngModelChange)="notas = $event; actualizarLog()"
+          [ngModel]="notesInput"
+          (ngModelChange)="notesInput = $event; updateLog()"
           placeholder="Opcional..."
           rows="3"
           class="w-full rounded-2xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none "
         ></textarea>
       </div>
 
-      <!-- Resumen -->
-      @if (distancia || tiempo) {
+      <!-- Summary -->
+      @if (distanceInput || timeInput) {
         <div class="rounded-xl bg-[var(--color-bg-input)] px-5 py-4 flex items-center justify-between border border-[var(--color-border)] shadow-sm">
-          <span class="text-xs text-[var(--color-text-muted)]  font-bold">Resumen</span>
+          <span class="text-xs text-[var(--color-text-muted)]  font-bold">Summary</span>
           <span class="text-base font-black text-[var(--color-text-primary)]">
-            @if (distancia) {
-              {{ distancia }} {{ unidadDistancia() }}
+            @if (distanceInput) {
+              {{ distanceInput }} {{ unitSvc.currentDistanceUnit() }}
             }
-            @if (distancia && tiempo) {
+            @if (distanceInput && timeInput) {
               <span class="text-[#00f2fe] px-1">·</span>
             }
-            @if (tiempo) {
-              {{ tiempo }} min
+            @if (timeInput) {
+              {{ timeInput }} min
             }
           </span>
         </div>
@@ -82,29 +83,48 @@ import { EjercicioLog } from '../../models/interfaces';
   styles: [``],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ExerciseCardioComponent {
-  // ─── Inputs / Outputs ───
-  ejercicioLog = input.required<EjercicioLog>();
-  unidadDistancia = input<string>('km');
+export class ExerciseCardioComponent implements OnInit {
+  unitSvc = inject(UnitConversionService);
 
-  logUpdated = output<EjercicioLog>();
+  // ─── Inputs / Outputs ───
+  exerciseLog = input.required<ExerciseLog>();
+  logUpdated = output<ExerciseLog>();
 
   // ─── Local state ───
-  distancia: string = '';
-  tiempo: string = '';
-  notas: string = '';
+  distanceInput: string = '';
+  timeInput: string = '';
+  notesInput: string = '';
   
   showSaved = signal(false);
   private saveTimeout: any;
 
+  ngOnInit() {
+    // Pre-fill inputs if the log already has cardio data
+    const cardio = this.exerciseLog().cardio;
+    if (cardio) {
+      if (cardio.distanceMeters > 0) {
+        this.distanceInput = String(this.unitSvc.metersToUser(cardio.distanceMeters));
+      }
+      if (cardio.timeMinutes > 0) {
+        this.timeInput = String(cardio.timeMinutes);
+      }
+      if (cardio.technicalNotes) {
+        this.notesInput = cardio.technicalNotes;
+      }
+    }
+  }
+
   // ─── Actions ───
-  actualizarLog(): void {
-    const log = this.ejercicioLog();
+  updateLog(): void {
+    const log = this.exerciseLog();
+    const userDistance = parseFloat(this.distanceInput) || 0;
+    
     log.cardio = {
-      distanciaKm: parseFloat(this.distancia) || 0,
-      tiempoMinutos: parseFloat(this.tiempo) || 0,
-      notasTecnica: this.notas || undefined,
+      distanceMeters: this.unitSvc.userToMeters(userDistance),
+      timeMinutes: parseFloat(this.timeInput) || 0,
+      technicalNotes: this.notesInput || undefined,
     };
+    
     this.logUpdated.emit(log);
     
     this.showSaved.set(true);

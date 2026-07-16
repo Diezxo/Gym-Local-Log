@@ -56,14 +56,14 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
 
                 <!-- Info -->
                 <div class="flex-1 min-w-0 cursor-pointer pt-1">
-                  <h2 class="text-lg font-black text-[var(--color-text-primary)] mb-1.5 truncate hover:text-[#00f2fe] transition-colors">{{ template.nombre }}</h2>
+                  <h2 class="text-lg font-black text-[var(--color-text-primary)] mb-1.5 truncate hover:text-[#00f2fe] transition-colors">{{ template.name }}</h2>
                   <p class="text-[var(--color-text-muted)] text-sm line-clamp-1 leading-relaxed font-medium">{{ getExercisesList(template) }}</p>
                 </div>
 
                 <!-- Badge + Delete -->
                 <div class="flex flex-col items-end gap-3 shrink-0">
                   <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/20">
-                    {{ template.ejercicios.length }} ej.
+                    {{ template.exercises.length }} ej.
                   </span>
                   <button
                     (click)="confirmDelete(template); $event.stopPropagation()"
@@ -94,7 +94,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
           <div class="bg-[var(--color-bg-card)] rounded-2xl p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] mb-4">¿Eliminar rutina?</h3>
             <p class="text-[var(--color-text-muted)] text-base mb-10 leading-relaxed font-medium">
-              Se eliminará <span class="text-[var(--color-text-primary)] font-bold">{{ templateToDelete()!.nombre }}</span> permanentemente.
+              Se eliminará <span class="text-[var(--color-text-primary)] font-bold">{{ templateToDelete()!.name }}</span> permanentemente.
             </p>
             <div class="flex flex-col gap-3">
               <button
@@ -148,12 +148,12 @@ export class TemplateListComponent implements OnInit {
   }
 
   getExercisesList(template: Template): string {
-    return template.ejercicios.map(e => e.nombre).join(' · ');
+    return template.exercises.map(e => e.name).join(' · ');
   }
 
   getTemplateTags(template: Template): string[] {
     const tags = new Set<string>();
-    template.ejercicios.forEach(e => e.tags?.forEach(t => tags.add(t)));
+    template.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
   }
 

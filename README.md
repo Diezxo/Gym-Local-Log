@@ -1,57 +1,71 @@
-# GymLocalLog
+# Gym-Local-Log 🏋️‍♂️
 
-## Development server
+![Offline First](https://img.shields.io/badge/Offline-First-00f2fe?style=for-the-badge&logo=offline)
+![PWA Ready](https://img.shields.io/badge/PWA-Ready-a252ff?style=for-the-badge&logo=pwa)
+![Angular](https://img.shields.io/badge/Angular-v19-DD0031?style=for-the-badge&logo=angular)
 
-To start a local development server, run:
+**Gym-Local-Log** es una aplicación progresiva (PWA) de registro de entrenamiento de fuerza y cardio, diseñada para ser rápida, privada y 100% offline. No hay servidores en la nube, no necesitas crear cuentas y eres el único dueño absoluto de tus datos.
 
-```bash
-ng serve
-```
+## ¿Por qué Gym-Local-Log?
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+La mayoría de las apps de gimnasio requieren suscripciones o guardan tus datos en la nube. Gym-Local-Log guarda tu progreso en tu propio dispositivo a través de IndexedDB y, de manera opcional, permite sincronizar automáticamente archivos JSON a una carpeta local de tu disco (ej. la carpeta de Dropbox o Google Drive en tu PC). 
 
-## Code scaffolding
+## Características
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+* 📱 **PWA Offline**: Instálala en iOS/Android/Windows y úsala sin conexión a internet.
+* 📝 **Rutinas Personalizadas**: Crea tus propias plantillas de empuje, tirón, pierna, etc.
+* 📈 **Progresión Inteligente**: El motor de progresión te sugiere automáticamente tus pesos y repeticiones basados en tu última sesión (Alertas de salto de carga).
+* 🏃‍♂️ **Soporte Híbrido**: Registra tanto series de fuerza como actividades de cardio.
+* 📊 **Estadísticas Detalladas**: Dashboard mensual con tu racha de días, último récord personal, gráficos de progresión y mapa de calor de consistencia.
+* 💾 **Tus Archivos (CSV/JSON)**: Importa o exporta historiales masivamente para análisis en Excel.
+* 🗄️ **Sincronización Local FS**: Permite enlazar una carpeta de tu ordenador para guardar archivos directamente sin tener que descargar, gracias a la **File System Access API**.
 
-```bash
-ng generate component component-name
-```
+---
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Instalación y Desarrollo
 
-```bash
-ng generate --help
-```
+### Requisitos previos
+* Node.js v22+
+* npm
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Inicio rápido
+Clona el repositorio e instala las dependencias:
 
 ```bash
-ng test
+git clone https://github.com/Diezxo/Gym-Local-Log.git
+cd Gym-Local-Log
+npm install
 ```
 
-## Running end-to-end tests
+Arranca el servidor de desarrollo:
+```bash
+npm run dev
+```
+La aplicación estará disponible en `http://localhost:4200/`.
 
-For end-to-end (e2e) testing, run:
+### Producción (PWA Activa)
+Para que el Service Worker y el modo offline funcionen, debes generar la build de producción:
 
 ```bash
-ng e2e
+npm run build
 ```
+Luego sirve la carpeta `dist/gym-local-log/browser` con un servidor local estático como `http-server` o `serve`.
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## Documentación Técnica
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Para conocer más sobre cómo se almacenan y estructuran los datos, visita:
+
+1. [**Almacenamiento Offline** (`docs/offline-storage.md`)](docs/offline-storage.md) - Arquitectura y File System Access API.
+2. [**Importar y Exportar** (`docs/import-export.md`)](docs/import-export.md) - Reglas y lógica de copias de seguridad.
+3. [**Formato de Datos** (`docs/data-format.md`)](docs/data-format.md) - Esquemas JSON, tablas y especificación del CSV.
+4. [**Arquitectura** (`docs/architecture.md`)](docs/architecture.md) - Diagramas de flujo y stack completo.
+
+## Contribuir
+
+Siéntete libre de abrir issues o pull requests para mejoras y nuevas funcionalidades.
+
+## Licencia
+
+[MIT License](LICENSE)

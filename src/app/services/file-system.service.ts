@@ -126,16 +126,16 @@ export class FileSystemService {
   }
 
   // 6. Write a rotating backup for a monthly archive (max MAX_BACKUPS per month)
-  async writeBackupJson(mesId: string, data: any): Promise<void> {
+  async writeBackupJson(monthId: string, data: any): Promise<void> {
     if (!this.isConnected() || !this.dirHandle) return;
     try {
       // Timestamp format: YYYY-MM-DD_HH-MM-SS (safe for filenames)
       const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-      const backupFilename = `${mesId}_bak_${ts}.json`;
+      const backupFilename = `${monthId}_bak_${ts}.json`;
       await this.writeJsonFile(backupFilename, data);
 
       // Rotate: keep only the MAX_BACKUPS most recent backups for this month
-      const backupPattern = new RegExp(`^${mesId}_bak_.*\\.json$`);
+      const backupPattern = new RegExp(`^${monthId}_bak_.*\\.json$`);
       const backupFiles: string[] = [];
 
       for await (const [name] of (this.dirHandle as any).entries()) {

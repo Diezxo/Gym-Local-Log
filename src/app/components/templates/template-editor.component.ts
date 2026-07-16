@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DbService } from '../../services/db.service';
 import {
-  Template, EjercicioBase, TipoEjercicio,
+  Template, BaseExercise, ExerciseType,
   MuscleTag, MUSCLE_TAGS, TAG_COLORS,
 } from '../../models/interfaces';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 // Internal type with a stable uid for correct @for tracking
-interface EjercicioConId extends EjercicioBase {
+interface ExerciseWithId extends BaseExercise {
   _uid: string;
 }
 
@@ -45,7 +45,7 @@ interface EjercicioConId extends EjercicioBase {
           instead of $index. Using $index causes Angular to recycle DOM nodes
           when the signal updates, which makes tag clicks fire on the wrong exercise.
         -->
-        @for (ejercicio of ejercicios(); track ejercicio._uid) {
+        @for (exercise of exercises(); track exercise._uid) {
           <div cdkDrag class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden ">
 
             <!-- Drag handle + exercise name row -->
@@ -55,19 +55,19 @@ interface EjercicioConId extends EjercicioBase {
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="16" y1="9" y2="9"/><line x1="8" x2="16" y1="15" y2="15"/></svg>
               </div>
 
-              <span class="text-[#00f2fe] text-base font-black w-6 shrink-0">{{ getIndex(ejercicio) + 1 }}</span>
+              <span class="text-[#00f2fe] text-base font-black w-6 shrink-0">{{ getIndex(exercise) + 1 }}</span>
 
               <input
                 type="text"
-                [ngModel]="ejercicio.nombre"
-                (ngModelChange)="updateExerciseName(ejercicio._uid, $event)"
+                [ngModel]="exercise.name"
+                (ngModelChange)="updateExerciseName(exercise._uid, $event)"
                 placeholder="Nombre del ejercicio"
                 class="flex-1 min-h-[56px] px-4 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm font-bold placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors "
               />
 
               <button
                 type="button"
-                (click)="removeExercise(ejercicio._uid); $event.stopPropagation()"
+                (click)="removeExercise(exercise._uid); $event.stopPropagation()"
                 class="text-[var(--color-text-muted)] hover:text-rose-500 transition-colors p-2 active:scale-90 shrink-0 bg-[var(--color-bg-input)] rounded-full"
                 aria-label="Eliminar ejercicio"
               >
@@ -82,9 +82,9 @@ interface EjercicioConId extends EjercicioBase {
               <div class="flex gap-3">
                 <button
                   type="button"
-                  (click)="setExerciseType(ejercicio._uid, 'fuerza'); $event.stopPropagation()"
+                  (click)="setExerciseType(exercise._uid, 'strength'); $event.stopPropagation()"
                   class="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-                  [class]="ejercicio.tipo === 'fuerza'
+                  [class]="exercise.type === 'strength'
                     ? 'bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe]/30 '
                     : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
                 >
@@ -93,9 +93,9 @@ interface EjercicioConId extends EjercicioBase {
                 </button>
                 <button
                   type="button"
-                  (click)="setExerciseType(ejercicio._uid, 'cardio'); $event.stopPropagation()"
+                  (click)="setExerciseType(exercise._uid, 'cardio'); $event.stopPropagation()"
                   class="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-                  [class]="ejercicio.tipo === 'cardio'
+                  [class]="exercise.type === 'cardio'
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 '
                     : 'bg-[var(--color-bg-input)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-border-active)]'"
                 >
@@ -111,11 +111,11 @@ interface EjercicioConId extends EjercicioBase {
                   @for (tag of allTags; track tag) {
                     <button
                       type="button"
-                      (click)="toggleTag(ejercicio._uid, tag); $event.stopPropagation()"
+                      (click)="toggleTag(exercise._uid, tag); $event.stopPropagation()"
                       class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95"
-                      [style.background]="hasTag(ejercicio, tag) ? getTagColor(tag).bg : 'var(--color-bg-input)'"
-                      [style.border-color]="hasTag(ejercicio, tag) ? getTagColor(tag).border : 'var(--color-border)'"
-                      [style.color]="hasTag(ejercicio, tag) ? getTagColor(tag).text : 'var(--color-text-muted)'"
+                      [style.background]="hasTag(exercise, tag) ? getTagColor(tag).bg : 'var(--color-bg-input)'"
+                      [style.border-color]="hasTag(exercise, tag) ? getTagColor(tag).border : 'var(--color-border)'"
+                      [style.color]="hasTag(exercise, tag) ? getTagColor(tag).text : 'var(--color-text-muted)'"
                     >{{ tag }}</button>
                   }
                 </div>
@@ -169,8 +169,8 @@ export class TemplateEditorComponent implements OnInit {
   isEditing = signal(false);
   editingId = signal<string | null>(null);
   templateName = signal('');
-  // Use EjercicioConId internally so @for can track by stable _uid
-  ejercicios = signal<EjercicioConId[]>([]);
+  // Use ExerciseWithId internally so @for can track by stable _uid
+  exercises = signal<ExerciseWithId[]>([]);
   errorMessage = signal('');
 
   readonly allTags: MuscleTag[] = MUSCLE_TAGS;
@@ -182,48 +182,48 @@ export class TemplateEditorComponent implements OnInit {
       this.editingId.set(id);
       const template = await this.db.getTemplate(id);
       if (template) {
-        this.templateName.set(template.nombre);
-        this.ejercicios.set(template.ejercicios.map(e => ({ ...e, _uid: crypto.randomUUID() })));
+        this.templateName.set(template.name);
+        this.exercises.set(template.exercises.map(e => ({ ...e, _uid: crypto.randomUUID() })));
       }
     }
   }
 
   /** Helper: find the current index of an exercise by its uid */
-  getIndex(ej: EjercicioConId): number {
-    return this.ejercicios().findIndex(e => e._uid === ej._uid);
+  getIndex(ej: ExerciseWithId): number {
+    return this.exercises().findIndex(e => e._uid === ej._uid);
   }
 
   drop(event: CdkDragDrop<string[]>) {
-    const ejs = [...this.ejercicios()];
+    const ejs = [...this.exercises()];
     moveItemInArray(ejs, event.previousIndex, event.currentIndex);
-    this.ejercicios.set(ejs);
+    this.exercises.set(ejs);
   }
 
   addExercise() {
-    this.ejercicios.update(list => [
+    this.exercises.update(list => [
       ...list,
-      { nombre: '', tipo: 'fuerza' as TipoEjercicio, tags: [], _uid: crypto.randomUUID() },
+      { name: '', type: 'strength' as ExerciseType, tags: [], _uid: crypto.randomUUID() },
     ]);
   }
 
   removeExercise(uid: string) {
-    this.ejercicios.update(list => list.filter(e => e._uid !== uid));
+    this.exercises.update(list => list.filter(e => e._uid !== uid));
   }
 
   updateExerciseName(uid: string, name: string) {
-    this.ejercicios.update(list =>
-      list.map(e => e._uid === uid ? { ...e, nombre: name } : e)
+    this.exercises.update(list =>
+      list.map(e => e._uid === uid ? { ...e, name: name } : e)
     );
   }
 
-  setExerciseType(uid: string, tipo: TipoEjercicio) {
-    this.ejercicios.update(list =>
-      list.map(e => e._uid === uid ? { ...e, tipo } : e)
+  setExerciseType(uid: string, type: ExerciseType) {
+    this.exercises.update(list =>
+      list.map(e => e._uid === uid ? { ...e, type } : e)
     );
   }
 
   toggleTag(uid: string, tag: MuscleTag) {
-    this.ejercicios.update(list =>
+    this.exercises.update(list =>
       list.map(e => {
         if (e._uid !== uid) return e;
         const currentTags = e.tags ?? [];
@@ -237,8 +237,8 @@ export class TemplateEditorComponent implements OnInit {
     );
   }
 
-  hasTag(ejercicio: EjercicioConId, tag: MuscleTag): boolean {
-    return (ejercicio.tags ?? []).includes(tag);
+  hasTag(exercise: ExerciseWithId, tag: MuscleTag): boolean {
+    return (exercise.tags ?? []).includes(tag);
   }
 
   getTagColor(tag: MuscleTag) {
@@ -254,24 +254,24 @@ export class TemplateEditorComponent implements OnInit {
       return;
     }
 
-    const exercises = this.ejercicios();
-    if (exercises.length === 0) {
+    const exercisesList = this.exercises();
+    if (exercisesList.length === 0) {
       this.errorMessage.set('Añade al menos un ejercicio.');
       return;
     }
 
-    if (exercises.some(e => !e.nombre.trim())) {
+    if (exercisesList.some(e => !e.name.trim())) {
       this.errorMessage.set('Todos los ejercicios deben tener un nombre.');
       return;
     }
 
     const template: Template = {
       id: this.editingId() ?? crypto.randomUUID(),
-      nombre: name,
+      name: name,
       // Strip internal _uid before saving
-      ejercicios: exercises.map(({ _uid: _discard, ...e }) => ({
-        nombre: e.nombre.trim(),
-        tipo: e.tipo,
+      exercises: exercisesList.map(({ _uid: _discard, ...e }) => ({
+        name: e.name.trim(),
+        type: e.type,
         tags: e.tags ?? [],
       })),
     };

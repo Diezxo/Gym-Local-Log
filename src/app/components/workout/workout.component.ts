@@ -9,10 +9,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   Template,
-  LogDiario,
-  EjercicioLog,
-  SerieFuerza,
-  Sugerencia,
+  DailyLog,
+  ExerciseLog,
+  StrengthSet,
+  Suggestion,
   UserSettings,
   DEFAULT_SETTINGS,
   TAG_COLORS,
@@ -39,11 +39,11 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
       <!-- Header -->
       <header class="px-6 pt-12 pb-6">
         <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">Entrenar</p>
-        <h1 class="text-[40px] leading-tight font-black capitalize tracking-tight">{{ fechaDisplay() }}</h1>
+        <h1 class="text-[40px] leading-tight font-black capitalize tracking-tight">{{ dateDisplay() }}</h1>
       </header>
 
-      <!-- ── Vista: Selección de template ── -->
-      @if (!logActivo()) {
+      <!-- ── View: Template selection ── -->
+      @if (!activeLog()) {
         <div class="px-6 flex flex-col gap-4 animate-fade-in">
           <p class="text-base font-black text-[var(--color-text-muted)]  mb-2">Elige tu rutina</p>
 
@@ -56,7 +56,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           @for (tmpl of templates(); track tmpl.id) {
             <button
-              (click)="seleccionarTemplate(tmpl)"
+              (click)="selectTemplate(tmpl)"
               class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group shadow-lg hover:shadow-xl"
             >
               <!-- Main content -->
@@ -67,14 +67,14 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
                 </div>
 
                 <div class="flex-1 min-w-0">
-                  <p class="text-[var(--color-text-primary)] font-black text-lg truncate mb-1">{{ tmpl.nombre }}</p>
+                  <p class="text-[var(--color-text-primary)] font-black text-lg truncate mb-1">{{ tmpl.name }}</p>
                   <p class="text-[var(--color-text-muted)] text-sm truncate font-medium">
-                    {{ tmpl.ejercicios.map(e => e.nombre).join(' · ') }}
+                    {{ tmpl.exercises.map(e => e.name).join(' · ') }}
                   </p>
                 </div>
 
                 <span class="shrink-0 text-xs font-bold text-[var(--color-text-secondary)] bg-[var(--color-bg-input)] px-3 py-1.5 rounded-xl border border-[var(--color-border)]">
-                  {{ tmpl.ejercicios.length }} ej.
+                  {{ tmpl.exercises.length }} ej.
                 </span>
               </div>
 
@@ -96,14 +96,14 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
         </div>
       }
 
-      <!-- ── Vista: Entrenamiento activo ── -->
-      @if (logActivo()) {
+      <!-- ── View: Active Workout ── -->
+      @if (activeLog()) {
         <div class="px-6 flex flex-col gap-4 animate-scale-in">
 
           <!-- Active header: template name + timer + cancel -->
           <div class="flex items-center justify-between gap-3 pt-2">
             <button
-              (click)="cancelarEntrenamiento()"
+              (click)="cancelWorkout()"
               class="text-sm font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5 active:scale-95 bg-[var(--color-bg-input)] px-4 py-2 rounded-full border border-[var(--color-border)]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -140,12 +140,12 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           <div class="flex flex-col gap-2">
             <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-bold ">
               <span>Progreso</span>
-              <span class="text-[#00f2fe]">{{ getCompletedExercisesCount() }} / {{ logActivo()!.ejercicios.length }} completados</span>
+              <span class="text-[#00f2fe]">{{ getCompletedExercisesCount() }} / {{ activeLog()!.exercises.length }} completados</span>
             </div>
             <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden border border-[var(--color-border)] ">
               <div
                 class="h-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] transition-all duration-500 ease-out  rounded-full"
-                [style.width.%]="(getCompletedExercisesCount() / logActivo()!.ejercicios.length) * 100"
+                [style.width.%]="(getCompletedExercisesCount() / activeLog()!.exercises.length) * 100"
               ></div>
             </div>
           </div>
@@ -153,36 +153,35 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           <!-- Rest Timer -->
           <app-rest-timer
             #restTimerRef
-            [duracion]="settings().tiempoDescanso"
+            [duration]="settings().restTime"
             (timerFinished)="onTimerFinished()"
           />
 
-          <!-- Ejercicios -->
-          @for (ejLog of logActivo()!.ejercicios; track $index; let i = $index) {
-            @if (ejLog.tipo === 'fuerza') {
-              <app-exercise-strength
-                [ejercicioLog]="ejLog"
-                [sugerencia]="sugerencias()[i] ?? null"
-                [unidadPeso]="settings().unidadPeso"
-                [incrementoPeso]="settings().incrementoPeso"
-                (serieCompletada)="onSerieCompletada($event)"
-                (logUpdated)="onLogUpdated($event)"
-              />
-            } @else {
-              <app-exercise-cardio
-                [ejercicioLog]="ejLog"
-                [unidadDistancia]="settings().unidadDistancia"
-                (logUpdated)="onLogUpdated($event)"
-              />
-            }
+          <!-- Exercises -->
+          @for (ejLog of activeLog()!.exercises; track $index; let i = $index) {
+            <div class="mb-4">
+              @if (ejLog.type === 'strength') {
+                <app-exercise-strength
+                  [exerciseLog]="ejLog"
+                  [suggestion]="suggestions()[i] ?? null"
+                  (setCompleted)="onSetCompleted($event)"
+                  (logUpdated)="onLogUpdated($event)"
+                />
+              } @else {
+                <app-exercise-cardio
+                  [exerciseLog]="ejLog"
+                  (logUpdated)="onLogUpdated($event)"
+                />
+              }
+            </div>
           }
 
           <!-- Notas del día -->
           <div class="flex flex-col gap-3">
             <label class="text-sm text-[var(--color-text-muted)] font-bold ">Notas del día</label>
             <textarea
-              [ngModel]="notasDelDia()"
-              (ngModelChange)="actualizarNotas($event)"
+              [ngModel]="dailyNotes()"
+              (ngModelChange)="updateNotes($event)"
               placeholder="¿Cómo te sentiste hoy?"
               rows="3"
               class="w-full rounded-2xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none "
@@ -191,7 +190,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           <!-- Botón Finalizar -->
           <button
-            (click)="finalizarEntrenamiento()"
+            (click)="finishWorkout()"
             class="btn-primary min-h-[56px] text-xl font-black w-full flex items-center justify-center gap-3 mt-4  bg-gradient-to-r from-emerald-400 to-emerald-600 hover: border-none"
           >
             ✓ Finalizar Entrenamiento
@@ -200,7 +199,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
       }
 
       <!-- Toast de éxito -->
-      @if (mostrarToast()) {
+      @if (showToast()) {
         <div class="fixed bottom-28 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-6 py-4 flex items-center justify-center gap-3 text-white  animate-slide-up">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           <span class="font-bold text-sm tracking-wide">¡Entrenamiento guardado!</span>
@@ -226,16 +225,17 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   @ViewChild('restTimerRef') restTimerRef!: RestTimerComponent;
 
   // ─── State ───
-  fechaDisplay = signal('');
-  fechaISO = signal('');
+  dateDisplay = signal('');
+  dateISO = signal('');
   templates = signal<Template[]>([]);
   settings = signal<UserSettings>({ ...DEFAULT_SETTINGS });
-  logActivo = signal<LogDiario | null>(null);
+  activeLog = signal<DailyLog | null>(null);
   activeTemplateName = signal('');
   activeTemplateTags = signal<MuscleTag[]>([]);
-  sugerencias = signal<(Sugerencia | null)[]>([]);
-  notasDelDia = signal('');
-  mostrarToast = signal(false);
+  suggestions = signal<(Suggestion | null)[]>([]);
+  dailyNotes = signal('');
+  showToast = signal(false);
+  restTimerActive = signal(false);
 
   // Session timer
   sessionStartTime = signal<number | null>(null);
@@ -247,13 +247,11 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     const opciones: Intl.DateTimeFormatOptions = {
       weekday: 'long', day: 'numeric', month: 'long',
     };
-    this.fechaDisplay.set(hoy.toLocaleDateString('es-ES', opciones));
-    // Fix: usar fecha local en lugar de toISOString() que devuelve UTC
-    // (en zonas UTC-N puede dar el día anterior)
+    this.dateDisplay.set(hoy.toLocaleDateString('es-ES', opciones));
     const y = hoy.getFullYear();
     const m = String(hoy.getMonth() + 1).padStart(2, '0');
     const d = String(hoy.getDate()).padStart(2, '0');
-    this.fechaISO.set(`${y}-${m}-${d}`);
+    this.dateISO.set(`${y}-${m}-${d}`);
 
     const [tmpls, setts] = await Promise.all([
       this.db.getTemplates(),
@@ -285,46 +283,45 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   // ─── Template Selection ───
-  async seleccionarTemplate(tmpl: Template): Promise<void> {
-    const ejercicios: EjercicioLog[] = tmpl.ejercicios.map((ej) => ({
-      nombre: ej.nombre,
-      tipo: ej.tipo,
+  async selectTemplate(tmpl: Template): Promise<void> {
+    const exercises: ExerciseLog[] = tmpl.exercises.map((ej) => ({
+      name: ej.name,
+      type: ej.type,
       tags: ej.tags ?? [],
-      series: ej.tipo === 'fuerza' ? [] : undefined,
-      cardio: ej.tipo === 'cardio' ? { distanciaKm: 0, tiempoMinutos: 0 } : undefined,
+      sets: ej.type === 'strength' ? [] : undefined,
+      cardio: ej.type === 'cardio' ? { distanceMeters: 0, timeMinutes: 0 } : undefined,
     }));
 
-    const log: LogDiario = {
-      fecha: this.fechaISO(),
+    const log: DailyLog = {
+      date: this.dateISO(),
       templateId: tmpl.id,
-      ejercicios,
-      notas: '',
+      exercises,
+      notes: '',
     };
 
-    this.logActivo.set(log);
-    this.activeTemplateName.set(tmpl.nombre);
+    this.activeLog.set(log);
+    this.activeTemplateName.set(tmpl.name);
     this.activeTemplateTags.set(this.getTemplateTags(tmpl));
-    this.notasDelDia.set('');
+    this.dailyNotes.set('');
     this.startTimer();
 
-    await this.cargarSugerencias(log);
+    await this.loadSuggestions(log);
   }
 
-  private async cargarSugerencias(log: LogDiario): Promise<void> {
-    const mesId = this.fechaISO().substring(0, 7);
-    const setts = this.settings();
-    const promesas = log.ejercicios.map((ej) =>
-      ej.tipo === 'fuerza'
-        ? this.progression.getSugerencia(ej.nombre, mesId, setts)
+  private async loadSuggestions(log: DailyLog): Promise<void> {
+    const monthId = this.dateISO().substring(0, 7);
+    const promesas = log.exercises.map((ej) =>
+      ej.type === 'strength'
+        ? this.progression.getSuggestion(ej.name, monthId)
         : Promise.resolve(null)
     );
-    this.sugerencias.set(await Promise.all(promesas));
+    this.suggestions.set(await Promise.all(promesas));
   }
 
   // ─── Helpers ───
   getTemplateTags(tmpl: Template): MuscleTag[] {
     const tags = new Set<MuscleTag>();
-    tmpl.ejercicios.forEach(e => e.tags?.forEach(t => tags.add(t)));
+    tmpl.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
   }
 
@@ -333,43 +330,43 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   // ─── Exercise Events ───
-  onSerieCompletada(_serie: SerieFuerza): void {
-    if (this.restTimerRef) {
-      this.restTimerRef.reiniciar();
-      this.restTimerRef.iniciar();
+  onSetCompleted(setLog: StrengthSet) {
+    if (!this.restTimerActive()) {
+      this.restTimerActive.set(true);
     }
-    this.autoGuardar();
+    this.restTimerRef.start();
+    this.autoSave();
   }
 
-  onLogUpdated(_ejLog: EjercicioLog): void {
-    this.autoGuardar();
+  onLogUpdated(_ejLog: ExerciseLog): void {
+    this.autoSave();
   }
 
   onTimerFinished(): void {}
 
   // ─── Progress ───
   getCompletedExercisesCount(): number {
-    const log = this.logActivo();
+    const log = this.activeLog();
     if (!log) return 0;
-    return log.ejercicios.filter(ej => {
-      if (ej.tipo === 'fuerza') return ej.series && ej.series.length > 0;
-      return ej.cardio && (ej.cardio.distanciaKm > 0 || ej.cardio.tiempoMinutos > 0);
+    return log.exercises.filter(ej => {
+      if (ej.type === 'strength') return ej.sets && ej.sets.length > 0;
+      return ej.cardio && (ej.cardio.distanceMeters > 0 || ej.cardio.timeMinutes > 0);
     }).length;
   }
 
   // ─── Notes ───
-  actualizarNotas(value: string): void {
-    this.notasDelDia.set(value);
-    const log = this.logActivo();
+  updateNotes(value: string): void {
+    this.dailyNotes.set(value);
+    const log = this.activeLog();
     if (log) {
-      log.notas = value;
-      this.autoGuardar();
+      log.notes = value;
+      this.autoSave();
     }
   }
 
   // ─── Auto-save ───
-  private async autoGuardar(): Promise<void> {
-    const log = this.logActivo();
+  private async autoSave(): Promise<void> {
+    const log = this.activeLog();
     if (!log) return;
     try {
       await this.db.saveLog(log);
@@ -377,31 +374,31 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   // ─── Finalize ───
-  async finalizarEntrenamiento(): Promise<void> {
-    const log = this.logActivo();
+  async finishWorkout(): Promise<void> {
+    const log = this.activeLog();
     if (!log) return;
 
-    log.notas = this.notasDelDia();
+    log.notes = this.dailyNotes();
     await this.db.saveLog(log);
     this.stopTimer();
 
-    this.mostrarToast.set(true);
-    setTimeout(() => this.mostrarToast.set(false), 3000);
+    this.showToast.set(true);
+    setTimeout(() => this.showToast.set(false), 3000);
 
-    this.logActivo.set(null);
+    this.activeLog.set(null);
     this.activeTemplateName.set('');
     this.activeTemplateTags.set([]);
-    this.sugerencias.set([]);
-    this.notasDelDia.set('');
+    this.suggestions.set([]);
+    this.dailyNotes.set('');
   }
 
   // ─── Cancel ───
-  cancelarEntrenamiento(): void {
+  cancelWorkout(): void {
     this.stopTimer();
-    this.logActivo.set(null);
+    this.activeLog.set(null);
     this.activeTemplateName.set('');
     this.activeTemplateTags.set([]);
-    this.sugerencias.set([]);
-    this.notasDelDia.set('');
+    this.suggestions.set([]);
+    this.dailyNotes.set('');
   }
 }

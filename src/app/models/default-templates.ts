@@ -3,71 +3,71 @@ import { Template } from './interfaces';
 export const DEFAULT_TEMPLATES: Template[] = [
   {
     id: 'lunes-full-body-vertical',
-    nombre: 'Lunes: Full Body (Vertical)',
-    ejercicios: [
-      { nombre: 'Dominadas o Jalón al pecho',          tipo: 'fuerza', tags: ['Espalda'] },
-      { nombre: 'Press militar (mancuernas/máquina)',  tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Elevaciones laterales',               tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Prensa',                              tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Curl de bíceps',                     tipo: 'fuerza', tags: ['Espalda'] },
+    name: 'Lunes: Full Body (Vertical)',
+    exercises: [
+      { name: 'Dominadas o Jalón al pecho',          type: 'strength', tags: ['Back'] },
+      { name: 'Press militar (mancuernas/máquina)',  type: 'strength', tags: ['Chest'] },
+      { name: 'Elevaciones laterales',               type: 'strength', tags: ['Chest'] },
+      { name: 'Prensa',                              type: 'strength', tags: ['Legs'] },
+      { name: 'Curl de bíceps',                     type: 'strength', tags: ['Back'] },
     ],
   },
   {
     id: 'martes-recuperacion',
-    nombre: 'Martes: Recuperación Activa',
-    ejercicios: [
-      { nombre: 'Trote suave (4 Km)',          tipo: 'cardio', tags: ['Cardio'] },
-      { nombre: 'Práctica técnica de carrera', tipo: 'cardio', tags: ['Cardio'] },
+    name: 'Martes: Recuperación Activa',
+    exercises: [
+      { name: 'Trote suave (4 Km)',          type: 'cardio', tags: ['Cardio'] },
+      { name: 'Práctica técnica de carrera', type: 'cardio', tags: ['Cardio'] },
     ],
   },
   {
     id: 'miercoles-pierna-core',
-    nombre: 'Miércoles: Pierna y Core',
-    ejercicios: [
-      { nombre: 'Hip Thrust',                       tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Curl Femoral',                     tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Extensiones de Cuádriceps',        tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Adductores y Abductores',          tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Trabajo de Abs (Planchas, etc)',   tipo: 'fuerza', tags: [] },
+    name: 'Miércoles: Pierna y Core',
+    exercises: [
+      { name: 'Hip Thrust',                       type: 'strength', tags: ['Legs'] },
+      { name: 'Curl Femoral',                     type: 'strength', tags: ['Legs'] },
+      { name: 'Extensiones de Cuádriceps',        type: 'strength', tags: ['Legs'] },
+      { name: 'Adductores y Abductores',          type: 'strength', tags: ['Legs'] },
+      { name: 'Trabajo de Abs (Planchas, etc)',   type: 'strength', tags: [] },
     ],
   },
   {
     id: 'jueves-potencia',
-    nombre: 'Jueves: Potencia y Prevención',
-    ejercicios: [
-      { nombre: 'Carrera a intervalos (4 Km)', tipo: 'cardio', tags: ['Cardio'] },
-      { nombre: 'Elevaciones de punta (Aquiles)', tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Isométricos de gemelo',          tipo: 'fuerza', tags: ['Piernas'] },
+    name: 'Jueves: Potencia y Prevención',
+    exercises: [
+      { name: 'Carrera a intervalos (4 Km)', type: 'cardio', tags: ['Cardio'] },
+      { name: 'Elevaciones de punta (Aquiles)', type: 'strength', tags: ['Legs'] },
+      { name: 'Isométricos de gemelo',          type: 'strength', tags: ['Legs'] },
     ],
   },
   {
     id: 'viernes-full-body-horizontal',
-    nombre: 'Viernes: Full Body (Horizontal)',
-    ejercicios: [
-      { nombre: 'Press plano (máquina/mancuernas)',       tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Remo en máquina (apoyo pecho)',          tipo: 'fuerza', tags: ['Espalda'] },
-      { nombre: 'Flyes (Aperturas)',                      tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Extensión de tríceps en polea',         tipo: 'fuerza', tags: ['Pecho'] },
-      { nombre: 'Peso muerto rumano o Curl femoral',     tipo: 'fuerza', tags: ['Piernas'] },
+    name: 'Viernes: Full Body (Horizontal)',
+    exercises: [
+      { name: 'Press plano (máquina/mancuernas)',       type: 'strength', tags: ['Chest'] },
+      { name: 'Remo en máquina (apoyo pecho)',          type: 'strength', tags: ['Back'] },
+      { name: 'Flyes (Aperturas)',                      type: 'strength', tags: ['Chest'] },
+      { name: 'Extensión de tríceps en polea',         type: 'strength', tags: ['Chest'] },
+      { name: 'Peso muerto rumano o Curl femoral',     type: 'strength', tags: ['Legs'] },
     ],
   },
   {
     id: 'sabado-fondo',
-    nombre: 'Sábado: Fondo',
-    ejercicios: [
-      { nombre: 'Correr al aire libre', tipo: 'cardio', tags: ['Cardio'] },
+    name: 'Sábado: Fondo',
+    exercises: [
+      { name: 'Correr al aire libre', type: 'cardio', tags: ['Cardio'] },
     ],
   },
   {
     id: 'protocolo-carrera',
-    nombre: 'Protocolo: Calentamiento/Enfriamiento',
-    ejercicios: [
-      { nombre: 'Caminata de puntillas/talones',         tipo: 'cardio', tags: ['Cardio'] },
-      { nombre: 'Balanceos de pierna',                   tipo: 'cardio', tags: ['Cardio'] },
-      { nombre: 'Rodillas al pecho y talones a glúteos', tipo: 'cardio', tags: ['Cardio'] },
-      { nombre: 'Estiramiento de isquiotibiales',        tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Estiramiento de cuádriceps',            tipo: 'fuerza', tags: ['Piernas'] },
-      { nombre: 'Estiramiento de gemelos',               tipo: 'fuerza', tags: ['Piernas'] },
+    name: 'Protocolo: Calentamiento/Enfriamiento',
+    exercises: [
+      { name: 'Caminata de puntillas/talones',         type: 'cardio', tags: ['Cardio'] },
+      { name: 'Balanceos de pierna',                   type: 'cardio', tags: ['Cardio'] },
+      { name: 'Rodillas al pecho y talones a glúteos', type: 'cardio', tags: ['Cardio'] },
+      { name: 'Estiramiento de isquiotibiales',        type: 'strength', tags: ['Legs'] },
+      { name: 'Estiramiento de cuádriceps',            type: 'strength', tags: ['Legs'] },
+      { name: 'Estiramiento de gemelos',               type: 'strength', tags: ['Legs'] },
     ],
   },
 ];

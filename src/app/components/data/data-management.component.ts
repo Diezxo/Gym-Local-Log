@@ -2,12 +2,13 @@ import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { ExportService } from '../../services/export.service';
 import { DbService } from '../../services/db.service';
-import { LogDiario, MuscleTag, TAG_COLORS, EjercicioLog } from '../../models/interfaces';
+import { UnitConversionService } from '../../services/unit-conversion.service';
+import { DailyLog, MuscleTag, TAG_COLORS, ExerciseLog, StrengthSet } from '../../models/interfaces';
 
 interface MonthStats {
   sesiones: number;
-  volumenKg: number;
-  distanciaKm: number;
+  volumenWeight: number;
+  distanceMeters: number;
   tagSesiones: { tag: MuscleTag; count: number }[];
 }
 
@@ -42,11 +43,11 @@ interface MonthStats {
           <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Sesiones</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
-          <span class="text-[28px] font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center">{{ formatVol(stats().volumenKg) }}</span>
+          <span class="text-[28px] font-black text-[var(--color-text-primary)] leading-none truncate w-full text-center">{{ formatVol(stats().volumenWeight) }}</span>
           <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Vol. Fuerza</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
-          <span class="text-[24px] font-black text-emerald-400 leading-none truncate w-full text-center">{{ stats().distanciaKm > 0 ? stats().distanciaKm + ' km' : '—' }}</span>
+          <span class="text-[24px] font-black text-emerald-400 leading-none truncate w-full text-center">{{ stats().distanceMeters > 0 ? unitSvc.metersToUser(stats().distanceMeters) + ' ' + unitSvc.currentDistanceUnit() : '—' }}</span>
           <span class="text-[10px]  text-[var(--color-text-muted)] text-center leading-tight font-bold">Cardio</span>
         </div>
       </div>
@@ -67,14 +68,14 @@ interface MonthStats {
 
       <!-- Workout List -->
       <div class="flex flex-col gap-4">
-        @for (log of allLogs(); track log.fecha + log.templateId) {
+        @for (log of allLogs(); track log.date + log.templateId) {
           <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden  hover:border-[var(--color-border-active)] transition-colors">
 
             <!-- Date + Tags row -->
             <div class="flex items-center gap-4 px-5 pt-5 pb-3">
               <div class="flex flex-col items-center justify-center bg-[#00f2fe]/10 rounded-2xl w-14 h-14 border border-[#00f2fe]/20 shrink-0">
-                <span class="text-[#00f2fe] font-black text-xl leading-none">{{ log.fecha | slice:8:10 }}</span>
-                <span class="text-[#00f2fe]/80 text-[10px] font-bold uppercase mt-0.5">{{ getMonthShort(log.fecha) }}</span>
+                <span class="text-[#00f2fe] font-black text-xl leading-none">{{ log.date | slice:8:10 }}</span>
+                <span class="text-[#00f2fe]/80 text-[10px] font-bold uppercase mt-0.5">{{ getMonthShort(log.date) }}</span>
               </div>
 
               <div class="flex-1 min-w-0">
@@ -91,7 +92,7 @@ interface MonthStats {
                     <span class="text-[var(--color-text-muted)] text-xs font-medium">Sin etiquetas</span>
                   }
                 </div>
-                <p class="text-[var(--color-text-muted)] text-xs font-bold">{{ log.ejercicios.length }} ejercicio{{ log.ejercicios.length !== 1 ? 's' : '' }}</p>
+                <p class="text-[var(--color-text-muted)] text-xs font-bold">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
               </div>
 
               <button
@@ -104,13 +105,34 @@ interface MonthStats {
             </div>
 
             <!-- Exercise lines -->
-            <div class="border-t border-[var(--color-border)] px-5 pt-3 pb-4 flex flex-col gap-2">
-              @for (ej of log.ejercicios; track ej.nombre) {
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-[var(--color-text-secondary)] text-sm font-medium truncate flex-1">{{ ej.nombre }}</span>
-                  <span class="text-sm font-black text-[var(--color-text-primary)] shrink-0 font-mono tracking-tight">
-                    {{ getEjercicioResumen(ej) }}
-                  </span>
+            <div class="border-t border-[var(--color-border)] px-5 pt-3 pb-4 flex flex-col gap-3">
+              @for (ej of log.exercises; track ej.name) {
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-[var(--color-text-secondary)] text-sm font-medium">{{ ej.name }}</span>
+                  @if (ej.type === 'strength' && ej.sets && ej.sets.length > 0) {
+                    @if (hasProgressiveOverload(ej.sets)) {
+                      <!-- Progressive overload: show each set as a chip -->
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (s of ej.sets; track $index; let i = $index) {
+                          <span
+                            class="text-[11px] font-bold px-2 py-0.5 rounded-lg border"
+                            [class]="isMaxSet(s, ej.sets!)
+                              ? 'bg-[#00f2fe]/10 border-[#00f2fe]/30 text-[#00f2fe]'
+                              : 'bg-[var(--color-bg-input)] border-[var(--color-border)] text-[var(--color-text-secondary)]'"
+                          >S{{ i + 1 }}: {{ unitSvc.kgToUser(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <!-- All sets equal: compact summary -->
+                      <span class="text-sm font-black text-[var(--color-text-primary)] font-mono">
+                        {{ ej.sets.length }}×{{ ej.sets[0].reps }} @ {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
+                      </span>
+                    }
+                  } @else if (ej.type === 'cardio') {
+                    <span class="text-sm font-black text-emerald-400 font-mono">{{ getEjercicioResumen(ej) }}</span>
+                  } @else {
+                    <span class="text-sm text-[var(--color-text-muted)]">—</span>
+                  }
                 </div>
               }
             </div>
@@ -125,7 +147,7 @@ interface MonthStats {
                 }
                 @if (getLogDistancia(log) > 0) {
                   <span class="text-xs text-[var(--color-text-muted)] font-bold">
-                    Cardio: <span class="text-[#00f2fe]">{{ getLogDistancia(log) }} km</span>
+                    Cardio: <span class="text-[#00f2fe]">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
                   </span>
                 }
               </div>
@@ -185,7 +207,7 @@ interface MonthStats {
           <div class="bg-[var(--color-bg-card)] rounded-2xl p-8 w-full max-w-sm border border-[var(--color-border)] shadow-2xl animate-scale-in">
             <h3 class="text-2xl font-black text-[var(--color-text-primary)] mb-4">¿Eliminar registro?</h3>
             <p class="text-[var(--color-text-muted)] text-base mb-10 leading-relaxed font-medium">
-              Se eliminará el entrenamiento del <span class="text-[var(--color-text-primary)] font-bold">{{ logToDelete()!.fecha }}</span> permanentemente.
+              Se eliminará el entrenamiento del <span class="text-[var(--color-text-primary)] font-bold">{{ logToDelete()!.date }}</span> permanentemente.
             </p>
             <div class="flex flex-col gap-3">
               <button
@@ -207,15 +229,16 @@ interface MonthStats {
 export class DataManagementComponent implements OnInit {
   private exportService = inject(ExportService);
   private db = inject(DbService);
+  unitSvc = inject(UnitConversionService);
 
-  currentMesId = signal('');
+  currentMonthId = signal('');
   currentMonthLabel = signal('');
   feedbackMessage = signal('');
   feedbackIsError = signal(false);
 
-  allLogs = signal<LogDiario[]>([]);
-  stats = signal<MonthStats>({ sesiones: 0, volumenKg: 0, distanciaKm: 0, tagSesiones: [] });
-  logToDelete = signal<LogDiario | null>(null);
+  allLogs = signal<DailyLog[]>([]);
+  stats = signal<MonthStats>({ sesiones: 0, volumenWeight: 0, distanceMeters: 0, tagSesiones: [] });
+  logToDelete = signal<DailyLog | null>(null);
 
   private monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -226,7 +249,7 @@ export class DataManagementComponent implements OnInit {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const defaultMes = `${year}-${month}`;
-    this.currentMesId.set(defaultMes);
+    this.currentMonthId.set(defaultMes);
     this.currentMonthLabel.set(`${this.monthNames[now.getMonth()]} ${year}`);
     
     await this.refreshAvailableMonths(defaultMes);
@@ -244,25 +267,25 @@ export class DataManagementComponent implements OnInit {
 
   canGoPrev(): boolean {
     const months = this.availableMonths();
-    const currentIndex = months.indexOf(this.currentMesId());
+    const currentIndex = months.indexOf(this.currentMonthId());
     return currentIndex < months.length - 1 && currentIndex !== -1;
   }
 
   canGoNext(): boolean {
     const months = this.availableMonths();
-    const currentIndex = months.indexOf(this.currentMesId());
+    const currentIndex = months.indexOf(this.currentMonthId());
     return currentIndex > 0;
   }
 
   changeMonth(direction: -1 | 1) {
     const months = this.availableMonths();
-    const currentIndex = months.indexOf(this.currentMesId());
+    const currentIndex = months.indexOf(this.currentMonthId());
     if (currentIndex === -1) return;
     
     const nextIndex = currentIndex - direction; // -1 (prev) means higher index in reverse sorted array
     if (nextIndex >= 0 && nextIndex < months.length) {
       const nextMes = months[nextIndex];
-      this.currentMesId.set(nextMes);
+      this.currentMonthId.set(nextMes);
       const [y, m] = nextMes.split('-');
       this.currentMonthLabel.set(`${this.monthNames[parseInt(m, 10) - 1]} ${y}`);
       this.loadHistory();
@@ -270,9 +293,9 @@ export class DataManagementComponent implements OnInit {
   }
 
   async loadHistory() {
-    const archive = await this.db.getMonthlyArchive(this.currentMesId());
+    const archive = await this.db.getMonthlyArchive(this.currentMonthId());
     if (archive?.logs) {
-      const logs = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      const logs = [...archive.logs].sort((a, b) => b.date.localeCompare(a.date));
       this.allLogs.set(logs);
       this.calcStats(logs);
     } else {
@@ -281,21 +304,21 @@ export class DataManagementComponent implements OnInit {
     }
   }
 
-  private calcStats(logs: LogDiario[]) {
+  private calcStats(logs: DailyLog[]) {
     let volumen = 0;
     let distancia = 0;
     const tagCount = new Map<MuscleTag, Set<string>>();
 
     for (const log of logs) {
-      for (const ej of log.ejercicios) {
-        if (ej.tipo === 'fuerza' && ej.series) {
-          volumen += ej.series.reduce((s, r) => s + r.peso * r.reps, 0);
+      for (const ej of log.exercises) {
+        if (ej.type === 'strength' && ej.sets) {
+          volumen += ej.sets.reduce((s, r) => s + r.weight * r.reps, 0);
         } else if (ej.cardio) {
-          distancia += ej.cardio.distanciaKm ?? 0;
+          distancia += ej.cardio.distanceMeters ?? 0;
         }
         for (const tag of (ej.tags ?? [])) {
           if (!tagCount.has(tag)) tagCount.set(tag, new Set());
-          tagCount.get(tag)!.add(log.fecha);
+          tagCount.get(tag)!.add(log.date);
         }
       }
     }
@@ -306,8 +329,8 @@ export class DataManagementComponent implements OnInit {
 
     this.stats.set({
       sesiones: logs.length,
-      volumenKg: Math.round(volumen),
-      distanciaKm: Math.round(distancia * 10) / 10,
+      volumenWeight: volumen,
+      distanceMeters: distancia,
       tagSesiones,
     });
   }
@@ -319,9 +342,9 @@ export class DataManagementComponent implements OnInit {
     return this.monthNames[parseInt(month, 10) - 1] || '';
   }
 
-  getLogTags(log: LogDiario): MuscleTag[] {
+  getLogTags(log: DailyLog): MuscleTag[] {
     const tags = new Set<MuscleTag>();
-    log.ejercicios.forEach(e => e.tags?.forEach(t => tags.add(t)));
+    log.exercises.forEach(e => e.tags?.forEach(t => tags.add(t)));
     return Array.from(tags);
   }
 
@@ -329,57 +352,70 @@ export class DataManagementComponent implements OnInit {
     return TAG_COLORS[tag] ?? { bg: 'rgba(255,255,255,0.05)', text: '#a3a3a3', border: 'rgba(255,255,255,0.1)' };
   }
 
-  /** Devuelve línea de resumen por ejercicio: '3×8 @ 80kg' o '5.2 km · 32 min' o '0×—' */
-  getEjercicioResumen(ej: EjercicioLog): string {
-    if (ej.tipo === 'fuerza') {
-      const series = ej.series ?? [];
+  /** Returns line summary for cardio or fallback; strength handled inline in template */
+  getEjercicioResumen(ej: ExerciseLog): string {
+    if (ej.type === 'strength') {
+      const series = ej.sets ?? [];
       if (series.length === 0) return '0×—';
-      // Best set (highest volume per set)
       const best = series.reduce((prev, cur) =>
-        cur.peso * cur.reps > prev.peso * prev.reps ? cur : prev
+        cur.weight * cur.reps > prev.weight * prev.reps ? cur : prev
       );
-      return `${series.length}×${best.reps} @ ${best.peso}kg`;
+      const userWeight = this.unitSvc.kgToUser(best.weight);
+      return `${series.length}×${best.reps} @ ${userWeight}${this.unitSvc.currentWeightUnit()}`;
     } else {
-      const km = ej.cardio?.distanciaKm ?? 0;
-      const min = ej.cardio?.tiempoMinutos ?? 0;
-      if (km === 0 && min === 0) return '—';
+      const meters = ej.cardio?.distanceMeters ?? 0;
+      const min = ej.cardio?.timeMinutes ?? 0;
+      if (meters === 0 && min === 0) return '—';
       const parts: string[] = [];
-      if (km > 0) parts.push(`${km} km`);
+      if (meters > 0) parts.push(`${this.unitSvc.metersToUser(meters)} ${this.unitSvc.currentDistanceUnit()}`);
       if (min > 0) parts.push(`${min} min`);
       return parts.join(' · ');
     }
   }
 
-  getLogVolumen(log: LogDiario): number {
-    return log.ejercicios
-      .filter(e => e.tipo === 'fuerza' && e.series)
-      .reduce((s, e) => s + e.series!.reduce((ss, r) => ss + r.peso * r.reps, 0), 0);
+  /** Returns true if not all sets in a session have the same weight or reps (so we expand them in UI). */
+  hasProgressiveOverload(series: StrengthSet[]): boolean {
+    if (!series || series.length <= 1) return false;
+    const firstWeight = series[0].weight;
+    const firstReps = series[0].reps;
+    return series.some(s => s.weight !== firstWeight || s.reps !== firstReps);
   }
 
-  getLogDistancia(log: LogDiario): number {
-    return Math.round(
-      log.ejercicios
-        .filter(e => e.tipo === 'cardio' && e.cardio)
-        .reduce((s, e) => s + (e.cardio?.distanciaKm ?? 0), 0) * 10
-    ) / 10;
+  /** Returns true if this set has the maximum weight (used to highlight the top set in cian). */
+  isMaxSet(serie: StrengthSet, allSeries: StrengthSet[]): boolean {
+    const maxPeso = Math.max(...allSeries.map(s => s.weight));
+    return serie.weight === maxPeso;
   }
 
-  formatVol(kg: number): string {
-    if (kg === 0) return '—';
-    if (kg >= 1000) return `${(kg / 1000).toFixed(1)}t`;
-    return `${kg.toLocaleString()} kg`;
+  getLogVolumen(log: DailyLog): number {
+    return log.exercises
+      .filter(e => e.type === 'strength' && e.sets)
+      .reduce((s, e) => s + e.sets!.reduce((ss, r) => ss + r.weight * r.reps, 0), 0);
+  }
+
+  getLogDistancia(log: DailyLog): number {
+    return log.exercises
+      .filter(e => e.type === 'cardio' && e.cardio)
+      .reduce((s, e) => s + (e.cardio?.distanceMeters ?? 0), 0);
+  }
+
+  formatVol(baseWeight: number): string {
+    if (baseWeight === 0) return '—';
+    const userWeight = this.unitSvc.kgToUser(baseWeight);
+    if (userWeight >= 1000) return `${(userWeight / 1000).toFixed(1)}k ${this.unitSvc.currentWeightUnit()}`;
+    return `${userWeight.toLocaleString()} ${this.unitSvc.currentWeightUnit()}`;
   }
 
   // ── Actions ──
 
-  confirmDeleteLog(log: LogDiario) {
+  confirmDeleteLog(log: DailyLog) {
     this.logToDelete.set(log);
   }
 
   async deleteLogConfirmed() {
     const log = this.logToDelete();
     if (log) {
-      await this.db.deleteLog(log.fecha, log.templateId);
+      await this.db.deleteLog(log.date, log.templateId);
       this.logToDelete.set(null);
       await this.loadHistory();
       this.showFeedback('Registro eliminado.', false);
@@ -387,11 +423,11 @@ export class DataManagementComponent implements OnInit {
   }
 
   async exportJSON() {
-    await this.exportMonth(this.currentMesId(), 'json');
+    await this.exportMonth(this.currentMonthId(), 'json');
   }
 
   async exportCSV() {
-    await this.exportMonth(this.currentMesId(), 'csv');
+    await this.exportMonth(this.currentMonthId(), 'csv');
   }
 
   async exportAllJSON() {
@@ -412,12 +448,12 @@ export class DataManagementComponent implements OnInit {
     }
   }
 
-  private async exportMonth(mesId: string, format: 'json' | 'csv') {
+  private async exportMonth(monthId: string, format: 'json' | 'csv') {
     try {
       if (format === 'json') {
-        await this.exportService.exportJSON(mesId);
+        await this.exportService.exportJSON(monthId);
       } else {
-        await this.exportService.exportCSV(mesId);
+        await this.exportService.exportCSV(monthId);
       }
       this.showFeedback('Exportado correctamente.', false);
     } catch (err: any) {
@@ -432,7 +468,7 @@ export class DataManagementComponent implements OnInit {
     try {
       await this.exportService.importJSON(file);
       this.showFeedback('Importado correctamente', false);
-      await this.refreshAvailableMonths(this.currentMesId());
+      await this.refreshAvailableMonths(this.currentMonthId());
       await this.loadHistory();
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al importar.', true);
@@ -451,7 +487,7 @@ export class DataManagementComponent implements OnInit {
         msg += ` ${result.rejected} fila${result.rejected !== 1 ? 's' : ''} rechazada${result.rejected !== 1 ? 's' : ''} (rutina desconocida).`;
       }
       this.showFeedback(msg, result.rejected > 0 && result.imported === 0);
-      await this.refreshAvailableMonths(this.currentMesId());
+      await this.refreshAvailableMonths(this.currentMonthId());
       await this.loadHistory();
     } catch (err: any) {
       this.showFeedback(err.message || 'Error al importar CSV.', true);

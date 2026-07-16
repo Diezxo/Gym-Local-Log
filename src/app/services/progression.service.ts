@@ -1,110 +1,118 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
-import { Sugerencia, UserSettings } from '../models/interfaces';
+import { Suggestion } from '../models/interfaces';
+import { UnitConversionService } from './unit-conversion.service';
 
 export interface ExerciseHistoryRecord {
-  fecha: string;
-  peso: number;
-  reps: number;
-  volumenTotal: number;
+  date: string;
+  weight: number;         // Best set weight IN BASE UNIT (kg)
+  reps: number;         // Best set reps
+  totalVolume: number;    // IN BASE UNIT
+  sets: { weight: number; reps: number }[]; // IN BASE UNIT
 }
 
 @Injectable({ providedIn: 'root' })
 export class ProgressionService {
-  private db = inject(DbService);
+  constructor(
+    private db: DbService,
+    private unitSvc: UnitConversionService
+  ) {}
 
   /**
-   * Motor de Progresión Doble Automatizada
+   * Automated Double Progression Engine
    *
-   * Lógica:
-   * - Busca la última sesión del ejercicio en el mes actual
-   * - Si se lograron 8-11 reps con peso X → sugiere X kg con reps+1
-   * - Si se alcanzaron ≥12 reps → sugiere peso+incremento con 8 reps (alerta de carga)
-   * - Si < 8 reps → sugiere mismo peso y mismas reps (consolidar)
+   * Logic:
+   * - Finds the last session of the exercise
+   * - If achieved 8-11 reps with weight X → suggests X weight with reps+1
+   * - If achieved ≥12 reps → suggests weight+increment with 8 reps (Load alert)
+   * - If < 8 reps → suggests same weight and same reps (consolidate)
    */
-  async getSugerencia(
-    nombreEjercicio: string,
-    mesId: string,
-    settings: UserSettings
-  ): Promise<Sugerencia | null> {
-    let lastLog = await this.db.getLastExerciseLog(nombreEjercicio, mesId);
+  async getSuggestion(
+    exerciseName: string,
+    monthId: string
+  ): Promise<Suggestion | null> {
+    let lastLog = await this.db.getLastExerciseLog(exerciseName, monthId);
 
     // If no data this month, check the previous month (common at start of month)
-    if (!lastLog || !lastLog.series || lastLog.series.length === 0) {
-      const [year, month] = mesId.split('-').map(Number);
+    if (!lastLog || !lastLog.sets || lastLog.sets.length === 0) {
+      const [year, month] = monthId.split('-').map(Number);
       const prevDate = new Date(year, month - 2, 1); // month-1 = current month index, month-2 = previous
-      const prevMesId = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-      lastLog = await this.db.getLastExerciseLog(nombreEjercicio, prevMesId);
+      const prevMonthId = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+      lastLog = await this.db.getLastExerciseLog(exerciseName, prevMonthId);
     }
 
     // No data found in current or previous month
-    if (!lastLog || !lastLog.series || lastLog.series.length === 0) {
+    if (!lastLog || !lastLog.sets || lastLog.sets.length === 0) {
       return null;
     }
 
     // Use the last completed series as reference
-    const ultimaSerie = lastLog.series[lastLog.series.length - 1];
-    const pesoAnterior = ultimaSerie.peso;
-    const repsAnteriores = ultimaSerie.reps;
-    const unidad = settings.unidadPeso === 'kg' ? 'kg' : 'lb';
-    const incremento = settings.incrementoPeso;
+    const lastSet = lastLog.sets[lastLog.sets.length - 1];
+    const previousBaseWeight = lastSet.weight; // kg
+    const previousReps = lastSet.reps;
+    
+    // We convert previous weight to user unit for the reference text and logic
+    const prevUserWeight = this.unitSvc.kgToUser(previousBaseWeight);
+    const unitLabel = this.unitSvc.currentWeightUnit();
+    const increment = this.unitSvc.currentSettings()?.weightIncrement ?? 2.5;
 
-    const textoReferencia = `Anterior: ${pesoAnterior}${unidad} × ${repsAnteriores}`;
+    const referenceText = `Anterior: ${prevUserWeight}${unitLabel} × ${previousReps}`;
 
-    if (repsAnteriores >= 12) {
-      // Salto de carga: incrementar peso, resetear a 8 reps
+    if (previousReps >= 12) {
+      // Jump load: increment weight, reset to 8 reps
       return {
-        pesoSugerido: pesoAnterior + incremento,
-        repsSugeridas: 8,
-        esAlertaCarga: true,
-        textoReferencia,
+        suggestedWeight: prevUserWeight + increment,
+        suggestedReps: 8,
+        isLoadAlert: true,
+        referenceText,
       };
-    } else if (repsAnteriores >= 8) {
-      // Progresión de reps: mismo peso, +1 rep
+    } else if (previousReps >= 8) {
+      // Rep progression: same weight, +1 rep
       return {
-        pesoSugerido: pesoAnterior,
-        repsSugeridas: repsAnteriores + 1,
-        esAlertaCarga: false,
-        textoReferencia,
+        suggestedWeight: prevUserWeight,
+        suggestedReps: previousReps + 1,
+        isLoadAlert: false,
+        referenceText,
       };
     } else {
-      // Consolidar: mismo peso, mismas reps
+      // Consolidate: same weight, same reps
       return {
-        pesoSugerido: pesoAnterior,
-        repsSugeridas: repsAnteriores,
-        esAlertaCarga: false,
-        textoReferencia,
+        suggestedWeight: prevUserWeight,
+        suggestedReps: previousReps,
+        isLoadAlert: false,
+        referenceText,
       };
     }
   }
 
-  async getExerciseHistory(nombreEjercicio: string, limit: number = 5): Promise<ExerciseHistoryRecord[]> {
+  async getExerciseHistory(exerciseName: string, limit: number = 5): Promise<ExerciseHistoryRecord[]> {
     const archives = await this.db.getAllMonthlyArchives();
-    archives.sort((a, b) => b.mesId.localeCompare(a.mesId));
+    archives.sort((a, b) => b.monthId.localeCompare(a.monthId));
 
     const history: ExerciseHistoryRecord[] = [];
 
     for (const archive of archives) {
-      const logsDescending = [...archive.logs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      const logsDescending = [...archive.logs].sort((a, b) => b.date.localeCompare(a.date));
       
       for (const log of logsDescending) {
-        const ejercicio = log.ejercicios.find(
-          (e) => e.nombre.toLowerCase() === nombreEjercicio.toLowerCase() && e.tipo === 'fuerza'
+        const exercise = log.exercises.find(
+          (e) => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength'
         );
         
-        if (ejercicio && ejercicio.series && ejercicio.series.length > 0) {
-          const bestSet = [...ejercicio.series].sort((a, b) => {
-             if (b.peso !== a.peso) return b.peso - a.peso;
+        if (exercise && exercise.sets && exercise.sets.length > 0) {
+          const bestSet = [...exercise.sets].sort((a, b) => {
+             if (b.weight !== a.weight) return b.weight - a.weight;
              return b.reps - a.reps;
           })[0];
           
-          const volumenTotal = ejercicio.series.reduce((sum, s) => sum + (s.peso * s.reps), 0);
+          const totalVolume = exercise.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
           
           history.push({
-            fecha: log.fecha,
-            peso: bestSet.peso,
+            date: log.date,
+            weight: bestSet.weight,
             reps: bestSet.reps,
-            volumenTotal
+            totalVolume,
+            sets: exercise.sets.map(s => ({ weight: s.weight, reps: s.reps })),
           });
           
           if (history.length >= limit) return history;

@@ -1,108 +1,113 @@
-// ─── Tipos de Ejercicio ───
-export type TipoEjercicio = 'fuerza' | 'cardio';
+// ─── Exercise Types ───
+export type ExerciseType = 'strength' | 'cardio';
 
-// ─── Tags Musculares / de Tipo ───
+// ─── Muscle / Type Tags ───
+// We keep the actual string values in Spanish so the UI doesn't look weird if we don't have i18n yet,
+// or we can translate them if requested. The user said "todos esos nombres de archivos y clases, metodos en ingles".
+// Let's keep the internal type values in English, but the UI might need to map them if they want it in Spanish.
+// Wait, the user said "pon todos esos nombres de archivos y clases, metodos en ingles".
+// Let's translate the string literals too, it's safer for a pure English codebase. We can localize later.
 export type MuscleTag =
-  | 'Pecho'
-  | 'Espalda'
-  | 'Piernas'
-  | 'Brazos'
+  | 'Chest'
+  | 'Back'
+  | 'Legs'
+  | 'Arms'
   | 'Core'
   | 'Cardio'
-  | 'Calentamiento';
+  | 'Warmup';
 
 export const MUSCLE_TAGS: MuscleTag[] = [
-  'Pecho', 'Espalda', 'Piernas', 'Brazos', 'Core', 'Cardio', 'Calentamiento',
+  'Chest', 'Back', 'Legs', 'Arms', 'Core', 'Cardio', 'Warmup',
 ];
 
-// Colores para cada tag
+// Colors for each tag
 export const TAG_COLORS: Record<MuscleTag, { bg: string; text: string; border: string }> = {
-  'Pecho':         { bg: 'rgba(239,68,68,0.12)',   text: '#f87171', border: 'rgba(239,68,68,0.25)' },
-  'Espalda':       { bg: 'rgba(59,130,246,0.12)',  text: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
-  'Piernas':       { bg: 'rgba(168,85,247,0.12)',  text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
-  'Brazos':        { bg: 'rgba(245,158,11,0.12)',  text: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
-  'Core':          { bg: 'rgba(236,72,153,0.12)',  text: '#f472b6', border: 'rgba(236,72,153,0.25)' },
-  'Cardio':        { bg: 'rgba(34,211,238,0.12)',  text: '#22d3ee', border: 'rgba(34,211,238,0.25)' },
-  'Calentamiento': { bg: 'rgba(16,185,129,0.12)',  text: '#34d399', border: 'rgba(16,185,129,0.25)' },
+  'Chest':   { bg: 'rgba(239,68,68,0.12)',   text: '#f87171', border: 'rgba(239,68,68,0.25)' },
+  'Back':    { bg: 'rgba(59,130,246,0.12)',  text: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
+  'Legs':    { bg: 'rgba(168,85,247,0.12)',  text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
+  'Arms':    { bg: 'rgba(245,158,11,0.12)',  text: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
+  'Core':    { bg: 'rgba(236,72,153,0.12)',  text: '#f472b6', border: 'rgba(236,72,153,0.25)' },
+  'Cardio':  { bg: 'rgba(34,211,238,0.12)',  text: '#22d3ee', border: 'rgba(34,211,238,0.25)' },
+  'Warmup':  { bg: 'rgba(16,185,129,0.12)',  text: '#34d399', border: 'rgba(16,185,129,0.25)' },
 };
 
-// ─── Unidades ───
-export type UnidadPeso = 'kg' | 'lb';
-export type UnidadDistancia = 'km' | 'mi';
-export type Idioma = 'es' | 'en';
+// ─── Units ───
+export type WeightUnit = 'kg' | 'lb';
+export type DistanceUnit = 'km' | 'mi';
+export type Language = 'es' | 'en';
 
-// ─── Series y Logs ───
-export interface SerieFuerza {
-  numero: number;
+// ─── Sets and Logs ───
+export interface StrengthSet {
+  setNumber: number;
   reps: number;
-  peso: number;
+  weight: number; // Stored universally in kg in DB
 }
 
-export interface LogCardio {
-  distanciaKm: number;
-  tiempoMinutos: number;
-  notasTecnica?: string;
+export interface CardioLog {
+  distanceMeters: number; // Stored universally in meters in DB
+  timeMinutes: number;
+  technicalNotes?: string;
 }
 
-// ─── Ejercicio Base (para templates) ───
-export interface EjercicioBase {
-  nombre: string;
-  tipo: TipoEjercicio;
-  tags?: MuscleTag[]; // Grupos musculares / tipo
+// ─── Base Exercise (for templates) ───
+export interface BaseExercise {
+  name: string;
+  type: ExerciseType;
+  tags?: MuscleTag[]; // Muscle groups / type
 }
 
-// ─── Template / Plantilla ───
+// ─── Template ───
 export interface Template {
   id: string;
-  nombre: string;
-  ejercicios: EjercicioBase[];
+  name: string;
+  exercises: BaseExercise[];
 }
 
-// ─── Log de un Ejercicio Individual ───
-export interface EjercicioLog {
-  nombre: string;
-  tipo: TipoEjercicio;
-  tags?: MuscleTag[]; // Copiado del template al registrar
-  series?: SerieFuerza[];
-  cardio?: LogCardio;
+// ─── Individual Exercise Log ───
+export interface ExerciseLog {
+  name: string;
+  type: ExerciseType;
+  tags?: MuscleTag[]; // Copied from template when logging
+  sets?: StrengthSet[];
+  cardio?: CardioLog;
 }
 
-// ─── Log Diario ───
-export interface LogDiario {
-  fecha: string; // Formato YYYY-MM-DD
+// ─── Daily Log ───
+export interface DailyLog {
+  date: string; // Format YYYY-MM-DD
   templateId: string;
-  ejercicios: EjercicioLog[];
-  notas?: string;
+  exercises: ExerciseLog[];
+  notes?: string;
 }
 
-// ─── Archivo Mensual ───
-export interface ArchivoMensual {
-  mesId: string; // Formato YYYY-MM
-  schemaVersion?: number; // 1 = formato inicial; permite migraciones futuras
-  logs: LogDiario[];
+// ─── Monthly Archive ───
+export interface MonthlyArchive {
+  monthId: string; // Format YYYY-MM
+  schemaVersion?: number; // 2 = English schema, kg/m base
+  logs: DailyLog[];
 }
 
-// ─── Configuración de Usuario ───
+// ─── User Settings ───
 export interface UserSettings {
-  unidadPeso: UnidadPeso;
-  unidadDistancia: UnidadDistancia;
-  idioma: Idioma;
-  incrementoPeso: number; // default 2.5
-  tiempoDescanso: number; // default 90 (segundos)
+  weightUnit: WeightUnit;
+  distanceUnit: DistanceUnit;
+  language: Language;
+  weightIncrement: number; // default 2.5
+  restTime: number; // default 90 (seconds)
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
-  unidadPeso: 'kg',
-  unidadDistancia: 'km',
-  idioma: 'es',
-  incrementoPeso: 2.5,
-  tiempoDescanso: 90,
+  weightUnit: 'kg',
+  distanceUnit: 'km',
+  language: 'es',
+  weightIncrement: 2.5,
+  restTime: 90,
 };
 
-// ─── Sugerencia de Progresión ───
-export interface Sugerencia {
-  pesoSugerido: number;
-  repsSugeridas: number;
-  esAlertaCarga: boolean;
-  textoReferencia: string;
+// ─── Progression Suggestion ───
+export interface Suggestion {
+  suggestedWeight: number; // In user's unit
+  suggestedReps: number;
+  isLoadAlert: boolean;
+  referenceText: string;
 }

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
-import { ArchivoMensual, LogDiario, EjercicioLog } from '../models/interfaces';
+import { MonthlyArchive, DailyLog, ExerciseLog } from '../models/interfaces';
 
 // ─── Import Result ───
 export interface ImportResult {
@@ -11,28 +11,28 @@ export interface ImportResult {
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
-  private db = inject(DbService);
+  constructor(private db: DbService) {}
 
   /**
-   * Exporta el archivo mensual como JSON y lo descarga
+   * Export monthly archive as JSON
    */
-  async exportJSON(mesId: string): Promise<void> {
-    const archive = await this.db.getMonthlyArchive(mesId);
+  async exportJSON(monthId: string): Promise<void> {
+    const archive = await this.db.getMonthlyArchive(monthId);
     if (!archive) {
-      throw new Error(`No hay datos para el mes ${mesId}`);
+      throw new Error(`No data for month ${monthId}`);
     }
 
     const json = JSON.stringify(archive, null, 2);
-    this.downloadFile(json, `${mesId}.json`, 'application/json');
+    this.downloadFile(json, `${monthId}.json`, 'application/json');
   }
 
   /**
-   * Exporta todos los meses disponibles como un único JSON
+   * Export all months as a single JSON
    */
   async exportAllJSON(): Promise<void> {
     const archives = await this.db.getAllMonthlyArchives();
     if (!archives || archives.length === 0) {
-      throw new Error('No hay datos para exportar');
+      throw new Error('No data to export');
     }
 
     const json = JSON.stringify(archives, null, 2);
@@ -40,19 +40,17 @@ export class ExportService {
   }
 
   /**
-   * Exporta el archivo mensual como CSV aplanado
-   * Columnas: Fecha, Rutina, Ejercicio, Tipo, Serie/Distancia, Reps/Tiempo, Peso/Notas
+   * Export monthly archive as CSV
    */
-  async exportCSV(mesId: string): Promise<void> {
-    const archive = await this.db.getMonthlyArchive(mesId);
+  async exportCSV(monthId: string): Promise<void> {
+    const archive = await this.db.getMonthlyArchive(monthId);
     if (!archive) {
-      throw new Error(`No hay datos para el mes ${mesId}`);
+      throw new Error(`No data for month ${monthId}`);
     }
 
-    // Pre-load template names to avoid N+1 queries
     const templateMap = await this.buildTemplateMap();
     const rows: string[] = [];
-    rows.push('Fecha,Rutina,Ejercicio,Tipo,Serie/Distancia,Reps/Tiempo,Peso/Notas');
+    rows.push('Date,Routine,Exercise,Type,Set/Distance_m,Reps/Time_min,Weight_kg/Notes');
 
     for (const log of archive.logs) {
       const templateName = templateMap.get(log.templateId) ?? log.templateId;
@@ -60,21 +58,21 @@ export class ExportService {
     }
 
     const csv = rows.join('\n');
-    this.downloadFile(csv, `${mesId}.csv`, 'text/csv');
+    this.downloadFile(csv, `${monthId}.csv`, 'text/csv');
   }
 
   /**
-   * Exporta todos los meses disponibles como un único CSV aplanado
+   * Export all months as CSV
    */
   async exportAllCSV(): Promise<void> {
     const archives = await this.db.getAllMonthlyArchives();
     if (!archives || archives.length === 0) {
-      throw new Error('No hay datos para exportar');
+      throw new Error('No data to export');
     }
 
     const templateMap = await this.buildTemplateMap();
     const rows: string[] = [];
-    rows.push('Fecha,Rutina,Ejercicio,Tipo,Serie/Distancia,Reps/Tiempo,Peso/Notas');
+    rows.push('Date,Routine,Exercise,Type,Set/Distance_m,Reps/Time_min,Weight_kg/Notes');
 
     for (const archive of archives) {
       for (const log of archive.logs) {
@@ -88,8 +86,7 @@ export class ExportService {
   }
 
   /**
-   * Importa un archivo JSON como ArchivoMensual con validación estricta.
-   * Reporta todos los errores encontrados antes de rechazar.
+   * Import JSON (Strict validation)
    */
   async importJSON(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -100,19 +97,18 @@ export class ExportService {
           try {
             data = JSON.parse(reader.result as string);
           } catch {
-            reject(new Error('El archivo no es JSON válido'));
+            reject(new Error('Invalid JSON file'));
             return;
           }
 
           if (Array.isArray(data)) {
-            // Import multiple months
             const allErrors: string[] = [];
             for (let i = 0; i < data.length; i++) {
-              const errs = this.validateArchivoMensual(data[i], `mes[${i}]`);
+              const errs = this.validateMonthlyArchive(data[i], `array[${i}]`);
               allErrors.push(...errs);
             }
             if (allErrors.length > 0) {
-              reject(new Error(`Errores de validación (${allErrors.length}):\n• ${allErrors.slice(0, 10).join('\n• ')}`));
+              reject(new Error(`Validation errors (${allErrors.length}):\n• ${allErrors.slice(0, 10).join('\n• ')}`));
               return;
             }
             for (const monthData of data) {
@@ -120,27 +116,25 @@ export class ExportService {
             }
             resolve('all');
           } else {
-            // Import single month
-            const errs = this.validateArchivoMensual(data, 'raíz');
+            const errs = this.validateMonthlyArchive(data, 'root');
             if (errs.length > 0) {
-              reject(new Error(`Errores de validación (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`));
+              reject(new Error(`Validation errors (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`));
               return;
             }
-            await this.db.importMonthlyArchive(data as ArchivoMensual);
-            resolve(data.mesId);
+            await this.db.importMonthlyArchive(data);
+            resolve(data.monthId || data.mesId);
           }
         } catch (err) {
           reject(err);
         }
       };
-      reader.onerror = () => reject(new Error('Error leyendo el archivo'));
+      reader.onerror = () => reject(new Error('Error reading file'));
       reader.readAsText(file);
     });
   }
 
   /**
-   * Importa un archivo CSV como logs mensuales.
-   * Las filas cuya "Rutina" no coincida con ningún template existente son rechazadas.
+   * Import CSV
    */
   async importCSV(file: File): Promise<ImportResult> {
     return new Promise((resolve, reject) => {
@@ -151,92 +145,85 @@ export class ExportService {
           const lines = text.split(/\r?\n/).filter(l => l.trim());
 
           if (lines.length < 2) {
-            reject(new Error('El archivo CSV está vacío o solo tiene encabezados'));
+            reject(new Error('CSV is empty or only has headers'));
             return;
           }
 
-          // Validate header
           const header = lines[0].toLowerCase();
-          if (!header.includes('fecha') || !header.includes('rutina')) {
-            reject(new Error('Formato CSV inválido: faltan columnas "Fecha" o "Rutina" en el encabezado'));
+          // Backward compatibility: accept 'fecha' and 'rutina' or 'date' and 'routine'
+          if (!(header.includes('fecha') || header.includes('date')) || !(header.includes('rutina') || header.includes('routine'))) {
+            reject(new Error('Invalid CSV format: missing Date/Routine columns'));
             return;
           }
 
-          // Pre-load templates to build name→id map
           const templates = await this.db.getTemplates();
-          const templateMap = new Map(templates.map(t => [t.nombre.trim().toLowerCase(), t.id]));
+          const templateMap = new Map(templates.map(t => [t.name.trim().toLowerCase(), t.id]));
 
           const errors: string[] = [];
           const rejectedRows: string[] = [];
-
-          // Group parsed rows by fecha+templateId
-          const logMap = new Map<string, LogDiario>();
+          const logMap = new Map<string, DailyLog>();
 
           for (let i = 1; i < lines.length; i++) {
             const row = this.parseCSVRow(lines[i]);
             if (row.length < 4) continue;
 
-            const [fecha, rutina, ejercicio, tipo, col5 = '', col6 = '', col7 = ''] = row.map(s => s.trim());
+            const [date, routine, exercise, type, col5 = '', col6 = '', col7 = ''] = row.map(s => s.trim());
 
-            // Validate date format
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-              errors.push(`Fila ${i + 1}: fecha "${fecha}" con formato inválido (esperado YYYY-MM-DD)`);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+              errors.push(`Row ${i + 1}: invalid date "${date}"`);
               continue;
             }
 
-            // Validate template exists (reject if not found)
-            const templateId = templateMap.get(rutina.toLowerCase());
+            const templateId = templateMap.get(routine.toLowerCase());
             if (!templateId) {
-              rejectedRows.push(`Fila ${i + 1}: Rutina "${rutina}" no encontrada — fila ignorada`);
+              rejectedRows.push(`Row ${i + 1}: Routine "${routine}" not found — ignored`);
               continue;
             }
 
-            const key = `${fecha}|${templateId}`;
+            const key = `${date}|${templateId}`;
             if (!logMap.has(key)) {
-              logMap.set(key, { fecha, templateId, ejercicios: [], notas: '' });
+              logMap.set(key, { date, templateId, exercises: [], notes: '' });
             }
             const log = logMap.get(key)!;
 
-            // Find or create ejercicio entry
-            let ejLog = log.ejercicios.find(e => e.nombre === ejercicio);
+            let ejLog = log.exercises.find(e => e.name === exercise);
             if (!ejLog) {
-              const tipoNorm = tipo.toLowerCase() === 'fuerza' ? 'fuerza' : 'cardio';
+              const tipoNorm = (type.toLowerCase() === 'fuerza' || type.toLowerCase() === 'strength') ? 'strength' : 'cardio';
               ejLog = {
-                nombre: ejercicio,
-                tipo: tipoNorm,
-                series: tipoNorm === 'fuerza' ? [] : undefined,
-                cardio: tipoNorm === 'cardio' ? { distanciaKm: 0, tiempoMinutos: 0 } : undefined,
+                name: exercise,
+                type: tipoNorm,
+                sets: tipoNorm === 'strength' ? [] : undefined,
+                cardio: tipoNorm === 'cardio' ? { distanceMeters: 0, timeMinutes: 0 } : undefined,
               };
-              log.ejercicios.push(ejLog);
+              log.exercises.push(ejLog);
             }
 
-            if (tipo.toLowerCase() === 'fuerza') {
-              const serieNum = parseInt(col5, 10);
+            if (ejLog.type === 'strength') {
+              const setNum = parseInt(col5, 10);
               const reps = parseInt(col6, 10);
-              const peso = parseFloat(col7);
-              if (isNaN(reps) || isNaN(peso) || reps < 0 || peso < 0) {
-                errors.push(`Fila ${i + 1}: reps o peso inválidos`);
+              const weight = parseFloat(col7);
+              if (isNaN(reps) || isNaN(weight) || reps < 0 || weight < 0) {
+                errors.push(`Row ${i + 1}: invalid reps or weight`);
                 continue;
               }
-              ejLog.series = ejLog.series ?? [];
-              ejLog.series.push({ numero: serieNum || ejLog.series.length + 1, reps, peso });
+              ejLog.sets = ejLog.sets ?? [];
+              ejLog.sets.push({ setNumber: setNum || ejLog.sets.length + 1, reps, weight });
             } else {
               ejLog.cardio = {
-                distanciaKm: parseFloat(col5) || 0,
-                tiempoMinutos: parseFloat(col6) || 0,
-                notasTecnica: col7 || undefined,
+                distanceMeters: parseFloat(col5) || 0,
+                timeMinutes: parseFloat(col6) || 0,
+                technicalNotes: col7 || undefined,
               };
             }
           }
 
-          // Group logs into monthly archives and import
-          const monthArchives = new Map<string, ArchivoMensual>();
+          const monthArchives = new Map<string, MonthlyArchive>();
           for (const log of logMap.values()) {
-            const mesId = log.fecha.substring(0, 7);
-            if (!monthArchives.has(mesId)) {
-              monthArchives.set(mesId, { mesId, schemaVersion: 1, logs: [] });
+            const monthId = log.date.substring(0, 7);
+            if (!monthArchives.has(monthId)) {
+              monthArchives.set(monthId, { monthId, schemaVersion: 2, logs: [] });
             }
-            monthArchives.get(mesId)!.logs.push(log);
+            monthArchives.get(monthId)!.logs.push(log);
           }
 
           for (const archive of monthArchives.values()) {
@@ -252,93 +239,95 @@ export class ExportService {
           reject(err);
         }
       };
-      reader.onerror = () => reject(new Error('Error leyendo el archivo'));
+      reader.onerror = () => reject(new Error('Error reading CSV'));
       reader.readAsText(file);
     });
   }
 
-  /**
-   * Retorna la lista de meses disponibles en la base de datos
-   */
   async getAvailableMonths(): Promise<string[]> {
     const archives = await this.db.getAllMonthlyArchives();
     return archives
-      .map((a) => a.mesId)
+      .map((a) => a.monthId)
       .sort()
       .reverse();
   }
 
   // ─── Validators ───
 
-  /**
-   * Validates an ArchivoMensual object deeply, returning an array of error messages.
-   * Returns empty array if valid.
-   */
-  private validateArchivoMensual(data: any, context: string): string[] {
+  private validateMonthlyArchive(data: any, context: string): string[] {
     const errors: string[] = [];
     const MAX_ERRORS = 20;
 
     if (!data || typeof data !== 'object') {
-      errors.push(`${context}: debe ser un objeto JSON`);
+      errors.push(`${context}: must be a JSON object`);
       return errors;
     }
 
-    if (!data.mesId || typeof data.mesId !== 'string' || !/^\d{4}-\d{2}$/.test(data.mesId)) {
-      errors.push(`${context}.mesId: formato inválido (esperado YYYY-MM)`);
+    const monthId = data.monthId || data.mesId;
+    if (!monthId || typeof monthId !== 'string' || !/^\d{4}-\d{2}$/.test(monthId)) {
+      errors.push(`${context}.monthId: invalid format (YYYY-MM expected)`);
     }
 
     if (!Array.isArray(data.logs)) {
-      errors.push(`${context}.logs: debe ser un array`);
+      errors.push(`${context}.logs: must be an array`);
       return errors;
     }
 
     outer: for (let i = 0; i < data.logs.length; i++) {
       const log = data.logs[i];
       const logCtx = `${context}.logs[${i}]`;
+      const date = log.date || log.fecha;
 
-      if (!log.fecha || typeof log.fecha !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(log.fecha)) {
-        errors.push(`${logCtx}.fecha: formato inválido (esperado YYYY-MM-DD)`);
+      if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        errors.push(`${logCtx}.date: invalid format (YYYY-MM-DD expected)`);
       }
       if (!log.templateId || typeof log.templateId !== 'string') {
-        errors.push(`${logCtx}.templateId: requerido (string)`);
+        errors.push(`${logCtx}.templateId: required string`);
       }
-      if (!Array.isArray(log.ejercicios)) {
-        errors.push(`${logCtx}.ejercicios: debe ser un array`);
+      const exercises = log.exercises || log.ejercicios;
+      if (!Array.isArray(exercises)) {
+        errors.push(`${logCtx}.exercises: must be an array`);
         if (errors.length >= MAX_ERRORS) break;
         continue;
       }
 
-      for (let j = 0; j < log.ejercicios.length; j++) {
-        const ej = log.ejercicios[j];
-        const ejCtx = `${logCtx}.ejercicios[${j}]`;
+      for (let j = 0; j < exercises.length; j++) {
+        const ej = exercises[j];
+        const ejCtx = `${logCtx}.exercises[${j}]`;
+        const name = ej.name || ej.nombre;
+        const type = ej.type || ej.tipo;
 
-        if (!ej.nombre || typeof ej.nombre !== 'string') {
-          errors.push(`${ejCtx}.nombre: requerido`);
+        if (!name || typeof name !== 'string') {
+          errors.push(`${ejCtx}.name: required`);
         }
-        if (ej.tipo !== 'fuerza' && ej.tipo !== 'cardio') {
-          errors.push(`${ejCtx}.tipo: debe ser 'fuerza' o 'cardio', encontrado "${ej.tipo}"`);
+        if (type !== 'strength' && type !== 'cardio' && type !== 'fuerza') {
+          errors.push(`${ejCtx}.type: must be 'strength' or 'cardio'`);
         }
 
-        if (ej.tipo === 'fuerza' && Array.isArray(ej.series)) {
-          for (let k = 0; k < ej.series.length; k++) {
-            const serie = ej.series[k];
-            const sCtx = `${ejCtx}.series[${k}]`;
+        const sets = ej.sets || ej.series;
+        if ((type === 'strength' || type === 'fuerza') && Array.isArray(sets)) {
+          for (let k = 0; k < sets.length; k++) {
+            const serie = sets[k];
+            const sCtx = `${ejCtx}.sets[${k}]`;
+            const weight = serie.weight ?? serie.peso;
             if (typeof serie.reps !== 'number' || serie.reps < 0) {
-              errors.push(`${sCtx}.reps: debe ser número ≥ 0`);
+              errors.push(`${sCtx}.reps: must be >= 0`);
             }
-            if (typeof serie.peso !== 'number' || serie.peso < 0) {
-              errors.push(`${sCtx}.peso: debe ser número ≥ 0`);
+            if (typeof weight !== 'number' || weight < 0) {
+              errors.push(`${sCtx}.weight: must be >= 0`);
             }
             if (errors.length >= MAX_ERRORS) break outer;
           }
         }
 
-        if (ej.tipo === 'cardio' && ej.cardio) {
-          if (typeof ej.cardio.distanciaKm !== 'number' || ej.cardio.distanciaKm < 0) {
-            errors.push(`${ejCtx}.cardio.distanciaKm: debe ser número ≥ 0`);
+        if (type === 'cardio' && ej.cardio) {
+          const dist = ej.cardio.distanceMeters ?? ej.cardio.distanciaKm;
+          const time = ej.cardio.timeMinutes ?? ej.cardio.tiempoMinutos;
+          if (typeof dist !== 'number' || dist < 0) {
+            errors.push(`${ejCtx}.cardio.distanceMeters: must be >= 0`);
           }
-          if (typeof ej.cardio.tiempoMinutos !== 'number' || ej.cardio.tiempoMinutos < 0) {
-            errors.push(`${ejCtx}.cardio.tiempoMinutos: debe ser número ≥ 0`);
+          if (typeof time !== 'number' || time < 0) {
+            errors.push(`${ejCtx}.cardio.timeMinutes: must be >= 0`);
           }
         }
 
@@ -351,40 +340,38 @@ export class ExportService {
 
   // ─── Helpers ───
 
-  /** Builds a map of templateId → templateName for CSV export (avoids N+1 queries) */
   private async buildTemplateMap(): Promise<Map<string, string>> {
     const templates = await this.db.getTemplates();
-    return new Map(templates.map(t => [t.id, t.nombre]));
+    return new Map(templates.map(t => [t.id, t.name]));
   }
 
-  /** Converts a LogDiario to CSV rows */
-  private logToCSVRows(log: LogDiario, templateName: string): string[] {
+  private logToCSVRows(log: DailyLog, templateName: string): string[] {
     const rows: string[] = [];
-    for (const ejercicio of log.ejercicios) {
-      if (ejercicio.tipo === 'fuerza' && ejercicio.series) {
-        for (const serie of ejercicio.series) {
+    for (const exercise of log.exercises) {
+      if (exercise.type === 'strength' && exercise.sets) {
+        for (const serie of exercise.sets) {
           rows.push(
             this.csvRow([
-              log.fecha,
+              log.date,
               templateName,
-              ejercicio.nombre,
-              'Fuerza',
-              String(serie.numero),
+              exercise.name,
+              'Strength',
+              String(serie.setNumber),
               String(serie.reps),
-              String(serie.peso),
+              String(serie.weight),
             ])
           );
         }
-      } else if (ejercicio.tipo === 'cardio' && ejercicio.cardio) {
+      } else if (exercise.type === 'cardio' && exercise.cardio) {
         rows.push(
           this.csvRow([
-            log.fecha,
+            log.date,
             templateName,
-            ejercicio.nombre,
+            exercise.name,
             'Cardio',
-            String(ejercicio.cardio.distanciaKm),
-            String(ejercicio.cardio.tiempoMinutos),
-            ejercicio.cardio.notasTecnica ?? '',
+            String(exercise.cardio.distanceMeters),
+            String(exercise.cardio.timeMinutes),
+            exercise.cardio.technicalNotes ?? '',
           ])
         );
       }
@@ -392,7 +379,6 @@ export class ExportService {
     return rows;
   }
 
-  /** Parses a single CSV line, handling quoted fields with escaped double-quotes */
   private parseCSVRow(line: string): string[] {
     const result: string[] = [];
     let current = '';
