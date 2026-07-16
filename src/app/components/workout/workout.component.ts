@@ -40,52 +40,52 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Header -->
       <header class="px-6 pt-12 pb-6">
-        <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">Entrenar</p>
-        <h1 class="text-[40px] leading-tight font-black capitalize tracking-tight">{{ dateDisplay() }}</h1>
+        <p class="text-sm text-[var(--color-accent)] uppercase font-heading font-bold tracking-[0.2em] mb-2 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Entrenar</p>
+        <h1 class="text-4xl sm:text-5xl font-heading font-black capitalize tracking-tight drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">{{ dateDisplay() }}</h1>
       </header>
 
       <!-- ── View: Template selection ── -->
       @if (!activeLog()) {
-        <div class="px-6 flex flex-col gap-4 animate-fade-in">
-          <p class="text-base font-black text-[var(--color-text-muted)]  mb-2">Elige tu rutina</p>
+        <div class="px-6 flex flex-col gap-6 animate-fade-in max-w-4xl mx-auto">
+          <p class="text-lg font-heading font-black uppercase text-[var(--color-text-muted)] tracking-widest drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Elige tu rutina</p>
 
           @if (templates().length === 0) {
-            <div class="rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] p-12 text-center flex flex-col gap-3 ">
-              <p class="text-[var(--color-text-primary)] text-lg font-bold">No tienes plantillas creadas.</p>
-              <p class="text-[var(--color-text-muted)] text-sm font-medium">Ve a Rutinas para crear una.</p>
+            <div class="rounded-xl bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] shadow-[6px_6px_0px_rgba(0,0,0,0.3)] p-12 text-center flex flex-col gap-3">
+              <p class="text-[var(--color-text-primary)] text-xl font-heading font-black uppercase">No tienes plantillas creadas.</p>
+              <p class="text-[var(--color-text-muted)] text-sm font-heading font-bold uppercase tracking-widest">Ve a Rutinas para crear una.</p>
             </div>
           }
 
           @for (tmpl of templates(); track tmpl.id) {
             <button
               (click)="selectTemplate(tmpl)"
-              class="w-full text-left bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden active:scale-[0.98] transition-all hover:border-[#00f2fe]/50 group shadow-lg hover:shadow-xl"
+              class="w-full text-left bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] rounded-xl overflow-hidden active:translate-y-[2px] active:translate-x-[2px] active:shadow-[2px_2px_0_rgba(0,0,0,0.5)] transition-all hover:border-[var(--color-accent)] group shadow-[6px_6px_0_rgba(0,0,0,0.3)]"
             >
               <!-- Main content -->
-              <div class="flex items-center gap-4 p-4">
+              <div class="flex items-center gap-4 p-5">
                 <!-- Dumbbell icon -->
-                <div class="w-14 h-14 rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] flex items-center justify-center shrink-0 group-hover:border-[#00f2fe]/40 transition-colors ">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#00f2fe] drop- group-hover:drop- transition-all"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+                <div class="w-16 h-16 rounded-lg bg-[#111827] border-2 border-[var(--color-accent)] flex items-center justify-center shrink-0 group-hover:bg-[var(--color-accent)] transition-colors shadow-[inset_2px_2px_0px_rgba(255,255,255,0.1)] group-hover:shadow-[inset_2px_2px_0px_rgba(0,0,0,0.2)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent)] group-hover:text-[#111827] transition-all"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
                 </div>
 
                 <div class="flex-1 min-w-0">
-                  <p class="text-[var(--color-text-primary)] font-black text-lg truncate mb-1">{{ tmpl.name }}</p>
-                  <p class="text-[var(--color-text-muted)] text-sm truncate font-medium">
+                  <p class="text-[var(--color-text-primary)] font-heading font-black text-2xl truncate mb-1 uppercase tracking-wide drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ tmpl.name }}</p>
+                  <p class="text-[var(--color-text-muted)] text-sm truncate font-heading font-bold tracking-widest uppercase">
                     {{ tmpl.exercises.map(e => e.name).join(' · ') }}
                   </p>
                 </div>
 
-                <span class="shrink-0 text-xs font-bold text-[var(--color-text-secondary)] bg-[var(--color-bg-input)] px-3 py-1.5 rounded-xl border border-[var(--color-border)]">
+                <span class="shrink-0 text-sm font-heading font-black uppercase tracking-widest text-[#111827] bg-[var(--color-accent)] px-3 py-1.5 rounded-md border-2 border-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.5)]">
                   {{ tmpl.exercises.length }} ej.
                 </span>
               </div>
 
               <!-- Tags row -->
               @if (getTemplateTags(tmpl).length > 0) {
-                <div class="border-t border-[var(--color-border)] px-5 py-3.5 flex flex-wrap gap-2">
+                <div class="border-t-2 border-[var(--color-border)] px-5 py-3.5 flex flex-wrap gap-2 bg-[var(--color-bg-input)]">
                   @for (tag of getTemplateTags(tmpl); track tag) {
                     <span
-                      class="px-3 py-1 rounded-full text-[10px] font-bold border"
+                      class="px-3 py-1 rounded-md text-xs font-heading font-black uppercase tracking-widest border-2 shadow-[2px_2px_0_rgba(0,0,0,0.5)]"
                       [style.background]="getTagColor(tag).bg"
                       [style.borderColor]="getTagColor(tag).border"
                       [style.color]="getTagColor(tag).text"
@@ -100,35 +100,35 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- ── View: Active Workout ── -->
       @if (activeLog()) {
-        <div class="px-6 flex flex-col gap-4 animate-scale-in">
+        <div class="px-6 flex flex-col gap-6 animate-scale-in max-w-4xl mx-auto">
 
-          <!-- Active header: template name + timer + cancel -->
+          <!-- Active header: cancel + timer + badge -->
           <div class="flex items-center justify-between gap-3 pt-2">
             <button
               (click)="cancelWorkout()"
-              class="text-sm font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5 active:scale-95 bg-[var(--color-bg-input)] px-4 py-2 rounded-full border border-[var(--color-border)]"
+              class="text-sm font-heading font-black uppercase tracking-widest text-[var(--color-text-muted)] hover:text-white transition-colors flex items-center gap-1.5 active:translate-y-[2px] bg-[var(--color-bg-card)] px-4 py-2 rounded-lg border-2 border-[var(--color-border)] shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-y-[2px] hover:translate-x-[2px]"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
               Cancelar
             </button>
 
             <!-- Session timer -->
-            <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-full px-4 py-2 ">
-              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse "></div>
-              <span class="font-mono text-base font-black text-[var(--color-text-primary)] tracking-tight">{{ sessionTimerLabel() }}</span>
+            <div class="flex items-center gap-2.5 bg-[#111827] border-2 border-[var(--color-accent)] rounded-lg px-4 py-2 shadow-[2px_2px_0_rgba(249,115,22,0.5)]">
+              <div class="w-3 h-3 rounded-sm bg-emerald-400 animate-pulse border border-emerald-900"></div>
+              <span class="font-mono text-lg font-black text-[var(--color-accent)] tracking-widest drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ sessionTimerLabel() }}</span>
             </div>
 
-            <span class="text-xs font-black text-[#00f2fe] bg-[#00f2fe]/10 px-4 py-2 rounded-full border border-[#00f2fe]/30 ">En curso</span>
+            <span class="text-xs font-heading font-black uppercase tracking-widest text-[#111827] bg-[var(--color-accent)] px-3 py-2 rounded-lg border-2 border-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.5)] hidden sm:inline-block">En curso</span>
           </div>
 
           <!-- Template name + tags -->
           <div class="flex flex-col gap-3">
-            <h2 class="text-2xl font-black text-[var(--color-text-primary)] truncate">{{ activeTemplateName() }}</h2>
+            <h2 class="text-3xl font-heading font-black text-[var(--color-text-primary)] uppercase tracking-wide drop-shadow-[2px_2px_0_rgba(0,0,0,1)] truncate">{{ activeTemplateName() }}</h2>
             @if (activeTemplateTags().length > 0) {
               <div class="flex flex-wrap gap-2">
                 @for (tag of activeTemplateTags(); track tag) {
                   <span
-                    class="px-3 py-1 rounded-full text-[11px] font-bold border"
+                    class="px-3 py-1 rounded-md text-xs font-heading font-black uppercase tracking-widest border-2 shadow-[2px_2px_0_rgba(0,0,0,0.5)]"
                     [style.background]="getTagColor(tag).bg"
                     [style.borderColor]="getTagColor(tag).border"
                     [style.color]="getTagColor(tag).text"
@@ -140,13 +140,13 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           <!-- Barra de Progreso -->
           <div class="flex flex-col gap-2">
-            <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-bold ">
+            <div class="flex justify-between text-sm text-[var(--color-text-muted)] font-heading font-bold uppercase tracking-widest">
               <span>Progreso</span>
-              <span class="text-[#00f2fe]">{{ getCompletedExercisesCount() }} / {{ activeLog()!.exercises.length }} completados</span>
+              <span class="text-[var(--color-accent)]">{{ getCompletedExercisesCount() }} / {{ activeLog()!.exercises.length }}</span>
             </div>
-            <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden border border-[var(--color-border)] ">
+            <div class="w-full h-4 bg-[var(--color-bg-input)] rounded-md overflow-hidden border-2 border-[var(--color-border)] shadow-inner">
               <div
-                class="h-full bg-gradient-to-r from-[#00f2fe] to-[#a252ff] transition-all duration-500 ease-out  rounded-full"
+                class="h-full bg-[var(--color-accent)] transition-all duration-500 ease-out border-r-2 border-[#111827]"
                 [style.width.%]="(getCompletedExercisesCount() / activeLog()!.exercises.length) * 100"
               ></div>
             </div>
@@ -160,40 +160,42 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           />
 
           <!-- Exercises -->
-          @for (ejLog of activeLog()!.exercises; track $index; let i = $index) {
-            <div class="mb-4">
-              @if (ejLog.type === 'strength') {
-                <app-exercise-strength
-                  [exerciseLog]="ejLog"
-                  [suggestion]="suggestions()[i] ?? null"
-                  (setCompleted)="onSetCompleted($event)"
-                  (logUpdated)="onLogUpdated($event)"
-                />
-              } @else {
-                <app-exercise-cardio
-                  [exerciseLog]="ejLog"
-                  (logUpdated)="onLogUpdated($event)"
-                />
-              }
-            </div>
-          }
+          <div class="flex flex-col gap-6">
+            @for (ejLog of activeLog()!.exercises; track $index; let i = $index) {
+              <div>
+                @if (ejLog.type === 'strength') {
+                  <app-exercise-strength
+                    [exerciseLog]="ejLog"
+                    [suggestion]="suggestions()[i] ?? null"
+                    (setCompleted)="onSetCompleted($event)"
+                    (logUpdated)="onLogUpdated($event)"
+                  />
+                } @else {
+                  <app-exercise-cardio
+                    [exerciseLog]="ejLog"
+                    (logUpdated)="onLogUpdated($event)"
+                  />
+                }
+              </div>
+            }
+          </div>
 
           <!-- Notas del día -->
-          <div class="flex flex-col gap-3">
-            <label class="text-sm text-[var(--color-text-muted)] font-bold ">Notas del día</label>
+          <div class="flex flex-col gap-3 mt-4">
+            <label class="text-sm text-[var(--color-text-muted)] font-heading font-black uppercase tracking-widest drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Notas del día</label>
             <textarea
               [ngModel]="dailyNotes()"
               (ngModelChange)="updateNotes($event)"
               placeholder="¿Cómo te sentiste hoy?"
               rows="3"
-              class="w-full rounded-2xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[#00f2fe] transition-colors resize-none "
+              class="w-full rounded-xl bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] px-5 py-4 text-base font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors resize-none shadow-[inset_2px_2px_0_rgba(0,0,0,0.2)]"
             ></textarea>
           </div>
 
           <!-- Botón Finalizar -->
           <button
             (click)="finishWorkout()"
-            class="btn-primary min-h-[56px] text-xl font-black w-full flex items-center justify-center gap-3 mt-4  bg-gradient-to-r from-emerald-400 to-emerald-600 hover: border-none"
+            class="btn-primary min-h-[64px] text-xl font-heading font-black uppercase tracking-widest w-full flex items-center justify-center gap-3 mt-6"
           >
             ✓ Finalizar Entrenamiento
           </button>
@@ -202,9 +204,9 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
       <!-- Toast de éxito -->
       @if (showToast()) {
-        <div class="fixed bottom-28 left-4 right-4 z-50 rounded-2xl bg-emerald-500 px-6 py-4 flex items-center justify-center gap-3 text-white  animate-slide-up">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span class="font-bold text-sm tracking-wide">¡Entrenamiento guardado!</span>
+        <div class="fixed bottom-28 left-4 right-4 max-w-sm mx-auto z-50 rounded-lg bg-emerald-500 border-2 border-emerald-900 px-6 py-4 flex items-center justify-center gap-3 text-white shadow-[6px_6px_0_rgba(0,0,0,0.5)] animate-slide-up">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="font-heading font-black uppercase tracking-widest text-lg drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">¡Guardado!</span>
         </div>
       }
     </div>

@@ -37,183 +37,191 @@ interface PRRecord {
   standalone: true,
   imports: [CommonModule, ProgressionChartComponent],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-6">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-6 pt-12 pb-36 flex flex-col gap-8 max-w-7xl mx-auto w-full">
 
       <!-- ── Header ── -->
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-2 font-bold">{{ dayLabel() }}</p>
-          <h1 class="text-[40px] leading-tight font-black text-[var(--color-text-primary)] tracking-tight">Dashboard</h1>
+          <p class="text-sm text-[var(--color-text-muted)] font-heading uppercase tracking-[0.1em] font-bold">{{ dayLabel() }}</p>
+          <h1 class="text-5xl uppercase font-heading font-black text-[var(--color-accent)] tracking-tight drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">Dashboard</h1>
         </div>
         
         <div class="flex gap-2">
-          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes anterior">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button (click)="changeMonth(-1)" [disabled]="!canGoPrev()" class="w-12 h-12 flex items-center justify-center rounded-lg bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 hover:border-[var(--color-accent)] shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:active:scale-100 active:scale-95 transition-all" aria-label="Mes siguiente">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          <button (click)="changeMonth(1)" [disabled]="!canGoNext()" class="w-12 h-12 flex items-center justify-center rounded-lg bg-[var(--color-bg-card)] border-2 border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-30 hover:border-[var(--color-accent)] shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- ── Semana Actual ── -->
-      <div>
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] ">Esta semana</h2>
-          <span class="text-sm text-[var(--color-text-secondary)] font-medium">{{ weekRangeLabel() }}</span>
-        </div>
-        <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
-          @for (day of weekDays(); track day.label) {
-            <div class="flex flex-col items-center gap-2">
-              <span class="text-xs font-bold "
-                [class]="day.isToday ? 'text-[#00f2fe]' : 'text-[var(--color-text-muted)]'">
-                {{ day.label }}
-              </span>
-              <div
-                class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold transition-all"
-                [class]="getWeekDayClass(day)"
-              >
-                {{ day.dayNum }}
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column -->
+        <div class="lg:col-span-7 flex flex-col gap-8">
+          
+          <!-- ── Semana Actual ── -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)]">Esta semana</h2>
+              <span class="text-sm font-heading tracking-widest text-[var(--color-text-muted)] font-medium">{{ weekRangeLabel() }}</span>
+            </div>
+            <div class="grid grid-cols-7 gap-2 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+              @for (day of weekDays(); track day.label) {
+                <div class="flex flex-col items-center gap-2">
+                  <span class="text-xs font-heading font-bold"
+                    [class]="day.isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'">
+                    {{ day.label }}
+                  </span>
+                  <div
+                    class="w-10 h-10 rounded-lg border-2 flex items-center justify-center text-lg font-heading font-bold transition-all"
+                    [class]="getWeekDayClass(day)"
+                  >
+                    {{ day.dayNum }}
+                  </div>
+                </div>
+              }
+            </div>
+            @if (weeklyCardioDistance() > 0) {
+              <div class="flex justify-start mt-3">
+                <span class="text-sm font-bold font-heading uppercase tracking-wider text-[var(--color-accent-success)] border-2 border-[var(--color-accent-success)] bg-[#111827] px-4 py-1.5 rounded-lg shadow-[2px_2px_0px_rgba(34,197,94,0.3)]">
+                  🏃 {{ weeklyCardioDistance() }} {{ unitSvc.currentDistanceUnit() }} esta semana
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- ── Streak + Stats Row ── -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
+              <span class="text-4xl font-heading font-black text-amber-500 leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ streak() }}</span>
+              <span class="text-xs text-[var(--color-text-muted)] text-center font-heading uppercase tracking-widest font-bold">Racha<br/>días</span>
+            </div>
+            <div class="col-span-1 bg-[var(--color-accent)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
+              <span class="text-4xl font-heading font-black text-[#111827] leading-none drop-shadow-[1px_1px_0_rgba(255,255,255,0.2)]">{{ monthSessions() }}</span>
+              <span class="text-xs text-[#111827] text-center font-heading uppercase tracking-widest font-bold">Sesiones<br/>mes</span>
+            </div>
+            <div class="col-span-1 bg-[var(--color-bg-card)] rounded-xl p-4 border-2 border-[var(--color-border)] flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] min-h-[120px]">
+              <span class="text-4xl font-heading font-black text-[var(--color-text-primary)] leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ daysLeftInMonth() }}</span>
+              <span class="text-xs text-[var(--color-text-muted)] text-center font-heading uppercase tracking-widest font-bold">Días<br/>restantes</span>
+            </div>
+          </div>
+
+          <!-- ── Último PR ── -->
+          @if (lastPR()) {
+            <div>
+              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Último PR</h2>
+              <div class="bg-[var(--color-bg-card)] rounded-xl p-5 border-2 border-amber-500/50 shadow-[4px_4px_0px_rgba(245,158,11,0.2)] flex items-center justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                  <p class="text-amber-500 text-xs font-heading font-bold uppercase tracking-widest mb-1">Récord personal</p>
+                  <p class="text-[var(--color-text-primary)] font-heading uppercase font-black text-2xl leading-tight truncate">{{ lastPR()!.exercise }}</p>
+                  <p class="text-[var(--color-text-muted)] text-sm font-medium mt-1">{{ getDaysAgo(lastPR()!.date) }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-4xl font-heading font-black text-amber-500 leading-none drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ unitSvc.kgToUser(lastPR()!.weight) }}<span class="text-xl">{{ unitSvc.currentWeightUnit() }}</span></p>
+                  <p class="text-sm text-[var(--color-text-muted)] font-bold mt-1">× {{ lastPR()!.reps }} reps</p>
+                </div>
               </div>
             </div>
           }
-        </div>
-        <!-- Weekly cardio distance badge -->
-        @if (weeklyCardioDistance() > 0) {
-          <div class="flex justify-center mt-3">
-            <span class="text-sm font-bold text-emerald-400 bg-emerald-400/10 px-4 py-1.5 rounded-full border border-emerald-400/20">
-              🏃 {{ weeklyCardioDistance() }} {{ unitSvc.currentDistanceUnit() }} esta semana
-            </span>
-          </div>
-        }
-      </div>
 
-      <!-- ── Streak + Stats Row ── -->
-      <div class="grid grid-cols-3 gap-4">
-        <!-- Racha -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
-          <span class="text-3xl font-black text-amber-400 leading-none">{{ streak() }}</span>
-          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium">Racha<br/>días</span>
-        </div>
-        <!-- Sesiones mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  relative overflow-hidden min-h-[110px]">
-          <div class="absolute inset-0 bg-gradient-to-br from-[#00f2fe]/10 to-[#a252ff]/10 z-0 pointer-events-none"></div>
-          <span class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#a252ff] z-10 leading-none">{{ monthSessions() }}</span>
-          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium z-10">Sesiones<br/>este mes</span>
-        </div>
-        <!-- Días restantes del mes -->
-        <div class="col-span-1 bg-[var(--color-bg-card)] rounded-2xl p-3 border border-[var(--color-border)] flex flex-col items-center justify-center gap-1.5  min-h-[110px]">
-          <span class="text-3xl font-black text-[var(--color-text-primary)] leading-none">{{ daysLeftInMonth() }}</span>
-          <span class="text-[10px] text-[var(--color-text-muted)] text-center leading-tight font-medium">Días<br/>restantes</span>
-        </div>
-      </div>
-
-      <!-- ── Último PR ── -->
-      @if (lastPR()) {
-        <div>
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] mb-4">Último PR</h2>
-          <div class="bg-[var(--color-bg-card)] rounded-2xl p-5 border border-[var(--color-border)] flex items-center justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <p class="text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wider mb-1">Récord personal</p>
-              <p class="text-[var(--color-text-primary)] font-black text-lg leading-tight truncate">{{ lastPR()!.exercise }}</p>
-              <p class="text-[var(--color-text-muted)] text-xs font-medium mt-1">{{ getDaysAgo(lastPR()!.date) }}</p>
-            </div>
-            <div class="text-right shrink-0">
-              <p class="text-3xl font-black text-amber-400 leading-none">{{ unitSvc.kgToUser(lastPR()!.weight) }}<span class="text-lg">{{ unitSvc.currentWeightUnit() }}</span></p>
-              <p class="text-sm text-[var(--color-text-muted)] font-bold mt-1">× {{ lastPR()!.reps }} reps</p>
-            </div>
-            <div class="text-3xl shrink-0">🏆</div>
+          <!-- ── Chart Integration ── -->
+          <div class="mt-4">
+             <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Progresión del Volumen</h2>
+             <app-progression-chart [logs]="allLogs()"></app-progression-chart>
           </div>
         </div>
-      }
 
-      <!-- ── Volumen por Tag ── -->
-      @if (tagVolumens().length > 0) {
-        <div>
-          <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-4">Volumen este mes</h2>
-          <div class="flex flex-col gap-3">
-            @for (tv of tagVolumens(); track tv.tag) {
-              <div
-                class="flex items-center gap-4 rounded-xl px-5 py-4 border "
-                [style.background]="getTagColor(tv.tag).bg"
-                [style.borderColor]="getTagColor(tv.tag).border"
-              >
-                <div class="w-3 h-3 rounded-full flex-shrink-0" [style.background]="getTagColor(tv.tag).text"></div>
-                <span class="flex-1 text-base font-bold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
-                <div class="flex items-center gap-3">
-                  <span class="text-sm text-[var(--color-text-muted)] font-medium">{{ tv.sesiones }} ses.</span>
-                  <span class="font-black text-base" [style.color]="getTagColor(tv.tag).text">
-                    {{ formatTagValue(tv) }}
-                  </span>
+        <!-- Right Column -->
+        <div class="lg:col-span-5 flex flex-col gap-8">
+          
+          <!-- ── Último Entrenamiento ── -->
+          @if (lastLog()) {
+            <div>
+              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Último entrenamiento</h2>
+              <div class="bg-[var(--color-bg-card)] rounded-xl p-5 border-2 border-[var(--color-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+                <div class="flex items-center justify-between mb-5">
+                  <span class="text-[var(--color-text-primary)] font-heading uppercase font-black text-2xl drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">{{ formatFecha(lastLog()!.date) }}</span>
+                  <span class="text-xs font-heading tracking-widest uppercase font-bold text-[var(--color-text-primary)] bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] px-3 py-1 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">{{ getDaysAgo(lastLog()!.date) }}</span>
                 </div>
+                <div class="flex flex-wrap gap-2.5 mb-6">
+                  @for (tag of getLogTags(lastLog()!); track tag) {
+                    <span
+                      class="px-3 py-1 rounded-lg text-xs font-heading tracking-wider uppercase font-bold border-2"
+                      [style.background]="getTagColor(tag).bg"
+                      [style.borderColor]="getTagColor(tag).border"
+                      [style.color]="getTagColor(tag).text"
+                    >{{ tag }}</span>
+                  }
+                </div>
+                <button
+                  (click)="irAEntrenar()"
+                  class="btn-primary"
+                >
+                  Nuevo entrenamiento →
+                </button>
               </div>
-            }
-          </div>
-        </div>
-      }
+            </div>
+          } @else {
+            <div>
+              <button
+                (click)="irAEntrenar()"
+                class="btn-primary text-2xl h-20"
+              >
+                ¡Primer Entrenamiento!
+              </button>
+            </div>
+          }
 
-      <!-- ── Consistencia (30 días) ── -->
-      <div>
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)] ">Consistencia</h2>
-          <span class="text-sm font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-xl">
-            {{ trainedCount() }} / 30 días
-          </span>
-        </div>
-        <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] p-4 ">
-          <div class="grid gap-2.5" style="grid-template-columns: repeat(10, 1fr)">
-            @for (day of heatmap(); track day.date) {
-              <div
-                class="aspect-square rounded-md transition-colors"
-                [class]="day.trained ? 'bg-emerald-500 ' : 'bg-[var(--color-bg-input)]'"
-                [title]="day.date"
-              ></div>
-            }
+          <!-- ── Volumen por Tag ── -->
+          @if (tagVolumens().length > 0) {
+            <div>
+              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-4">Volumen mensual</h2>
+              <div class="flex flex-col gap-3">
+                @for (tv of tagVolumens(); track tv.tag) {
+                  <div
+                    class="flex items-center gap-4 rounded-xl px-4 py-3 border-2 shadow-[2px_2px_0px_rgba(0,0,0,0.3)]"
+                    [style.background]="getTagColor(tv.tag).bg"
+                    [style.borderColor]="getTagColor(tv.tag).border"
+                  >
+                    <div class="w-3 h-3 border-2 rounded-sm flex-shrink-0" [style.background]="getTagColor(tv.tag).text" [style.borderColor]="getTagColor(tv.tag).border"></div>
+                    <span class="flex-1 text-lg font-heading uppercase font-bold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-heading tracking-widest text-[var(--color-text-muted)] font-bold">{{ tv.sesiones }} SES.</span>
+                      <span class="font-black font-heading text-xl" [style.color]="getTagColor(tv.tag).text">
+                        {{ formatTagValue(tv) }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- ── Consistencia (30 días) ── -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)]">Consistencia</h2>
+              <span class="text-xs font-heading tracking-widest font-bold text-[#111827] border-2 border-[var(--color-accent-success)] bg-[var(--color-accent-success)] px-3 py-1.5 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
+                {{ trainedCount() }} / 30 DÍAS
+              </span>
+            </div>
+            <div class="bg-[var(--color-bg-card)] rounded-xl border-2 border-[var(--color-border)] p-4 shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+              <div class="grid gap-2" style="grid-template-columns: repeat(10, 1fr)">
+                @for (day of heatmap(); track day.date) {
+                  <div
+                    class="aspect-square rounded border transition-colors"
+                    [class]="day.trained ? 'bg-[var(--color-accent-success)] border-[var(--color-accent-success)] shadow-[1px_1px_0px_rgba(0,0,0,0.2)]' : 'bg-[var(--color-bg-input)] border-[var(--color-border)]'"
+                    [title]="day.date"
+                  ></div>
+                }
+              </div>
+            </div>
           </div>
+          
         </div>
       </div>
-
-      <!-- ── Último Entrenamiento ── -->
-      @if (lastLog()) {
-        <div class="mt-4">
-          <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-4">Último entrenamiento</h2>
-          <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-[var(--color-border)] ">
-            <div class="flex items-center justify-between mb-5">
-              <span class="text-[var(--color-text-primary)] font-black text-xl">{{ formatFecha(lastLog()!.date) }}</span>
-              <span class="text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-3 py-1 rounded-full">{{ getDaysAgo(lastLog()!.date) }}</span>
-            </div>
-            <div class="flex flex-wrap gap-2.5 mb-6">
-              @for (tag of getLogTags(lastLog()!); track tag) {
-                <span
-                  class="px-4 py-1.5 rounded-full text-xs font-bold border"
-                  [style.background]="getTagColor(tag).bg"
-                  [style.borderColor]="getTagColor(tag).border"
-                  [style.color]="getTagColor(tag).text"
-                >{{ tag }}</span>
-              }
-            </div>
-            <button
-              (click)="irAEntrenar()"
-              class="btn-primary min-h-[48px] text-lg font-black w-full"
-            >
-              Iniciar nuevo entrenamiento →
-            </button>
-          </div>
-        </div>
-      } @else {
-        <div class="mt-4">
-          <button
-            (click)="irAEntrenar()"
-            class="btn-primary min-h-[56px] text-xl font-black w-full"
-          >
-            ¡Empieza tu primer entrenamiento!
-          </button>
-        </div>
-      }
-
-      <!-- Chart Integration — recibe TODOS los meses para mostrar progresión histórica -->
-      <app-progression-chart [logs]="allLogs()"></app-progression-chart>
-
     </div>
   `,
   styles: [], changeDetection: ChangeDetectionStrategy.OnPush
@@ -438,10 +446,10 @@ export class DashboardComponent implements OnInit {
   }
 
   getWeekDayClass(day: { isToday: boolean; trained: boolean; dayNum: number }): string {
-    if (day.trained && day.isToday) return 'bg-gradient-to-br from-[#00f2fe] to-[#a252ff] text-white ';
-    if (day.trained) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
-    if (day.isToday) return 'bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/30 ';
-    return 'bg-transparent text-[var(--color-text-muted)]';
+    if (day.trained && day.isToday) return 'bg-[var(--color-accent)] border-[var(--color-accent)] text-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.3)]';
+    if (day.trained) return 'bg-[var(--color-accent-success)] border-[var(--color-accent-success)] text-[#111827] shadow-[2px_2px_0_rgba(0,0,0,0.3)]';
+    if (day.isToday) return 'bg-transparent border-[var(--color-accent)] text-[var(--color-accent)] border-dashed';
+    return 'bg-transparent border-transparent text-[var(--color-text-muted)]';
   }
 
   private buildHeatmap(trained: Set<string>, now: Date) {

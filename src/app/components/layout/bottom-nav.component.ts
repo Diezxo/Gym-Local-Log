@@ -7,32 +7,27 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50 bg-[var(--color-bg-primary)]/80 backdrop-blur-2xl border-t border-[var(--color-border)] pb-safe pt-1">
-      <div class="flex items-stretch justify-around w-full px-2">
+    <nav class="fixed bottom-0 left-0 w-full z-50 bg-[var(--color-bg-card)] border-t-4 border-[var(--color-border)] pb-safe pt-1">
+      <div class="flex items-stretch justify-around w-full px-2 max-w-7xl mx-auto">
         @for (item of navItems; track item.route) {
           <a
             [routerLink]="item.route"
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="{ exact: item.exact }"
             #navLink="routerLinkActive"
-            class="group relative flex flex-col items-center justify-center flex-1 min-h-[56px] py-2 text-[var(--color-text-muted)] transition-all duration-300 active:scale-90"
+            class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-150 active:scale-95"
           >
-            <!-- Background Pill for Active State -->
+            <!-- Active Indicator (Top Border) -->
+            <div class="absolute top-[-4px] left-1/2 -translate-x-1/2 w-0 h-[4px] bg-[var(--color-accent)] transition-all duration-200 group-[.is-active]:w-1/2"></div>
+            
             <div
-              class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-11 w-16 rounded-xl bg-gradient-to-r from-[#00f2fe]/15 to-[#a252ff]/15 scale-0 opacity-0 transition-all duration-300 group-[.is-active]:scale-100 group-[.is-active]:opacity-100"
-            ></div>
-
-            <div
-              class="mb-1 transition-all duration-300 group-[.is-active]:text-[#00f2fe] group-[.is-active]:drop-shadow-[0_0_8px_rgba(0,242,254,0.5)] group-[.is-active]:scale-110 group-[.is-active]:-translate-y-0.5"
+              class="mb-1 transition-all duration-200 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-1"
               [innerHTML]="getIconSvg(item.id)"
             ></div>
 
             <span
-              class="text-[10px] tracking-wide font-medium transition-colors duration-300 group-[.is-active]:text-[#00f2fe] group-[.is-active]:font-bold"
+              class="text-xs uppercase tracking-widest font-heading font-bold transition-colors duration-200 group-[.is-active]:text-[var(--color-accent)]"
             >{{ item.label }}</span>
-
-            <!-- Dot Indicator -->
-            <div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#00f2fe] shadow-[0_0_8px_rgba(0,242,254,0.8)] opacity-0 scale-0 transition-all duration-300 group-[.is-active]:opacity-100 group-[.is-active]:scale-100"></div>
           </a>
         }
       </div>

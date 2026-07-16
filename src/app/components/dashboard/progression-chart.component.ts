@@ -16,8 +16,8 @@ interface DataPoint {
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 sm:p-8 border border-[var(--color-border)]  mt-8">
-      <h2 class="text-base font-bold text-[var(--color-text-muted)]  mb-6">Exercise Progress</h2>
+    <div class="bg-[var(--color-bg-card)] rounded-xl p-4 sm:p-8 border-2 border-[var(--color-border)] shadow-[6px_6px_0px_rgba(0,0,0,0.3)] mt-8">
+      <h2 class="text-xl font-heading uppercase font-bold text-[var(--color-text-primary)] mb-6 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">Progreso de Ejercicios</h2>
       
       @if (uniqueExercises().length > 0) {
         <div class="flex flex-col gap-4 mb-6">
@@ -26,58 +26,67 @@ interface DataPoint {
             <select
               [ngModel]="selectedExercise()"
               (ngModelChange)="selectedExercise.set($event)"
-              class="w-full appearance-none rounded-xl bg-[var(--color-bg-input)] border border-[var(--color-border)] px-4 py-3 pr-10 text-sm font-bold text-[var(--color-text-primary)] focus:outline-none focus:border-[#00f2fe] transition-colors"
+              class="w-full appearance-none rounded-lg bg-[var(--color-bg-input)] border-2 border-[var(--color-border)] px-4 py-3 pr-10 text-lg font-heading font-bold text-[var(--color-text-primary)] uppercase focus:outline-none focus:border-[var(--color-accent)] shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-colors"
             >
               @for (ex of uniqueExercises(); track ex) {
                 <option [value]="ex">{{ ex }}</option>
               }
             </select>
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-accent)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
 
-          <!-- Metric Toggle -->
-          <div class="flex bg-[var(--color-bg-input)] p-1 rounded-full">
-            <button
-              (click)="metric.set('maxWeight')"
-              [class.bg-[#00f2fe]]="metric() === 'maxWeight'"
-              [class.text-black]="metric() === 'maxWeight'"
-              [class.text-[var(--color-text-muted)]]="metric() !== 'maxWeight'"
-              class="flex-1 py-1.5 text-xs font-bold rounded-full transition-all"
-            >
-              Max Weight
-            </button>
-            <button
-              (click)="metric.set('volume')"
-              [class.bg-[#00f2fe]]="metric() === 'volume'"
-              [class.text-black]="metric() === 'volume'"
-              [class.text-[var(--color-text-muted)]]="metric() !== 'volume'"
-              class="flex-1 py-1.5 text-xs font-bold rounded-full transition-all"
-            >
-              Volume
-            </button>
+          <!-- Extra Stat & Metric Toggle Row -->
+          <div class="flex flex-col sm:flex-row justify-between gap-4">
+            
+            <!-- Extra Stat (The "algo extra") -->
+            <div class="bg-[#111827] border-2 border-[var(--color-accent)] p-3 rounded-lg shadow-[2px_2px_0px_rgba(249,115,22,0.5)] flex-1 flex flex-col justify-center items-center text-center">
+              <span class="text-xs font-heading font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+                {{ metric() === 'maxWeight' ? 'Récord Histórico' : 'Volumen Total (Meses)' }}
+              </span>
+              <span class="text-2xl font-heading font-black text-[var(--color-accent)] drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                {{ metric() === 'maxWeight' ? (overallMax() | number:'1.0-1') : (totalVolume() | number:'1.0-1') }}
+                <span class="text-sm">{{ unitSvc.currentWeightUnit() }}</span>
+              </span>
+            </div>
+
+            <!-- Metric Toggle -->
+            <div class="flex bg-[var(--color-bg-input)] p-1 rounded-lg border-2 border-[var(--color-border)] flex-1">
+              <button
+                (click)="metric.set('maxWeight')"
+                [class.bg-[var(--color-accent)]]="metric() === 'maxWeight'"
+                [class.text-[#111827]]="metric() === 'maxWeight'"
+                [class.shadow-[2px_2px_0px_rgba(0,0,0,0.5)]]="metric() === 'maxWeight'"
+                [class.text-[var(--color-text-muted)]]="metric() !== 'maxWeight'"
+                class="flex-1 py-2 text-sm font-heading font-bold uppercase tracking-widest rounded-md transition-all border-2 border-transparent"
+                [class.border-[#111827]]="metric() === 'maxWeight'"
+              >
+                Peso Máx
+              </button>
+              <button
+                (click)="metric.set('volume')"
+                [class.bg-[var(--color-accent)]]="metric() === 'volume'"
+                [class.text-[#111827]]="metric() === 'volume'"
+                [class.shadow-[2px_2px_0px_rgba(0,0,0,0.5)]]="metric() === 'volume'"
+                [class.text-[var(--color-text-muted)]]="metric() !== 'volume'"
+                class="flex-1 py-2 text-sm font-heading font-bold uppercase tracking-widest rounded-md transition-all border-2 border-transparent"
+                [class.border-[#111827]]="metric() === 'volume'"
+              >
+                Volumen
+              </button>
+            </div>
+
           </div>
         </div>
 
         <!-- Chart Area -->
         @if (chartData().length > 1) {
-          <div class="relative w-full aspect-[2/1] bg-[var(--color-bg-input)]/30 rounded-2xl p-4 overflow-hidden">
+          <div class="relative w-full aspect-[2/1] bg-[var(--color-bg-input)] rounded-lg p-4 overflow-hidden border-2 border-[var(--color-border)] shadow-inner">
             <!-- Y-Axis max label -->
-            <div class="absolute top-2 left-2 text-[10px] font-black text-[var(--color-text-muted)]">{{ chartMax() | number:'1.0-1' }}{{ unitSvc.currentWeightUnit() }}</div>
+            <div class="absolute top-2 left-2 text-xs font-heading font-black tracking-wider text-[var(--color-text-muted)]">{{ chartMax() | number:'1.0-1' }}{{ unitSvc.currentWeightUnit() }}</div>
             
             <svg class="w-full h-full overflow-visible" viewBox="0 0 100 50" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="neon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#00f2fe" />
-                  <stop offset="100%" stop-color="#a252ff" />
-                </linearGradient>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="1.5" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-
               <!-- Grid lines -->
               <line x1="0" y1="25" x2="100" y2="25" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2 2" />
               <line x1="0" y1="50" x2="100" y2="50" stroke="var(--color-border)" stroke-width="0.5" />
@@ -85,13 +94,12 @@ interface DataPoint {
               <!-- Polyline -->
               <polyline
                 fill="none"
-                stroke="url(#neon-gradient)"
-                stroke-width="2"
+                stroke="var(--color-accent)"
+                stroke-width="3"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                filter="url(#glow)"
                 [attr.points]="svgPoints()"
-                class="animate-draw-line"
+                class="animate-draw-line shadow-sm"
               />
 
               <!-- Data points dots -->
@@ -99,10 +107,10 @@ interface DataPoint {
                 <circle
                   [attr.cx]="getX(pt.dayNum)"
                   [attr.cy]="getY(pt.value)"
-                  r="1.5"
+                  r="2"
                   fill="var(--color-bg-card)"
-                  stroke="#00f2fe"
-                  stroke-width="0.8"
+                  stroke="var(--color-accent)"
+                  stroke-width="1.5"
                 />
               }
             </svg>
@@ -110,30 +118,30 @@ interface DataPoint {
           
           <!-- X-Axis Labels (first and last) -->
           <div class="flex justify-between mt-3 px-2">
-            <span class="text-[10px] font-bold text-[var(--color-text-muted)]">{{ chartData()[0].dateStr | slice:8:10 }} / {{ chartData()[0].dateStr | slice:5:7 }}</span>
-            <span class="text-[10px] font-bold text-[var(--color-text-muted)]">{{ chartData()[chartData().length - 1].dateStr | slice:8:10 }} / {{ chartData()[chartData().length - 1].dateStr | slice:5:7 }}</span>
+            <span class="text-xs font-heading font-bold tracking-widest text-[var(--color-text-muted)]">{{ chartData()[0].dateStr | slice:8:10 }} / {{ chartData()[0].dateStr | slice:5:7 }}</span>
+            <span class="text-xs font-heading font-bold tracking-widest text-[var(--color-text-muted)]">{{ chartData()[chartData().length - 1].dateStr | slice:8:10 }} / {{ chartData()[chartData().length - 1].dateStr | slice:5:7 }}</span>
           </div>
         } @else if (chartData().length === 1) {
-          <div class="h-32 flex items-center justify-center text-center px-4 bg-[var(--color-bg-input)]/30 rounded-2xl">
-            <p class="text-sm text-[var(--color-text-muted)] font-medium">Only 1 record of <span class="text-[var(--color-text-primary)] font-bold">{{ selectedExercise() }}</span>. Do it at least 2 times to see the chart.</p>
+          <div class="h-32 flex items-center justify-center text-center px-4 bg-[var(--color-bg-input)] rounded-lg border-2 border-dashed border-[var(--color-border)]">
+            <p class="text-sm font-heading font-bold text-[var(--color-text-muted)] tracking-wide">Solo 1 registro de <span class="text-[var(--color-accent)]">{{ selectedExercise() }}</span>. Hazlo al menos 2 veces para ver el gráfico.</p>
           </div>
         } @else {
-          <div class="h-32 flex items-center justify-center text-center px-4 bg-[var(--color-bg-input)]/30 rounded-2xl">
-            <p class="text-sm text-[var(--color-text-muted)] font-medium">No strength data for this exercise.</p>
+          <div class="h-32 flex items-center justify-center text-center px-4 bg-[var(--color-bg-input)] rounded-lg border-2 border-dashed border-[var(--color-border)]">
+            <p class="text-sm font-heading font-bold text-[var(--color-text-muted)] tracking-wide">No hay datos de fuerza para este ejercicio.</p>
           </div>
         }
       } @else {
-        <p class="text-sm text-[var(--color-text-muted)] text-center py-4">No exercises logged yet.</p>
+        <p class="text-sm font-heading font-bold text-[var(--color-text-muted)] text-center py-4 uppercase tracking-widest">Aún no hay ejercicios registrados.</p>
       }
     </div>
   `,
   styles: [`
     @keyframes drawLine {
-      from { stroke-dasharray: 0 300; }
-      to { stroke-dasharray: 300 0; }
+      from { stroke-dasharray: 0 400; }
+      to { stroke-dasharray: 400 0; }
     }
     .animate-draw-line {
-      animation: drawLine 1.5s ease-out forwards;
+      animation: drawLine 1s ease-out forwards;
     }
   `]
 })
@@ -237,6 +245,14 @@ export class ProgressionChartComponent implements OnChanges {
     const data = this.chartData();
     if (data.length === 0) return 0;
     return Math.min(...data.map(d => d.value));
+  });
+
+  overallMax = computed(() => {
+    return this.chartMax();
+  });
+
+  totalVolume = computed(() => {
+    return this.chartData().reduce((acc, pt) => acc + pt.value, 0);
   });
 
   // SVG Coordinate mapping functions (100x50 viewBox)
