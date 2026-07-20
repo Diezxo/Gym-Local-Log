@@ -10,7 +10,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
   template: `
     <div class="rounded-3xl bg-[var(--color-bg-card)] p-5 border border-white/5 flex flex-col gap-5 shadow-sm">
       <!-- Header -->
-      <div class="flex items-center justify-between h-8">
+      <div class="sticky top-0 z-10 -mx-5 -mt-5 p-5 flex items-center justify-between h-auto bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-t-3xl border-b border-white/5">
         <h3 class="text-lg font-bold text-white tracking-tight uppercase">{{ exerciseLog().name }}</h3>
         @if (showSaved()) {
           <svg class="text-[var(--color-accent-success)] animate-fade-in" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

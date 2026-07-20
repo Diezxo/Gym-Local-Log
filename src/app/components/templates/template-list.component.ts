@@ -1,5 +1,7 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { RoutineUseCases } from '../../use-cases/routine.use-cases';
 import { Routine } from '../../models/interfaces';
 import { DEFAULT_TEMPLATES } from '../../models/default-templates';
@@ -7,6 +9,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
 @Component({
   selector: 'app-template-list',
   standalone: true,
+  imports: [CommonModule, DragDropModule],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
@@ -38,50 +41,55 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
         <!-- Template cards -->
         <div class="flex flex-col gap-4">
           @for (template of templates(); track template.id) {
-            <div
-              class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden transition-all shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 group cursor-pointer"
-              role="button"
-              tabindex="0"
-              (click)="editTemplate(template.id)"
-              (keydown.enter)="editTemplate(template.id)"
-              (keydown.space)="editTemplate(template.id); $event.preventDefault()"
-            >
-              <!-- Main row -->
-              <div class="flex items-start gap-4 p-5 sm:p-6">
-                <!-- Icon -->
-                <div class="w-14 h-14 rounded-2xl bg-[var(--color-bg-input)] border border-white/5 flex items-center justify-center shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent)]"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
-                </div>
-
-                <!-- Info -->
-                <div class="flex-1 min-w-0 pt-1">
-                  <h2 class="text-xl font-bold text-white tracking-tight mb-1 truncate transition-colors">{{ template.name }}</h2>
-                  <p class="text-[var(--color-text-muted)] text-xs font-medium line-clamp-1">{{ getExercisesList(template) }}</p>
-                </div>
-
-                <!-- Badge + Delete -->
-                <div class="flex flex-col items-end gap-3 shrink-0">
-                  <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
-                    {{ template.exercises.length }} ej.
-                  </span>
-                  <button
-                    (click)="confirmDelete(template); $event.stopPropagation()"
-                    class="text-[var(--color-text-muted)] hover:text-rose-400 transition-colors p-1.5 active:scale-95 bg-[var(--color-bg-input)] rounded-full border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/10"
-                    aria-label="Eliminar rutina"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                </div>
+            <div class="relative overflow-hidden rounded-3xl border border-white/5 bg-rose-500/80">
+              <!-- Background Action -->
+              <div class="absolute inset-0 flex items-center justify-end px-6 z-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </div>
 
-              <!-- Exercise tags row -->
-              @if (getTemplateTags(template).length > 0) {
-                <div class="border-t border-white/5 px-5 sm:px-6 py-3.5 flex flex-wrap gap-2 bg-[var(--color-bg-input)]/30">
-                  @for (tag of getTemplateTags(template); track tag) {
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5">{{ tag }}</span>
-                  }
+              <!-- Foreground Card -->
+              <div
+                cdkDrag
+                cdkDragLockAxis="x"
+                [cdkDragBoundary]="'.flex.flex-col.gap-4'"
+                (cdkDragEnded)="onDragEnded($event, template)"
+                class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden transition-all shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 group cursor-pointer relative z-10 w-full"
+                role="button"
+                tabindex="0"
+                (click)="editTemplate(template.id)"
+                (keydown.enter)="editTemplate(template.id)"
+                (keydown.space)="editTemplate(template.id); $event.preventDefault()"
+              >
+                <!-- Main row -->
+                <div class="flex items-start gap-4 p-5 sm:p-6">
+                  <!-- Icon -->
+                  <div class="w-14 h-14 rounded-2xl bg-[var(--color-bg-input)] border border-white/5 flex items-center justify-center shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent)]"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0 pt-1">
+                    <h2 class="text-xl font-bold text-white tracking-tight mb-1 truncate transition-colors">{{ template.name }}</h2>
+                    <p class="text-[var(--color-text-muted)] text-xs font-medium line-clamp-1">{{ getExercisesList(template) }}</p>
+                  </div>
+
+                  <!-- Badge -->
+                  <div class="flex flex-col items-end gap-3 shrink-0">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+                      {{ template.exercises.length }} ej.
+                    </span>
+                  </div>
                 </div>
-              }
+
+                <!-- Exercise tags row -->
+                @if (getTemplateTags(template).length > 0) {
+                  <div class="border-t border-white/5 px-5 sm:px-6 py-3.5 flex flex-wrap gap-2 bg-[var(--color-bg-input)]/30">
+                    @for (tag of getTemplateTags(template); track tag) {
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5">{{ tag }}</span>
+                    }
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>
@@ -166,6 +174,17 @@ export class TemplateListComponent implements OnInit {
 
   confirmDelete(template: Routine) {
     this.templateToDelete.set(template);
+  }
+
+  onDragEnded(event: CdkDragEnd, template: Routine) {
+    const x = event.distance.x;
+    // If swiped left by more than 80px, trigger delete confirmation
+    if (x < -80) {
+      this.confirmDelete(template);
+    }
+    
+    // Always snap back to original position (it has transition-all, so it smoothly snaps back)
+    event.source.reset();
   }
 
   async deleteConfirmed() {

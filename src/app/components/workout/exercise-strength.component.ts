@@ -13,13 +13,13 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
     <div class="rounded-3xl bg-[var(--color-bg-card)] p-4 sm:p-5 border border-white/5 flex flex-col gap-5 shadow-sm">
       <!-- Header -->
       <div
-        class="flex items-center justify-between cursor-pointer active:scale-95 transition-all group"
+        class="sticky top-0 z-10 -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 flex items-center justify-between cursor-pointer transition-all group bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-t-3xl border-b border-white/5"
         (click)="toggleHistory()"
       >
         <h3 class="text-lg sm:text-xl font-bold text-white tracking-tight uppercase">{{ exerciseLog().name }}</h3>
         <svg
           xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-110"
+          class="text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-110 active:scale-95"
           [class.rotate-180]="showHistory()"
         >
           <polyline points="6 9 12 15 18 9"></polyline>
@@ -134,7 +134,12 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
         <div class="flex items-center gap-2">
           <!-- Peso stepper -->
           <div class="flex flex-col gap-1.5 flex-1">
-            <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unitSvc.currentWeightUnit() }}</label>
+            <div class="flex items-center justify-center gap-1.5">
+              <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unitSvc.currentWeightUnit() }}</label>
+              <button (click)="showPlateCalculator.set(true)" class="text-[var(--color-accent)] hover:text-white transition-colors p-0.5 rounded-full hover:bg-white/5 active:scale-95" aria-label="Calculadora de discos" title="Calculadora de discos">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              </button>
+            </div>
             <div class="flex items-center gap-1 bg-[var(--color-bg-input)] rounded-2xl p-1 border border-white/5">
               <button
                 (click)="decrementWeight()"
@@ -194,6 +199,49 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
         </div>
       </div>
     </div>
+
+    <!-- Plate Calculator Modal -->
+    @if (showPlateCalculator()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-fade-in" (click)="showPlateCalculator.set(false)">
+        <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in" (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-white tracking-tight">Discos a cargar</h3>
+            <button (click)="showPlateCalculator.set(false)" class="text-[var(--color-text-muted)] hover:text-white transition-colors p-1 rounded-full hover:bg-white/5 active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </button>
+          </div>
+          
+          @if (plateCalculation; as calc) {
+            <p class="text-[var(--color-text-muted)] text-sm font-medium mb-6 leading-relaxed">
+              Para levantar <span class="text-white font-bold">{{ getTargetWeight() }} {{ unitSvc.currentWeightUnit() }}</span> usando una barra estándar de {{ calc.bar }} {{ unitSvc.currentWeightUnit() }}, coloca <span class="text-[var(--color-accent)] font-semibold">por cada lado</span>:
+            </p>
+            <div class="flex flex-col gap-2">
+              @for (plate of calc.plates; track plate.weight) {
+                <div class="flex items-center justify-between bg-[var(--color-bg-input)] rounded-2xl px-4 py-3 border border-white/5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full border-4 border-[var(--color-accent)]/30 flex items-center justify-center bg-[var(--color-bg-primary)]">
+                      <span class="text-xs font-bold text-white">{{ plate.weight }}</span>
+                    </div>
+                    <span class="text-sm font-semibold text-white">Disco de {{ plate.weight }}{{ unitSvc.currentWeightUnit() }}</span>
+                  </div>
+                  <span class="text-lg font-bold text-[var(--color-accent)]">x{{ plate.count }}</span>
+                </div>
+              }
+              @if (calc.plates.length === 0) {
+                <div class="text-center py-4 bg-[var(--color-bg-input)] rounded-2xl border border-white/5 text-[var(--color-text-muted)] text-sm font-medium">Solo necesitas la barra vacía.</div>
+              }
+              @if (calc.remainder > 0) {
+                <p class="text-xs text-rose-400 mt-2 font-medium text-center">No se puede armar exacto. Faltan {{ calc.remainder * 2 }}{{ unitSvc.currentWeightUnit() }}.</p>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-8">
+              <p class="text-[var(--color-text-muted)] text-sm font-medium">El peso actual es menor o igual a la barra vacía.</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
   `,
   styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -212,6 +260,7 @@ export class ExerciseStrengthComponent implements OnInit {
   weightInput = '';
   repsInput = '';
   showHistory = signal(false);
+  showPlateCalculator = signal(false);
   history = signal<ExerciseHistoryRecord[]>([]);
   justAddedSet = signal(false);
 
@@ -241,9 +290,33 @@ export class ExerciseStrengthComponent implements OnInit {
     return sets.some(s => s.weight !== firstWeight);
   }
 
-  private getTargetWeight(): number {
+  getTargetWeight(): number {
     const v = parseFloat(this.weightInput);
     return isNaN(v) ? (this.suggestion()?.suggestedWeight ?? 0) : v;
+  }
+
+  // Plate calculation logic
+  get plateCalculation() {
+    const unit = this.unitSvc.currentWeightUnit();
+    const barWeight = unit === 'kg' ? 20 : 45;
+    const availablePlates = unit === 'kg' ? [25, 20, 15, 10, 5, 2.5, 1.25] : [45, 35, 25, 10, 5, 2.5];
+    
+    const target = this.getTargetWeight(); 
+    if (target <= barWeight) return null;
+
+    let remainingPerSide = (target - barWeight) / 2;
+    const platesUsed: { weight: number; count: number }[] = [];
+
+    for (const plate of availablePlates) {
+      if (remainingPerSide >= plate) {
+        const count = Math.floor(remainingPerSide / plate);
+        platesUsed.push({ weight: plate, count });
+        remainingPerSide -= count * plate;
+      }
+    }
+
+    // round remainder to 2 decimals to avoid floating point issues
+    return { bar: barWeight, plates: platesUsed, remainder: Math.round(remainingPerSide * 100) / 100 };
   }
 
   private getTargetReps(fallback = 0): number {

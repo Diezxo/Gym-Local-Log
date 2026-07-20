@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
+import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { A11yModule } from '@angular/cdk/a11y';
 import { ExportService } from '../../services/export.service';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
@@ -16,7 +17,8 @@ interface MonthStats {
 @Component({
   selector: 'app-data-management',
   standalone: true,
-  imports: [CommonModule, A11yModule],
+  imports: [CommonModule, A11yModule, DragDropModule],
+  providers: [DatePipe],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
@@ -70,40 +72,45 @@ interface MonthStats {
       <!-- Workout List -->
       <div class="flex flex-col gap-4">
         @for (log of allLogs(); track log.date + log.routineId) {
-          <div class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 transition-all group">
-
-            <!-- Date + Tags row -->
-            <div class="flex items-center gap-4 p-5">
-              <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
-                <span class="text-[var(--color-accent)] font-bold text-xl leading-none">{{ log.date | slice:8:10 }}</span>
-                <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap gap-1.5 mb-1.5">
-                  @for (tag of getLogTags(log); track tag) {
-                    <span
-                      class="px-2 py-0.5 rounded-md text-[9px] font-semibold uppercase tracking-wider border border-white/5"
-                      [style.background]="getTagColor(tag).bg"
-                      [style.borderColor]="getTagColor(tag).border"
-                      [style.color]="getTagColor(tag).text"
-                    >{{ tag }}</span>
-                  }
-                  @if (getLogTags(log).length === 0) {
-                    <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider">Sin etiquetas</span>
-                  }
-                </div>
-                <p class="text-[var(--color-text-muted)] text-[11px] font-medium">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
-              </div>
-
-              <button
-                (click)="confirmDeleteLog(log)"
-                class="text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
-                aria-label="Eliminar entrenamiento"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              </button>
+          <!-- Swipe to Delete Container -->
+          <div class="relative overflow-hidden rounded-3xl border border-white/5 bg-rose-500/80">
+            <!-- Background Action (Delete) -->
+            <div class="absolute inset-0 flex items-center justify-end px-6 z-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </div>
+
+            <!-- Foreground Card -->
+            <div
+              cdkDrag
+              cdkDragLockAxis="x"
+              [cdkDragBoundary]="'.flex.flex-col.gap-4'"
+              (cdkDragEnded)="onDragEnded($event, log)"
+              class="bg-[var(--color-bg-card)] rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 transition-all group relative z-10 w-full"
+            >
+              <!-- Date + Tags row -->
+              <div class="flex items-center gap-4 p-5">
+                <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
+                  <span class="text-[var(--color-accent)] font-bold text-xl leading-none">{{ log.date | slice:8:10 }}</span>
+                  <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-1.5 mb-1.5">
+                    @for (tag of getLogTags(log); track tag) {
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[9px] font-semibold uppercase tracking-wider border border-white/5"
+                        [style.background]="getTagColor(tag).bg"
+                        [style.borderColor]="getTagColor(tag).border"
+                        [style.color]="getTagColor(tag).text"
+                      >{{ tag }}</span>
+                    }
+                    @if (getLogTags(log).length === 0) {
+                      <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider">Sin etiquetas</span>
+                    }
+                  </div>
+                  <p class="text-[var(--color-text-muted)] text-[11px] font-medium">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
+                </div>
+              </div>
 
             <!-- Exercise lines -->
             <div class="border-t border-white/5 px-5 pt-4 pb-5 flex flex-col gap-4 bg-[var(--color-bg-input)]/20">
@@ -153,6 +160,7 @@ interface MonthStats {
                 }
               </div>
             }
+          </div>
           </div>
         }
 
@@ -369,7 +377,6 @@ export class DataManagementComponent implements OnInit, OnDestroy {
     return TAG_COLORS[tag] ?? { bg: 'rgba(255,255,255,0.05)', text: '#a3a3a3', border: 'rgba(255,255,255,0.1)' };
   }
 
-  /** Returns line summary for cardio or fallback; strength handled inline in template */
   getEjercicioResumen(ej: ExerciseLog): string {
     if (ej.type === 'strength') {
       const series = ej.sets ?? [];
@@ -390,7 +397,6 @@ export class DataManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Returns true if not all sets in a session have the same weight or reps (so we expand them in UI). */
   hasProgressiveOverload(series: StrengthSet[]): boolean {
     if (!series || series.length <= 1) return false;
     const firstWeight = series[0].weight;
@@ -398,7 +404,6 @@ export class DataManagementComponent implements OnInit, OnDestroy {
     return series.some(s => s.weight !== firstWeight || s.reps !== firstReps);
   }
 
-  /** Returns true if this set has the maximum weight (used to highlight the top set in cian). */
   isMaxSet(serie: StrengthSet, allSeries: StrengthSet[]): boolean {
     const maxPeso = Math.max(...allSeries.map(s => s.weight));
     return serie.weight === maxPeso;
@@ -427,6 +432,14 @@ export class DataManagementComponent implements OnInit, OnDestroy {
 
   confirmDeleteLog(log: WorkoutSession) {
     this.logToDelete.set(log);
+  }
+
+  onDragEnded(event: CdkDragEnd, log: WorkoutSession) {
+    const x = event.distance.x;
+    if (x < -80) {
+      this.confirmDeleteLog(log);
+    }
+    event.source.reset();
   }
 
   async deleteLogConfirmed() {
