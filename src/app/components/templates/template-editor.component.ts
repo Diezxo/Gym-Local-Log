@@ -8,6 +8,7 @@ import {
   MuscleTag, MUSCLE_TAGS, TAG_COLORS,
 } from '../../models/interfaces';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { generateId } from '../../utils/generate-id';
 
 // Internal type with a stable uid for correct @for tracking
 interface ExerciseWithId extends BaseExercise {
@@ -186,7 +187,7 @@ export class TemplateEditorComponent implements OnInit {
       const template = await this.routineUseCases.getRoutine(id);
       if (template) {
         this.templateName.set(template.name);
-        this.exercises.set(template.exercises.map(e => ({ ...e, _uid: crypto.randomUUID() })));
+        this.exercises.set(template.exercises.map(e => ({ ...e, _uid: generateId() })));
       }
     }
   }
@@ -205,7 +206,7 @@ export class TemplateEditorComponent implements OnInit {
   addExercise() {
     this.exercises.update(list => [
       ...list,
-      { name: '', type: 'strength' as ExerciseType, tags: [], _uid: crypto.randomUUID() },
+      { name: '', type: 'strength' as ExerciseType, tags: [], _uid: generateId() },
     ]);
   }
 
@@ -269,7 +270,7 @@ export class TemplateEditorComponent implements OnInit {
     }
 
     const template: Routine = {
-      id: this.editingId() ?? crypto.randomUUID(),
+      id: this.editingId() ?? generateId(),
       schemaVersion: 3,
       createdAt: Date.now(),
       updatedAt: Date.now(),

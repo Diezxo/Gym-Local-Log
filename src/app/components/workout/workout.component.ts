@@ -3,8 +3,7 @@ import { Component,
   signal,
   OnInit,
   OnDestroy,
-  ViewChild, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+  ViewChild, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -18,6 +17,7 @@ import {
   TAG_COLORS,
   MuscleTag,
 } from '../../models/interfaces';
+import { generateId } from '../../utils/generate-id';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { RoutineUseCases } from '../../use-cases/routine.use-cases';
 import { STORAGE_PORT, StoragePort } from '../../ports/storage.port';
@@ -71,7 +71,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
                 <div class="flex-1 min-w-0">
                   <p class="text-[var(--color-text-primary)] font-bold text-xl truncate mb-1 tracking-tight">{{ tmpl.name }}</p>
                   <p class="text-[var(--color-text-muted)] text-xs truncate font-medium tracking-wide">
-                    {{ tmpl.exercises.map(e => e.name).join(' · ') }}
+                    {{ getExerciseNames(tmpl) }}
                   </p>
                 </div>
 
@@ -140,12 +140,12 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           <div class="flex flex-col gap-2 mt-2">
             <div class="flex justify-between text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wider">
               <span>Progreso</span>
-              <span class="text-[var(--color-accent)]">{{ getCompletedExercisesCount() }} / {{ activeLog()!.exercises.length }}</span>
+              <span class="text-[var(--color-accent)]">{{ getCompletedExercisesCount() }} / {{ activeLog()?.exercises?.length ?? 0 }}</span>
             </div>
             <div class="w-full h-2.5 bg-[var(--color-bg-input)] rounded-full overflow-hidden shadow-inner">
               <div
                 class="h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-secondary)] transition-all duration-500 ease-out rounded-full"
-                [style.width.%]="(getCompletedExercisesCount() / activeLog()!.exercises.length) * 100"
+                [style.width.%]="activeLog()?.exercises?.length ? (getCompletedExercisesCount() / activeLog()!.exercises.length) * 100 : 0"
               ></div>
             </div>
           </div>
@@ -159,7 +159,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
 
           <!-- Exercises -->
           <div class="flex flex-col gap-6 mt-4">
-            @for (ejLog of activeLog()!.exercises; track $index; let i = $index) {
+            @for (ejLog of activeLog()?.exercises ?? []; track $index; let i = $index) {
               <div>
                 @if (ejLog.type === 'strength') {
                   <app-exercise-strength
@@ -245,6 +245,14 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   sessionStartTime = signal<number | null>(null);
   sessionTimerLabel = signal('0:00');
   private timerInterval: any;
+  private toastTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (this.activeLog()) {
+      $event.returnValue = true;
+    }
+  }
 
   async ngOnInit() {
     const hoy = new Date();
@@ -267,6 +275,9 @@ export class WorkoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopTimer();
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
   }
 
   // ─── Session Timer ───
@@ -289,7 +300,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   // ─── Template Selection ───
   async selectTemplate(tmpl: Routine): Promise<void> {
     const exercises: ExerciseLog[] = tmpl.exercises.map((ej) => ({
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: ej.name,
       type: ej.type,
       tags: ej.tags ?? [],
@@ -298,7 +309,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     }));
 
     const log: WorkoutSession = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       schemaVersion: 3,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -323,11 +334,19 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   private async loadSuggestions(log: WorkoutSession): Promise<void> {
     const monthId = this.dateISO().substring(0, 7); // Not strictly needed but API wants it
     const promesas = log.exercises.map((ej) =>
-      ej.type === 'strength'
-        ? this.progression.getSuggestion(ej.name, monthId)
-        : Promise.resolve(null)
+      this.getSuggestionForExercise(ej, monthId)
     );
     this.suggestions.set(await Promise.all(promesas));
+  }
+
+  private getSuggestionForExercise(ej: ExerciseLog, monthId: string): Promise<Suggestion | null> {
+    return ej.type === 'strength'
+        ? this.progression.getSuggestion(ej.name, monthId)
+        : Promise.resolve(null);
+  }
+
+  getExerciseNames(tmpl: Routine): string {
+    return tmpl.exercises.map(e => e.name).join(' · ');
   }
 
   // ─── Helpers ───
@@ -382,7 +401,9 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     if (!log) return;
     try {
       await this.workoutUseCases.updateWorkoutSession(log);
-    } catch {}
+    } catch (e) {
+      console.error('Auto-save failed:', e);
+    }
   }
 
   // ─── Finalize ───
@@ -395,7 +416,10 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     this.stopTimer();
 
     this.showToast.set(true);
-    setTimeout(() => this.showToast.set(false), 3000);
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.toastTimeout = setTimeout(() => this.showToast.set(false), 3000);
 
     this.activeLog.set(null);
     this.activeTemplateName.set('');

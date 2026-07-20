@@ -54,7 +54,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
                     </div>
                   } @else {
                     <!-- All sets equal: compact summary -->
-                    <span class="text-sm font-mono font-medium text-white">{{ record.sets.length }}×{{ record.sets[0]?.reps ?? record.reps }} @ {{ displayWeight(record.weight) }}{{ unitSvc.currentWeightUnit() }}</span>
+                    <span class="text-sm font-mono font-medium text-white">{{ record.sets.length }}×{{ record.sets[0]?.reps ?? record.reps }} &#64; {{ displayWeight(record.weight) }}{{ unitSvc.currentWeightUnit() }}</span>
                   }
                 </div>
               }
@@ -193,6 +193,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
           </div>
         </div>
       </div>
+    </div>
   `,
   styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -240,15 +241,25 @@ export class ExerciseStrengthComponent implements OnInit {
     return sets.some(s => s.weight !== firstWeight);
   }
 
+  private getTargetWeight(): number {
+    const v = parseFloat(this.weightInput);
+    return isNaN(v) ? (this.suggestion()?.suggestedWeight ?? 0) : v;
+  }
+
+  private getTargetReps(fallback = 0): number {
+    const v = parseInt(this.repsInput, 10);
+    return isNaN(v) ? (this.suggestion()?.suggestedReps ?? fallback) : v;
+  }
+
   isValidInput(): boolean {
-    const weight = parseFloat(this.weightInput) || this.suggestion()?.suggestedWeight || 0;
-    const reps = parseInt(this.repsInput, 10) || this.suggestion()?.suggestedReps || 0;
+    const weight = this.getTargetWeight();
+    const reps = this.getTargetReps();
     return weight > 0 || reps > 0;
   }
 
   // ─── Weight steppers ───
   incrementWeight(): void {
-    const current = parseFloat(this.weightInput) || this.suggestion()?.suggestedWeight || 0;
+    const current = this.getTargetWeight();
     const increment = this.unitSvc.currentSettings()?.weightIncrement ?? 2.5;
     const next = Math.round((current + increment) * 100) / 100;
     this.weightInput = String(next);
@@ -256,7 +267,7 @@ export class ExerciseStrengthComponent implements OnInit {
   }
 
   decrementWeight(): void {
-    const current = parseFloat(this.weightInput) || this.suggestion()?.suggestedWeight || 0;
+    const current = this.getTargetWeight();
     const increment = this.unitSvc.currentSettings()?.weightIncrement ?? 2.5;
     const next = Math.max(0, Math.round((current - increment) * 100) / 100);
     this.weightInput = String(next);
@@ -265,13 +276,13 @@ export class ExerciseStrengthComponent implements OnInit {
 
   // ─── Reps steppers ───
   incrementReps(): void {
-    const current = parseInt(this.repsInput, 10) || this.suggestion()?.suggestedReps || 0;
+    const current = this.getTargetReps();
     this.repsInput = String(current + 1);
     this.vibrarShort();
   }
 
   decrementReps(): void {
-    const current = parseInt(this.repsInput, 10) || this.suggestion()?.suggestedReps || 1;
+    const current = this.getTargetReps(1);
     this.repsInput = String(Math.max(1, current - 1));
     this.vibrarShort();
   }
@@ -290,9 +301,9 @@ export class ExerciseStrengthComponent implements OnInit {
   completeSet(): void {
     if (!this.isValidInput()) return;
 
-    const userWeight = parseFloat(this.weightInput) || this.suggestion()?.suggestedWeight || 0;
+    const userWeight = this.getTargetWeight();
     const baseWeight = this.unitSvc.userToKg(userWeight);
-    const reps = parseInt(this.repsInput, 10) || this.suggestion()?.suggestedReps || 0;
+    const reps = this.getTargetReps();
 
     const log = this.exerciseLog();
     if (!log.sets) {

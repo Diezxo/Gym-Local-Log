@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { StoragePort } from '../ports/storage.port';
 import { Routine, WorkoutSession, UserSettings, DEFAULT_SETTINGS } from '../models/interfaces';
 import { ChangeEvent, SyncOperation } from '../models/sync';
+import { generateId } from '../utils/generate-id';
 
 @Injectable()
 export class InMemoryAdapter implements StoragePort {
@@ -12,7 +13,7 @@ export class InMemoryAdapter implements StoragePort {
 
   private logChange(operation: SyncOperation, entityType: 'Routine' | 'WorkoutSession' | 'UserSettings', entity: any) {
     this.pendingChanges.push({
-      eventId: crypto.randomUUID(),
+      eventId: generateId(),
       entityType,
       entityId: entity.id,
       operation,

@@ -40,7 +40,11 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
           @for (template of templates(); track template.id) {
             <div
               class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden transition-all shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 group cursor-pointer"
+              role="button"
+              tabindex="0"
               (click)="editTemplate(template.id)"
+              (keydown.enter)="editTemplate(template.id)"
+              (keydown.space)="editTemplate(template.id); $event.preventDefault()"
             >
               <!-- Main row -->
               <div class="flex items-start gap-4 p-5 sm:p-6">
@@ -89,7 +93,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
           <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in">
             <h3 class="text-xl font-bold text-white tracking-tight mb-2">¿Eliminar rutina?</h3>
             <p class="text-[var(--color-text-muted)] text-sm font-medium mb-8 leading-relaxed">
-              Se eliminará <span class="text-white font-semibold">{{ templateToDelete()!.name }}</span> permanentemente.
+              Se eliminará <span class="text-white font-semibold">{{ templateToDelete()?.name }}</span> permanentemente.
             </p>
             <div class="flex flex-col gap-3">
               <button

@@ -96,6 +96,7 @@ export interface UserSettings extends BaseEntity {
   language: Language;
   weightIncrement: number; // default 2.5
   restTime: number; // default 90 (seconds)
+  weekStartDay: 0 | 1; // 0=Sunday, 1=Monday
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -111,6 +112,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   language: 'es',
   weightIncrement: 2.5,
   restTime: 90,
+  weekStartDay: 1,
 };
 
 // ─── Progression Suggestion ───

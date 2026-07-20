@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { STORAGE_PORT, StoragePort } from '../ports/storage.port';
 import { FileSystemService } from '../services/file-system.service';
 import { MonthlyArchive, Routine, UserSettings, WorkoutSession } from '../models/interfaces';
+import { generateId } from '../utils/generate-id';
 
 @Injectable({ providedIn: 'root' })
 export class SyncUseCases {
@@ -75,7 +76,7 @@ export class SyncUseCases {
           // Normalize and import
           for (const rawLog of archive.logs) {
             const session: WorkoutSession = {
-              id: rawLog.id || crypto.randomUUID(),
+              id: rawLog.id || generateId(),
               schemaVersion: rawLog.schemaVersion || 3,
               createdAt: rawLog.createdAt || Date.now(),
               updatedAt: rawLog.updatedAt || Date.now(),
@@ -86,7 +87,7 @@ export class SyncUseCases {
               routineId: rawLog.routineId || rawLog.templateId,
               notes: rawLog.notes || rawLog.notas,
               exercises: (rawLog.exercises || rawLog.ejercicios || []).map((e: any) => ({
-                id: e.id,
+                id: e.id || generateId(),
                 name: e.name || e.nombre,
                 type: (e.type === 'strength' || e.tipo === 'fuerza') ? 'strength' : 'cardio',
                 tags: e.tags,
@@ -107,7 +108,8 @@ export class SyncUseCases {
         }
       }
     } catch (e) {
-      console.warn('Error importing from FS:', e);
+      console.error('Error importing from FS:', e);
+      throw e;
     }
   }
 }

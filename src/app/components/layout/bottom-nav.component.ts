@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -15,6 +15,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="{ exact: item.exact }"
             #navLink="routerLinkActive"
+            [attr.aria-current]="navLink.isActive ? 'page' : null"
             class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-200 active:scale-95"
           >
             <!-- Active Indicator (Soft Glow) -->
@@ -22,7 +23,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             
             <div
               class="mb-1 transition-all duration-300 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-0.5"
-              [innerHTML]="getIconSvg(item.id)"
+              [innerHTML]="iconMap.get(item.id)"
             ></div>
 
             <span
@@ -37,9 +38,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     :host {
       display: block;
     }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
   `,
 })
-export class BottomNavComponent {
+export class BottomNavComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
 
   navItems = [
@@ -80,8 +84,11 @@ export class BottomNavComponent {
     },
   ];
 
-  getIconSvg(id: string): SafeHtml {
-    const item = this.navItems.find(i => i.id === id);
-    return this.sanitizer.bypassSecurityTrustHtml(item?.svg || '');
+  iconMap = new Map<string, SafeHtml>();
+
+  ngOnInit() {
+    for (const item of this.navItems) {
+      this.iconMap.set(item.id, this.sanitizer.bypassSecurityTrustHtml(item.svg));
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { STORAGE_PORT, StoragePort } from '../../ports/storage.port';
 import { SyncUseCases } from '../../use-cases/sync.use-cases';
@@ -164,7 +164,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
     }
   `,
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   private storage = inject<StoragePort>(STORAGE_PORT);
   private syncUseCases = inject(SyncUseCases);
   private fs = inject(FileSystemService);
@@ -181,6 +181,12 @@ export class SettingsComponent implements OnInit {
   async ngOnInit() {
     const loaded = await this.storage.getSettings();
     this.settings.set(loaded);
+  }
+
+  ngOnDestroy() {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
   }
 
   async updateSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {

@@ -1,5 +1,6 @@
 import { openDB } from 'idb';
 import { Routine, WorkoutSession, UserSettings } from '../models/interfaces';
+import { generateId } from '../utils/generate-id';
 
 export async function migrateV2toV3(): Promise<void> {
   console.log('Starting migration V2 to V3...');
@@ -54,7 +55,7 @@ export async function migrateV2toV3(): Promise<void> {
       if (archive.logs) {
         for (const log of archive.logs) {
           const session: WorkoutSession = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             schemaVersion: 3,
             createdAt: Date.now(),
             updatedAt: Date.now(),

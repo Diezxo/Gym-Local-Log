@@ -6,7 +6,6 @@ import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UnitConversionService } from '../../services/unit-conversion.service';
 import {
   WorkoutSession,
-  MonthlyArchive,
   MuscleTag,
   TAG_COLORS,
 } from '../../models/interfaces';
@@ -115,12 +114,12 @@ interface PRRecord {
               <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 border border-amber-500/20 shadow-sm flex items-center justify-between gap-4">
                 <div class="flex-1 min-w-0">
                   <p class="text-amber-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Récord personal</p>
-                  <p class="text-[var(--color-text-primary)] font-semibold text-lg sm:text-xl leading-tight truncate">{{ lastPR()!.exercise }}</p>
-                  <p class="text-[var(--color-text-muted)] text-xs font-medium mt-1">{{ getDaysAgo(lastPR()!.date) }}</p>
+                  <p class="text-[var(--color-text-primary)] font-semibold text-lg sm:text-xl leading-tight truncate">{{ lastPR()?.exercise }}</p>
+                  <p class="text-[var(--color-text-muted)] text-xs font-medium mt-1">{{ getDaysAgo(lastPR()?.date ?? '') }}</p>
                 </div>
                 <div class="text-right shrink-0">
-                  <p class="text-2xl sm:text-3xl font-bold text-amber-500 leading-none tracking-tight">{{ unitSvc.kgToUser(lastPR()!.weight) }}<span class="text-base sm:text-lg text-amber-500/70 ml-0.5">{{ unitSvc.currentWeightUnit() }}</span></p>
-                  <p class="text-xs text-[var(--color-text-muted)] font-medium mt-1.5">× {{ lastPR()!.reps }} reps</p>
+                  <p class="text-2xl sm:text-3xl font-bold text-amber-500 leading-none tracking-tight">{{ unitSvc.kgToUser(lastPR()?.weight ?? 0) }}<span class="text-base sm:text-lg text-amber-500/70 ml-0.5">{{ unitSvc.currentWeightUnit() }}</span></p>
+                  <p class="text-xs text-[var(--color-text-muted)] font-medium mt-1.5">× {{ lastPR()?.reps }} reps</p>
                 </div>
               </div>
             </div>
@@ -142,8 +141,8 @@ interface PRRecord {
               <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Último entrenamiento</h2>
               <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 border border-white/5 shadow-sm">
                 <div class="flex items-center justify-between mb-5">
-                  <span class="text-[var(--color-text-primary)] font-semibold text-xl tracking-tight">{{ formatFecha(lastLog()!.date) }}</span>
-                  <span class="text-[10px] font-medium tracking-wider uppercase text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-2.5 py-1 rounded-full">{{ getDaysAgo(lastLog()!.date) }}</span>
+                <span class="text-[var(--color-text-primary)] font-semibold text-xl tracking-tight">{{ formatFecha(lastLog()?.date ?? '') }}</span>
+                  <span class="text-[10px] font-medium tracking-wider uppercase text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-2.5 py-1 rounded-full">{{ getDaysAgo(lastLog()?.date ?? '') }}</span>
                 </div>
                 <div class="flex flex-wrap gap-2 mb-6">
                   @for (tag of getLogTags(lastLog()!); track tag) {
@@ -211,6 +210,8 @@ interface PRRecord {
                     class="aspect-square rounded-sm sm:rounded transition-colors"
                     [class]="day.trained ? 'bg-[var(--color-accent-success)]' : 'bg-[var(--color-bg-input)]/50'"
                     [title]="day.date"
+                    role="img"
+                    [attr.aria-label]="day.date + (day.trained ? ' - Entrenamiento realizado' : ' - Sin entrenamiento')"
                   ></div>
                 }
               </div>
@@ -418,9 +419,11 @@ export class DashboardComponent implements OnInit {
     const days: { label: string; dayNum: number; isToday: boolean; trained: boolean }[] = [];
     const todayStr = this.toLocalDateStr(now);
 
-    // Start of current week (Monday) — use local dates
-    const dow = now.getDay(); // 0=Sun
-    const startOffset = dow === 0 ? -6 : 1 - dow;
+    const dow = now.getDay();
+    // TODO: Make week start day configurable via UserSettings
+    // Monday = 1, so offset = (dow + 6) % 7
+    const mondayOffset = (dow === 0 ? 6 : dow - 1);
+    const startOffset = -mondayOffset;
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + startOffset);
 
     const weekLabels = ['L','M','X','J','V','S','D'];

@@ -14,7 +14,8 @@ export class MigrationRunner {
       try {
         await migrateV2toV3();
       } catch (e) {
-        console.error('Migration failed:', e);
+        console.error(`Migration failed:`, e);
+        throw e;
       }
     }
   }

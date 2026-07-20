@@ -1,12 +1,28 @@
 import { vi, describe, beforeEach, it, expect } from 'vitest';
+import { Injector, runInInjectionContext } from '@angular/core';
 import { UnitConversionService } from './unit-conversion.service';
 import { UserSettings, DEFAULT_SETTINGS } from '../models/interfaces';
+import { STORAGE_PORT } from '../ports/storage.port';
 
 describe('UnitConversionService', () => {
   let service: UnitConversionService;
+  let mockStorage: any;
 
   beforeEach(() => {
-    service = new UnitConversionService();
+    mockStorage = {
+      getSettings: vi.fn().mockResolvedValue(DEFAULT_SETTINGS),
+      saveSettings: vi.fn().mockResolvedValue(undefined)
+    };
+
+    const injector = Injector.create({
+      providers: [
+        { provide: STORAGE_PORT, useValue: mockStorage }
+      ]
+    });
+
+    runInInjectionContext(injector, () => {
+      service = new UnitConversionService();
+    });
   });
 
   it('should be created', () => {

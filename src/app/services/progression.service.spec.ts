@@ -1,16 +1,18 @@
 import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { ProgressionService } from './progression.service';
-import { DailyLog, ExerciseLog, StrengthSet, UserSettings, DEFAULT_SETTINGS } from '../models/interfaces';
+import { WorkoutUseCases } from '../use-cases/workout.use-cases';
+import { UnitConversionService } from './unit-conversion.service';
+import { DailyLog, ExerciseLog, StrengthSet, UserSettings, DEFAULT_SETTINGS, WorkoutSession } from '../models/interfaces';
 
 describe('ProgressionService', () => {
   let service: ProgressionService;
-  let dbServiceSpy: any;
+  let workoutUseCasesSpy: any;
   let unitSvcSpy: any;
 
   beforeEach(() => {
-    dbServiceSpy = {
-      getLastExerciseLog: vi.fn()
+    workoutUseCasesSpy = {
+      getAllWorkouts: vi.fn()
     };
     unitSvcSpy = {
       currentSettings: vi.fn(),
@@ -19,7 +21,16 @@ describe('ProgressionService', () => {
       addIncrementToBaseWeight: vi.fn()
     };
 
-    service = new ProgressionService(dbServiceSpy, unitSvcSpy);
+    const injector = Injector.create({
+      providers: [
+        { provide: WorkoutUseCases, useValue: workoutUseCasesSpy },
+        { provide: UnitConversionService, useValue: unitSvcSpy }
+      ]
+    });
+
+    runInInjectionContext(injector, () => {
+      service = new ProgressionService(workoutUseCasesSpy, unitSvcSpy);
+    });
     
     // Mock user settings
     unitSvcSpy.currentSettings.mockReturnValue({ ...DEFAULT_SETTINGS, weightUnit: 'kg', weightIncrement: 2.5 });
@@ -31,7 +42,7 @@ describe('ProgressionService', () => {
 
   describe('getSuggestions', () => {
     it('should return null if there is no previous log', async () => {
-      dbServiceSpy.getLastExerciseLog.mockReturnValue(Promise.resolve(undefined));
+      workoutUseCasesSpy.getAllWorkouts.mockReturnValue(Promise.resolve([]));
       
       const suggestion = await service.getSuggestion('Bench Press', '2025-01');
       expect(suggestion).toBeNull();
@@ -45,7 +56,14 @@ describe('ProgressionService', () => {
         sets: [mockSet, { setNumber: 2, reps: 12, weight: 60 }, { setNumber: 3, reps: 12, weight: 60 }]
       };
       
-      dbServiceSpy.getLastExerciseLog.mockReturnValue(Promise.resolve(previousLog));
+      const session: WorkoutSession = {
+        id: '1', date: '2025-01-01', schemaVersion: 3, createdAt: 1, updatedAt: 1, deviceId: '1', version: 1, syncStatus: 'local_only',
+        routineId: '1',
+        exercises: [previousLog],
+        notes: ''
+      };
+      
+      workoutUseCasesSpy.getAllWorkouts.mockReturnValue(Promise.resolve([session]));
       unitSvcSpy.kgToUser.mockReturnValue(60); // same weight
       unitSvcSpy.addIncrementToBaseWeight.mockReturnValue(62.5); // base weight + increment
 
@@ -67,7 +85,14 @@ describe('ProgressionService', () => {
         ]
       };
       
-      dbServiceSpy.getLastExerciseLog.mockReturnValue(Promise.resolve(previousLog));
+      const session: WorkoutSession = {
+        id: '1', date: '2025-01-01', schemaVersion: 3, createdAt: 1, updatedAt: 1, deviceId: '1', version: 1, syncStatus: 'local_only',
+        routineId: '1',
+        exercises: [previousLog],
+        notes: ''
+      };
+      
+      workoutUseCasesSpy.getAllWorkouts.mockReturnValue(Promise.resolve([session]));
       unitSvcSpy.kgToUser.mockReturnValue(60); 
 
       const suggestion = await service.getSuggestion('Bench Press', '2025-01');

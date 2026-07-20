@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { STORAGE_PORT, StoragePort } from '../ports/storage.port';
 import { Routine } from '../models/interfaces';
+import { generateId } from '../utils/generate-id';
 
 @Injectable({ providedIn: 'root' })
 export class RoutineUseCases {
@@ -9,7 +10,7 @@ export class RoutineUseCases {
   async createRoutine(routineData: Omit<Routine, 'id' | 'schemaVersion' | 'createdAt' | 'updatedAt' | 'deviceId' | 'version' | 'syncStatus'>): Promise<Routine> {
     const routine: Routine = {
       ...routineData,
-      id: crypto.randomUUID(),
+      id: generateId(),
       schemaVersion: 3,
       createdAt: Date.now(),
       updatedAt: Date.now(),

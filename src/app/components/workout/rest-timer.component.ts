@@ -98,6 +98,7 @@ export class RestTimerComponent implements OnInit, OnDestroy {
   isFinished = signal(false);
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private audioCtx: AudioContext | null = null;
   readonly circumference = 2 * Math.PI * 72; // ~452.39
 
   // ─── Computed ───
@@ -130,6 +131,8 @@ export class RestTimerComponent implements OnInit, OnDestroy {
     if (this.isFinished()) {
       this.restart();
     }
+    
+    this.getAudioContext(); // Initialize lazily during a user gesture
     
     this.isActive.set(true);
     this.isFinished.set(false);
@@ -183,6 +186,9 @@ export class RestTimerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stop();
+    if (this.audioCtx) {
+      this.audioCtx.close();
+    }
   }
 
   // ─── Private helpers ───
@@ -195,9 +201,19 @@ export class RestTimerComponent implements OnInit, OnDestroy {
     }
   }
 
+  private getAudioContext(): AudioContext {
+    if (!this.audioCtx) {
+      this.audioCtx = new AudioContext();
+    }
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    return this.audioCtx;
+  }
+
   private playBeep(): void {
     try {
-      const ctx = new AudioContext();
+      const ctx = this.getAudioContext();
       
       const playTone = (freq: number, startTime: number, duration: number) => {
         const oscillator = ctx.createOscillator();
@@ -223,8 +239,6 @@ export class RestTimerComponent implements OnInit, OnDestroy {
       playTone(523.25, now, 0.15);       // C5
       playTone(523.25, now + 0.25, 0.15); // C5
       playTone(659.25, now + 0.5, 0.4);  // E5 (longer)
-      
-      setTimeout(() => ctx.close(), 1000);
     } catch {
       // AudioContext not available
     }

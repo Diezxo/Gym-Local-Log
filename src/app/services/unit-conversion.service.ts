@@ -7,6 +7,7 @@ export class UnitConversionService {
   // We keep a signal of the current user settings to reactively update conversions in the UI
   // This will be fed by DbService when it loads or updates settings
   public currentSettings = signal<UserSettings | null>(null);
+  public settingsLoaded = signal<boolean>(false);
   
   private storage = inject<StoragePort>(STORAGE_PORT);
 
@@ -17,6 +18,7 @@ export class UnitConversionService {
   private async loadInitialSettings() {
     const settings = await this.storage.getSettings();
     this.currentSettings.set(settings);
+    this.settingsLoaded.set(true);
   }
 
   // Derived signals for convenience

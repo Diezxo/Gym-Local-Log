@@ -27,8 +27,8 @@ export class FileSystemService {
           this.isConnected.set(true);
         }
       }
-    } catch {
-      // Ignore errors (e.g. API not supported)
+    } catch (e) {
+      console.error('Error checking stored handle:', e);
     }
   }
 
@@ -130,7 +130,8 @@ export class FileSystemService {
     if (!this.isConnected() || !this.dirHandle) return;
     try {
       // Timestamp format: YYYY-MM-DD_HH-MM-SS (safe for filenames)
-      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      const now = new Date();
+      const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
       const backupFilename = `${monthId}_bak_${ts}.json`;
       await this.writeJsonFile(backupFilename, data);
 

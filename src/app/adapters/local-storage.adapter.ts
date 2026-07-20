@@ -5,6 +5,7 @@ import { Routine, WorkoutSession, UserSettings, DEFAULT_SETTINGS } from '../mode
 import { ChangeEvent, SyncOperation } from '../models/sync';
 import { FileSystemService } from '../services/file-system.service';
 import { DEFAULT_TEMPLATES } from '../models/default-templates';
+import { generateId } from '../utils/generate-id';
 
 // ─── IndexedDB Schema V3 ───
 interface GymDBSchemaV3 extends DBSchema {
@@ -92,7 +93,7 @@ export class LocalStorageAdapter implements StoragePort {
               if (archive.logs) {
                 for (const log of archive.logs) {
                   await sessionStore.put({
-                    id: crypto.randomUUID(), // Allowed since modern browsers support it
+                    id: generateId(), // Allowed since modern browsers support it
                     schemaVersion: 4,
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
@@ -146,7 +147,7 @@ export class LocalStorageAdapter implements StoragePort {
   private async logChange(operation: SyncOperation, entityType: 'Routine' | 'WorkoutSession' | 'UserSettings', entity: any) {
     const db = await this.getDb();
     const event: ChangeEvent = {
-      eventId: crypto.randomUUID(),
+      eventId: generateId(),
       entityType,
       entityId: entity.id,
       operation,

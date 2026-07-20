@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { STORAGE_PORT, StoragePort } from '../ports/storage.port';
 import { WorkoutSession } from '../models/interfaces';
+import { generateId } from '../utils/generate-id';
 
 @Injectable({ providedIn: 'root' })
 export class WorkoutUseCases {
@@ -9,7 +10,7 @@ export class WorkoutUseCases {
   async createWorkoutSession(sessionData: Omit<WorkoutSession, 'id' | 'schemaVersion' | 'createdAt' | 'updatedAt' | 'deviceId' | 'version' | 'syncStatus'>): Promise<WorkoutSession> {
     const session: WorkoutSession = {
       ...sessionData,
-      id: crypto.randomUUID(),
+      id: generateId(),
       schemaVersion: 3,
       createdAt: Date.now(),
       updatedAt: Date.now(),

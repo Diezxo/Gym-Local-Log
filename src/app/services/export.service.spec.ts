@@ -1,22 +1,39 @@
 import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { ExportService } from './export.service';
+import { WorkoutUseCases } from '../use-cases/workout.use-cases';
+import { RoutineUseCases } from '../use-cases/routine.use-cases';
+import { FileSystemService } from './file-system.service';
 import { Template } from '../models/interfaces';
 
 describe('ExportService', () => {
   let service: ExportService;
-  let dbServiceSpy: any;
+  let workoutUseCasesSpy: any;
+  let routineUseCasesSpy: any;
+  let fileSystemSpy: any;
 
   beforeEach(() => {
-    dbServiceSpy = {
-      getMonthlyArchive: vi.fn(),
-      getAllMonthlyArchives: vi.fn(),
+    workoutUseCasesSpy = {
       importMonthlyArchive: vi.fn(),
-      getTemplates: vi.fn(),
-      saveTemplate: vi.fn()
+      updateWorkoutSession: vi.fn()
     };
+    routineUseCasesSpy = {
+      getAllRoutines: vi.fn(),
+      updateRoutine: vi.fn()
+    };
+    fileSystemSpy = {};
 
-    service = new ExportService(dbServiceSpy);
+    const injector = Injector.create({
+      providers: [
+        { provide: WorkoutUseCases, useValue: workoutUseCasesSpy },
+        { provide: RoutineUseCases, useValue: routineUseCasesSpy },
+        { provide: FileSystemService, useValue: fileSystemSpy }
+      ]
+    });
+
+    runInInjectionContext(injector, () => {
+      service = new ExportService();
+    });
   });
 
   it('should be created', () => {
@@ -30,7 +47,7 @@ describe('ExportService', () => {
       const file = new File([csvContent], 'test.csv', { type: 'text/csv' });
 
       // Db has no templates
-      dbServiceSpy.getTemplates.mockReturnValue(Promise.resolve([]));
+      routineUseCasesSpy.getAllRoutines.mockReturnValue(Promise.resolve([]));
       
       const result = await service.importCSV(file);
       expect(result.rejected).toBe(1);
@@ -43,13 +60,13 @@ describe('ExportService', () => {
 
       // Db has the template
       const mockTemplate: Template = { id: 't1', name: 'Push Day', exercises: [] };
-      dbServiceSpy.getTemplates.mockReturnValue(Promise.resolve([mockTemplate]));
-      dbServiceSpy.importMonthlyArchive.mockReturnValue(Promise.resolve());
+      routineUseCasesSpy.getAllRoutines.mockReturnValue(Promise.resolve([mockTemplate]));
+      workoutUseCasesSpy.importMonthlyArchive.mockReturnValue(Promise.resolve());
       
       const result = await service.importCSV(file);
       expect(result.rejected).toBe(0);
       expect(result.imported).toBe(1);
-      expect(dbServiceSpy.importMonthlyArchive).toHaveBeenCalled();
+      expect(workoutUseCasesSpy.updateWorkoutSession).toHaveBeenCalled();
     });
   });
 });

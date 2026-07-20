@@ -1,5 +1,6 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { A11yModule } from '@angular/cdk/a11y';
 import { ExportService } from '../../services/export.service';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UnitConversionService } from '../../services/unit-conversion.service';
@@ -15,7 +16,7 @@ interface MonthStats {
 @Component({
   selector: 'app-data-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, A11yModule],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
@@ -116,7 +117,7 @@ interface MonthStats {
                         @for (s of ej.sets; track $index; let i = $index) {
                           <span
                             class="text-[11px] font-mono font-medium px-2 py-1 rounded-md border"
-                            [class]="isMaxSet(s, ej.sets!)
+                            [class]="isMaxSet(s, ej.sets ?? [])
                               ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30'
                               : 'bg-[var(--color-bg-primary)] border-white/5 text-[var(--color-text-muted)]'"
                           >S{{ i + 1 }}: {{ unitSvc.kgToUser(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
@@ -125,7 +126,7 @@ interface MonthStats {
                     } @else {
                       <!-- All sets equal: compact summary -->
                       <span class="text-sm font-semibold text-[var(--color-text-muted)] font-mono">
-                        {{ ej.sets.length }}×{{ ej.sets[0].reps }} @ {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
+                        {{ ej.sets.length }}×{{ ej.sets[0].reps }} &#64; {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
                       </span>
                     }
                   } @else if (ej.type === 'cardio') {
@@ -200,16 +201,16 @@ interface MonthStats {
           Importar (.csv)
         </button>
       </div>
-      <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" />
-      <input #csvInput type="file" accept=".csv" (change)="onCSVSelected($event)" class="hidden" />
+      <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" aria-label="Seleccionar archivo JSON" />
+      <input #csvInput type="file" accept=".csv" (change)="onCSVSelected($event)" class="hidden" aria-label="Seleccionar archivo CSV" />
 
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in">
+          <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in" cdkTrapFocus cdkTrapFocusAutoCapture>
             <h3 class="text-xl font-bold text-white tracking-tight mb-2">¿Eliminar registro?</h3>
             <p class="text-[var(--color-text-muted)] text-sm font-medium mb-8 leading-relaxed">
-              Se eliminará el entrenamiento del <span class="text-white font-semibold">{{ logToDelete()!.date }}</span> permanentemente.
+              Se eliminará el entrenamiento del <span class="text-white font-semibold">{{ logToDelete()?.date }}</span> permanentemente.
             </p>
             <div class="flex flex-col gap-3">
               <button
@@ -228,7 +229,7 @@ interface MonthStats {
   `,
   styles: [``], changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DataManagementComponent implements OnInit {
+export class DataManagementComponent implements OnInit, OnDestroy {
   private exportService = inject(ExportService);
   private workoutUseCases = inject(WorkoutUseCases);
   unitSvc = inject(UnitConversionService);
@@ -241,6 +242,8 @@ export class DataManagementComponent implements OnInit {
   allLogs = signal<WorkoutSession[]>([]);
   stats = signal<MonthStats>({ sesiones: 0, volumenWeight: 0, distanceMeters: 0, tagSesiones: [] });
   logToDelete = signal<WorkoutSession | null>(null);
+  
+  private feedbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -256,6 +259,12 @@ export class DataManagementComponent implements OnInit {
     
     await this.refreshAvailableMonths(defaultMes);
     await this.loadHistory();
+  }
+
+  ngOnDestroy() {
+    if (this.feedbackTimeout) {
+      clearTimeout(this.feedbackTimeout);
+    }
   }
 
   private async refreshAvailableMonths(defaultMes: string) {
@@ -503,6 +512,9 @@ export class DataManagementComponent implements OnInit {
   private showFeedback(message: string, isError: boolean) {
     this.feedbackMessage.set(message);
     this.feedbackIsError.set(isError);
-    setTimeout(() => this.feedbackMessage.set(''), 4000);
+    if (this.feedbackTimeout) {
+      clearTimeout(this.feedbackTimeout);
+    }
+    this.feedbackTimeout = setTimeout(() => this.feedbackMessage.set(''), 4000);
   }
 }

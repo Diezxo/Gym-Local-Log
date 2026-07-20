@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ExerciseLog } from '../../models/interfaces';
 import { UnitConversionService } from '../../services/unit-conversion.service';
@@ -83,7 +83,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
   styles: [``],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ExerciseCardioComponent implements OnInit {
+export class ExerciseCardioComponent implements OnInit, OnDestroy {
   unitSvc = inject(UnitConversionService);
 
   // ─── Inputs / Outputs ───
@@ -111,6 +111,12 @@ export class ExerciseCardioComponent implements OnInit {
       if (cardio.technicalNotes) {
         this.notesInput = cardio.technicalNotes;
       }
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
     }
   }
 

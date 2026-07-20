@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { WorkoutUseCases } from '../use-cases/workout.use-cases';
 import { RoutineUseCases } from '../use-cases/routine.use-cases';
 import { MonthlyArchive, WorkoutSession, ExerciseLog } from '../models/interfaces';
+import { generateId } from '../utils/generate-id';
 
 // ─── Import Result ───
 export interface ImportResult {
@@ -31,7 +32,7 @@ export class ExportService {
     const archive: MonthlyArchive = {
       monthId,
       schemaVersion: 3,
-      logs: monthWorkouts as any // Type issue with MonthlyArchive.logs expected DailyLog, but WorkoutSession is compatible
+      logs: monthWorkouts
     };
 
     const json = JSON.stringify(archive, null, 2);
@@ -53,7 +54,7 @@ export class ExportService {
       if (!archivesMap.has(monthId)) {
         archivesMap.set(monthId, { monthId, schemaVersion: 3, logs: [] });
       }
-      (archivesMap.get(monthId)!.logs as any).push(w);
+      archivesMap.get(monthId)!.logs.push(w);
     }
     
     const archives = Array.from(archivesMap.values());
@@ -137,13 +138,13 @@ export class ExportService {
               for (const log of monthData.logs) {
                 // Generate id if missing for older formats
                 const session: WorkoutSession = {
-                  id: (log as any).id || crypto.randomUUID(),
+                  id: log.id || generateId(),
                   schemaVersion: 3,
                   createdAt: Date.now(),
                   updatedAt: Date.now(),
-                  version: (log as any).version || 1,
-                  syncStatus: (log as any).syncStatus || 'local_only',
-                  deviceId: (log as any).deviceId || 'local',
+                  version: log.version || 1,
+                  syncStatus: log.syncStatus || 'local_only',
+                  deviceId: log.deviceId || 'local',
                   date: log.date || log.fecha,
                   routineId: log.routineId || log.templateId,
                   notes: log.notes || log.notas || '',
@@ -161,13 +162,13 @@ export class ExportService {
             }
             for (const log of data.logs) {
               const session: WorkoutSession = {
-                id: (log as any).id || crypto.randomUUID(),
+                id: log.id || generateId(),
                 schemaVersion: 3,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
-                version: (log as any).version || 1,
-                syncStatus: (log as any).syncStatus || 'local_only',
-                deviceId: (log as any).deviceId || 'local',
+                version: log.version || 1,
+                syncStatus: log.syncStatus || 'local_only',
+                deviceId: log.deviceId || 'local',
                 date: log.date || log.fecha,
                 routineId: log.routineId || log.templateId,
                 notes: log.notes || log.notas || '',
@@ -195,7 +196,7 @@ export class ExportService {
       reader.onload = async () => {
         try {
           const text = reader.result as string;
-          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          const lines = this.splitCSVLines(text);
 
           if (lines.length < 2) {
             reject(new Error('CSV is empty or only has headers'));
@@ -236,7 +237,7 @@ export class ExportService {
             const key = `${date}|${routineId}`;
             if (!logMap.has(key)) {
               logMap.set(key, { 
-                id: crypto.randomUUID(),
+                id: generateId(),
                 schemaVersion: 3,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
@@ -432,6 +433,31 @@ export class ExportService {
       }
     }
     return rows;
+  }
+
+  /**
+   * Split CSV text into logical rows, respecting quoted fields that may contain newlines.
+   */
+  private splitCSVLines(text: string): string[] {
+    const lines: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        current += char;
+      } else if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && text[i + 1] === '\n') i++; // Skip \r\n
+        if (current.trim()) lines.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    if (current.trim()) lines.push(current);
+    return lines;
   }
 
   private parseCSVRow(line: string): string[] {

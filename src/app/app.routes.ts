@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { workoutGuard } from './guards/workout.guard';
 
 export const routes: Routes = [
   {
@@ -15,6 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'workout',
+    canDeactivate: [workoutGuard],
     loadComponent: () =>
       import('./components/workout/workout.component').then(
         (m) => m.WorkoutComponent
@@ -55,8 +57,5 @@ export const routes: Routes = [
         (m) => m.SettingsComponent
       ),
   },
-  {
-    path: '**',
-    redirectTo: '',
-  },
+  { path: '**', redirectTo: '' }
 ];

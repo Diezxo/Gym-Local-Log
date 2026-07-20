@@ -61,10 +61,11 @@ export class ProgressionService {
     const referenceText = `Anterior: ${prevUserWeight}${unitLabel} × ${previousReps}`;
 
     if (previousReps >= 12) {
-      // Jump load: increment weight, reset to 8 reps
+      // Jump load: increment weight, reset reps
+      // Simplistic linear periodization. TODO: Make configurable
       return {
         suggestedWeight: prevUserWeight + increment,
-        suggestedReps: 8,
+        suggestedReps: Math.max(previousReps - 4, 8),
         isLoadAlert: true,
         referenceText,
       };
