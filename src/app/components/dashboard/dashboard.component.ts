@@ -162,12 +162,26 @@ interface PRRecord {
               </div>
             </div>
           } @else {
-            <div>
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-in bg-[var(--color-bg-card)] rounded-3xl border border-white/5 shadow-sm mt-4">
+              <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-accent)]/20 to-[var(--color-accent-secondary)]/20 border border-[var(--color-accent)]/30 flex items-center justify-center mb-5 relative">
+                <div class="absolute inset-0 bg-[var(--color-accent)]/10 rounded-full animate-ping opacity-20"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <defs>
+                    <linearGradient id="gradient-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="var(--color-accent)" />
+                      <stop offset="100%" stop-color="var(--color-accent-secondary)" />
+                    </linearGradient>
+                  </defs>
+                  <path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-white tracking-tight mb-2">Comienza tu viaje</h3>
+              <p class="text-[var(--color-text-muted)] text-sm font-medium mb-6 max-w-[240px] leading-relaxed">No hay entrenamientos registrados este mes. ¡Es un buen momento para empezar!</p>
               <button
                 (click)="irAEntrenar()"
-                class="btn-primary"
+                class="btn-primary max-w-[200px]"
               >
-                ¡Primer Entrenamiento!
+                Primer Entrenamiento
               </button>
             </div>
           }

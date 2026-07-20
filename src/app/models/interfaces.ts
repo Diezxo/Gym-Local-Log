@@ -97,6 +97,8 @@ export interface UserSettings extends BaseEntity {
   weightIncrement: number; // default 2.5
   restTime: number; // default 90 (seconds)
   weekStartDay: 0 | 1; // 0=Sunday, 1=Monday
+  theme: 'dark' | 'amoled'; // default 'dark'
+  hapticFeedback: boolean; // default true
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -113,6 +115,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   weightIncrement: 2.5,
   restTime: 90,
   weekStartDay: 1,
+  theme: 'dark',
+  hapticFeedback: true,
 };
 
 // ─── Progression Suggestion ───

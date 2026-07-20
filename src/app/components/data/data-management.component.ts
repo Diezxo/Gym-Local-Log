@@ -157,11 +157,14 @@ interface MonthStats {
         }
 
         @if (allLogs().length === 0) {
-          <div class="text-center py-16 flex flex-col items-center">
-            <div class="w-20 h-20 rounded-full bg-[var(--color-bg-input)] border border-white/5 shadow-inner flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-text-muted)]"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <div class="flex flex-col items-center justify-center py-20 px-4 text-center animate-fade-in bg-[var(--color-bg-card)] rounded-3xl border border-white/5 shadow-sm">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-accent-secondary)]/20 to-[var(--color-accent)]/20 border border-[var(--color-accent-secondary)]/30 flex items-center justify-center mb-5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent-secondary)]">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+              </svg>
             </div>
-            <p class="text-[var(--color-text-muted)] text-sm font-semibold uppercase tracking-wider">No hay entrenamientos este mes.</p>
+            <h3 class="text-xl font-bold text-white tracking-tight mb-2">Sin actividad este mes</h3>
+            <p class="text-[var(--color-text-muted)] text-sm font-medium max-w-[240px] leading-relaxed">No tienes entrenamientos registrados. Ve a Entrenar para sumar volumen a tu progreso.</p>
           </div>
         }
       </div>

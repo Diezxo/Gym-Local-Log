@@ -130,6 +130,52 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
           </div>
         </div>
 
+        <!-- Theme -->
+        <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 sm:p-6 border border-white/5 shadow-sm">
+          <h3 class="text-white font-bold text-lg mb-1">Tema Visual</h3>
+          <p class="text-[var(--color-text-muted)] text-sm font-medium mb-5">Elige tu estilo. AMOLED ahorra batería.</p>
+          <div class="flex gap-3">
+            <button
+              (click)="updateSetting('theme', 'dark')"
+              class="flex-1 h-12 rounded-xl font-semibold uppercase tracking-wider text-[11px] transition-all active:scale-95"
+              [class]="settings().theme === 'dark'
+                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5 hover:bg-white/5'"
+            >
+              Oscuro
+            </button>
+            <button
+              (click)="updateSetting('theme', 'amoled')"
+              class="flex-1 h-12 rounded-xl font-semibold uppercase tracking-wider text-[11px] transition-all active:scale-95"
+              [class]="settings().theme === 'amoled'
+                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5 hover:bg-white/5'"
+            >
+              AMOLED
+            </button>
+          </div>
+        </div>
+
+        <!-- Haptics -->
+        <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 sm:p-6 border border-white/5 shadow-sm flex items-center justify-between">
+          <div>
+            <h3 class="text-white font-bold text-lg mb-1">Vibración</h3>
+            <p class="text-[var(--color-text-muted)] text-sm font-medium">Feedback táctil al pulsar.</p>
+          </div>
+          <button
+            (click)="updateSetting('hapticFeedback', !settings().hapticFeedback)"
+            class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+            [class]="settings().hapticFeedback ? 'bg-[var(--color-accent)]' : 'bg-white/10'"
+            role="switch"
+            [attr.aria-checked]="settings().hapticFeedback"
+          >
+            <span
+              class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              [class]="settings().hapticFeedback ? 'translate-x-5' : 'translate-x-0'"
+            ></span>
+          </button>
+        </div>
+
         <!-- Local Storage Sync (File System Access API) -->
         <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 sm:p-6 border border-white/5 shadow-sm mb-8">
           <h3 class="text-white font-bold text-lg mb-1">Sincronización</h3>
@@ -202,7 +248,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     await this.storage.saveSettings(newSettings);
     
     // Explicitly notify UnitConversionService about the update
-    if (key === 'weightUnit' || key === 'distanceUnit') {
+    if (key === 'weightUnit' || key === 'distanceUnit' || key === 'theme') {
       this.unitSvc.currentSettings.set(newSettings);
     }
 

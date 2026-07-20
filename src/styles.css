@@ -23,6 +23,17 @@
   --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* ─── AMOLED Theme Overrides ─── */
+[data-theme="amoled"] {
+  --color-bg-backdrop: #000000;
+  --color-bg-primary: #000000;
+  --color-bg-card: #0a0a0a;
+  --color-bg-input: #171717;
+  --color-bg-elevated: #171717;
+  --color-border: #262626;
+  --color-border-active: #404040;
+}
+
 /* ─── Base Resets ─── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -43,6 +54,10 @@ body {
   min-height: 100dvh;
   background-color: var(--color-bg-backdrop);
   overscroll-behavior: none;
+}
+
+.pb-nav-safe {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
 h1, h2, h3, h4, h5, h6 {
