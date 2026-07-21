@@ -299,7 +299,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     const standardizeName = (name: string) => {
       if (!name) return name;
-      return name.trim().toLowerCase().replace(/\b[a-záéíóúüñ]/g, char => char.toUpperCase());
+      return name.trim().toLowerCase().replace(/(?:^|\s)\S/g, char => char.toUpperCase());
     };
     
     const translateTags = (tags: any[]) => {
@@ -333,7 +333,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       for (const e of (r.exercises || [])) {
          const stdName = standardizeName(e.name);
          if (e.name !== stdName) { e.name = stdName; changed = true; }
-         const newTags = translateTags(e.tags || []);
+         const newTags = Array.from(new Set(translateTags(e.tags || [])));
          if (JSON.stringify(newTags) !== JSON.stringify(e.tags)) { e.tags = newTags; changed = true; }
          const targetId = nameToId.get(stdName);
          if (e.exerciseId !== targetId) { e.exerciseId = targetId; changed = true; }
@@ -347,7 +347,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       for (const e of (l.exercises || [])) {
          const stdName = standardizeName(e.name);
          if (e.name !== stdName) { e.name = stdName; changed = true; }
-         const newTags = translateTags(e.tags || []);
+         const newTags = Array.from(new Set(translateTags(e.tags || [])));
          if (JSON.stringify(newTags) !== JSON.stringify(e.tags)) { e.tags = newTags; changed = true; }
          const targetId = nameToId.get(stdName);
          if (e.exerciseId !== targetId) { e.exerciseId = targetId; changed = true; }
