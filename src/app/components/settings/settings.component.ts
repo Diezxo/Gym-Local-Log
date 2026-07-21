@@ -160,7 +160,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
         <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 sm:p-6 border border-white/5 shadow-sm flex items-center justify-between">
           <div>
             <h3 class="text-white font-bold text-lg mb-1">Vibración</h3>
-            <p class="text-[var(--color-text-muted)] text-sm font-medium">Feedback táctil al pulsar.</p>
+            <p class="text-[var(--color-text-muted)] text-sm font-medium">Feedback táctil al pulsar <span class="text-[var(--color-text-muted)]/60">(solo Android)</span></p>
           </div>
           <button
             (click)="updateSetting('hapticFeedback', !settings().hapticFeedback)"
@@ -248,7 +248,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     await this.storage.saveSettings(newSettings);
     
     // Explicitly notify UnitConversionService about the update
-    if (key === 'weightUnit' || key === 'distanceUnit' || key === 'theme') {
+    if (key === 'weightUnit' || key === 'distanceUnit' || key === 'theme' || key === 'hapticFeedback') {
       this.unitSvc.currentSettings.set(newSettings);
     }
 

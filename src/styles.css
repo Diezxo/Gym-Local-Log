@@ -2,9 +2,11 @@
 
 
 /* ─── Theme Tokens (Minimalist & Elegant) ─── */
-@theme {
-  --color-bg-backdrop: #0f172a; /* Outer backdrop for desktop */
-  --color-bg-primary: #1e293b; /* Main app background */
+/* Using 'inline' so Tailwind v4 emits var() references instead of raw values.
+   This allows [data-theme="amoled"] overrides to work at runtime. */
+@theme inline {
+  --color-bg-backdrop: #0f172a;
+  --color-bg-primary: #1e293b;
   --color-bg-card: #334155;
   --color-bg-input: #475569;
   --color-bg-elevated: #475569;
@@ -19,6 +21,9 @@
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-active: #64748b;
+}
+
+@theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
 }
