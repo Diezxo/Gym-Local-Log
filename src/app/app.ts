@@ -3,13 +3,15 @@ import { DOCUMENT } from '@angular/common';
 import { RouterOutlet, ChildrenOutletContexts } from '@angular/router';
 import { BottomNavComponent } from './components/layout/bottom-nav.component';
 import { UnitConversionService } from './services/unit-conversion.service';
-import { trigger, transition, style, query, animate } from '@angular/animations';
+import { trigger, transition, style, query, animate, group } from '@angular/animations';
 
 export const fadeAnimation = trigger('routeAnimation', [
   transition('* <=> *', [
     query(':enter', [style({ opacity: 0 })], { optional: true }),
-    query(':leave', [animate('150ms ease-out', style({ opacity: 0 }))], { optional: true }),
-    query(':enter', [animate('150ms ease-in', style({ opacity: 1 }))], { optional: true })
+    group([
+      query(':leave', [animate('80ms ease-out', style({ opacity: 0 }))], { optional: true }),
+      query(':enter', [style({ opacity: 0 }), animate('80ms 40ms ease-in', style({ opacity: 1 }))], { optional: true })
+    ])
   ])
 ]);
 

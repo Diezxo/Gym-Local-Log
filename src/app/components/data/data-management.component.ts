@@ -1,6 +1,5 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { A11yModule } from '@angular/cdk/a11y';
 import { ExportService } from '../../services/export.service';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
@@ -17,7 +16,7 @@ interface MonthStats {
 @Component({
   selector: 'app-data-management',
   standalone: true,
-  imports: [CommonModule, A11yModule, DragDropModule],
+  imports: [CommonModule, A11yModule],
   providers: [DatePipe],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
@@ -72,24 +71,12 @@ interface MonthStats {
       <!-- Workout List -->
       <div class="flex flex-col gap-4">
         @for (log of allLogs(); track log.date + log.routineId) {
-          <!-- Swipe to Delete Container -->
-          <div class="relative overflow-hidden rounded-3xl border border-white/5 bg-rose-500/80">
-            <!-- Background Action (Delete) -->
-            <div class="absolute inset-0 flex items-center justify-end px-6 z-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            </div>
-
-            <!-- Foreground Card -->
             <div
-              cdkDrag
-              cdkDragLockAxis="x"
-              [cdkDragBoundary]="'.flex.flex-col.gap-4'"
-              (cdkDragEnded)="onDragEnded($event, log)"
-              class="bg-[var(--color-bg-card)] rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-[var(--color-accent)]/30 transition-all group relative z-10 w-full"
+              class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden shadow-sm transition-all group"
             >
               <!-- Date + Tags row -->
               <div class="flex items-center gap-4 p-5">
-                <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
+                <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner">
                   <span class="text-[var(--color-accent)] font-bold text-xl leading-none">{{ log.date | slice:8:10 }}</span>
                   <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
                 </div>
@@ -110,6 +97,15 @@ interface MonthStats {
                   </div>
                   <p class="text-[var(--color-text-muted)] text-[11px] font-medium">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
                 </div>
+
+                <!-- Delete button -->
+                <button
+                  (click)="confirmDelete(log); $event.stopPropagation()"
+                  class="w-9 h-9 flex items-center justify-center rounded-xl text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+                  aria-label="Eliminar registro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
 
             <!-- Exercise lines -->
@@ -160,7 +156,6 @@ interface MonthStats {
                 }
               </div>
             }
-          </div>
           </div>
         }
 
@@ -430,16 +425,8 @@ export class DataManagementComponent implements OnInit, OnDestroy {
 
   // ── Actions ──
 
-  confirmDeleteLog(log: WorkoutSession) {
+  confirmDelete(log: WorkoutSession) {
     this.logToDelete.set(log);
-  }
-
-  onDragEnded(event: CdkDragEnd, log: WorkoutSession) {
-    const x = event.distance.x;
-    if (x < -80) {
-      this.confirmDeleteLog(log);
-    }
-    event.source.reset();
   }
 
   async deleteLogConfirmed() {
