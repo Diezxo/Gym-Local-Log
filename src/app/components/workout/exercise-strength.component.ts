@@ -268,7 +268,7 @@ export class ExerciseStrengthComponent implements OnInit {
   readonly String = String;
 
   async ngOnInit() {
-    const records = await this.progressionService.getExerciseHistory(this.exerciseLog().name);
+    const records = await this.progressionService.getExerciseHistory(this.exerciseLog().exerciseId, this.exerciseLog().name);
     this.history.set(records);
   }
 

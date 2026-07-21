@@ -64,7 +64,11 @@ describe('InMemoryAdapter', () => {
 
       await adapter.saveWorkoutSession(session);
       const retrieved = await adapter.getWorkoutSession('s1');
-      expect(retrieved).toEqual({ ...session, version: 2 });
+      expect(retrieved).toMatchObject({ 
+        ...session, 
+        version: 2,
+        updatedAt: expect.any(Number)
+      });
     });
 
     it('should query sessions by date range', async () => {

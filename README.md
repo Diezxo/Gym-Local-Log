@@ -62,6 +62,9 @@ Para conocer más sobre cómo se almacenan y estructuran los datos, visita:
 3. [**Formato de Datos** (`docs/data-format.md`)](docs/data-format.md) - Esquemas JSON, tablas y especificación del CSV.
 4. [**Arquitectura** (`docs/architecture.md`)](docs/architecture.md) - Diagramas de flujo y stack completo.
 
+## Próximos Pasos (TODO)
+- **Migración a Backend (Firebase):** Crear un backend con catálogo estandarizado de ejercicios (incluyendo descripciones, GIFs demostrativos y métricas globales).
+
 ## Contribuir
 
 Siéntete libre de abrir issues o pull requests para mejoras y nuevas funcionalidades.

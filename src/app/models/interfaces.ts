@@ -51,6 +51,7 @@ export interface CardioLog {
 
 // ─── Base Exercise (for routines) ───
 export interface BaseExercise {
+  exerciseId?: string; // Unique identifier for the exercise for historical tracking
   name: string;
   type: ExerciseType;
   tags?: MuscleTag[]; // Muscle groups / type
@@ -62,11 +63,13 @@ import { BaseEntity } from './sync';
 export interface Routine extends BaseEntity {
   name: string;
   exercises: BaseExercise[];
+  archived?: boolean;
 }
 
 // ─── Individual Exercise Log ───
 export interface ExerciseLog {
   id?: string; // Optional UUID for individual exercises if needed
+  exerciseId?: string; // Reference to the base exercise ID to track PRs regardless of renames
   name: string;
   type: ExerciseType;
   tags?: MuscleTag[]; // Copied from routine when logging

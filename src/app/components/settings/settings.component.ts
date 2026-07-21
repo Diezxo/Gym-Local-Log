@@ -2,10 +2,13 @@ import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy }
 import { FormsModule } from '@angular/forms';
 import { STORAGE_PORT, StoragePort } from '../../ports/storage.port';
 import { SyncUseCases } from '../../use-cases/sync.use-cases';
+import { RoutineUseCases } from '../../use-cases/routine.use-cases';
+import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UserSettings, DEFAULT_SETTINGS } from '../../models/interfaces';
 
 import { FileSystemService } from '../../services/file-system.service';
 import { UnitConversionService } from '../../services/unit-conversion.service';
+import { generateId } from '../../utils/generate-id';
 
 @Component({
   selector: 'app-settings',
@@ -201,6 +204,22 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
             }
           }
         </div>
+
+        <!-- Database Maintenance -->
+        <div class="bg-[var(--color-bg-card)] rounded-3xl p-5 sm:p-6 border border-white/5 shadow-sm mb-8">
+          <h3 class="text-white font-bold text-lg mb-1">Mantenimiento Base de Datos</h3>
+          <p class="text-[var(--color-text-muted)] text-sm font-medium mb-6">
+            Estandariza los nombres de los ejercicios, traduce etiquetas antiguas y asigna IDs únicos para el historial. Útil si cambias nombres de ejercicios.
+          </p>
+          <button
+            (click)="migrateData()"
+            [disabled]="migrationStatus() === 'Procesando...'"
+            class="w-full h-14 bg-[var(--color-bg-input)] border border-white/5 text-white text-sm font-semibold rounded-2xl flex items-center justify-center gap-3 hover:bg-white/5 active:scale-95 transition-all shadow-sm disabled:opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+            {{ migrationStatus() || 'Estandarizar y Migrar' }}
+          </button>
+        </div>
       </div>
     </div>
   `,
@@ -213,14 +232,16 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
 export class SettingsComponent implements OnInit, OnDestroy {
   private storage = inject<StoragePort>(STORAGE_PORT);
   private syncUseCases = inject(SyncUseCases);
+  private routineUseCases = inject(RoutineUseCases);
+  private workoutUseCases = inject(WorkoutUseCases);
   private fs = inject(FileSystemService);
   private unitSvc = inject(UnitConversionService);
 
   settings = signal<UserSettings>({ ...DEFAULT_SETTINGS });
   showSaved = signal(false);
-  
   fsConnected = this.fs.isConnected;
   fsError = signal('');
+  migrationStatus = signal('');
 
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -269,5 +290,77 @@ export class SettingsComponent implements OnInit, OnDestroy {
     } catch (e: any) {
       this.fsError.set(e.message || 'Error al conectar carpeta.');
     }
+  }
+
+  async migrateData() {
+    this.migrationStatus.set('Procesando...');
+    const routines = await this.routineUseCases.getAllRoutines();
+    const logs = await this.workoutUseCases.getAllWorkouts();
+
+    const standardizeName = (name: string) => {
+      if (!name) return name;
+      return name.trim().toLowerCase().replace(/\b[a-záéíóúüñ]/g, char => char.toUpperCase());
+    };
+    
+    const translateTags = (tags: any[]) => {
+      const map: Record<string, string> = { 'Pecho': 'Chest', 'Espalda': 'Back', 'Piernas': 'Legs', 'Brazos': 'Arms', 'Core': 'Core', 'Cardio': 'Cardio', 'Calentamiento': 'Warmup' };
+      return tags ? tags.map(t => map[t] || t) : tags;
+    };
+    
+    const nameToId = new Map<string, string>();
+
+    // Pass 1: Gather existing IDs or assign new ones
+    for (const r of routines) {
+      for (const e of (r.exercises || [])) {
+        const stdName = standardizeName(e.name);
+        if (!nameToId.has(stdName)) {
+           nameToId.set(stdName, e.exerciseId || generateId());
+        }
+      }
+    }
+    for (const l of logs) {
+      for (const e of (l.exercises || [])) {
+        const stdName = standardizeName(e.name);
+        if (!nameToId.has(stdName)) {
+           nameToId.set(stdName, e.exerciseId || generateId());
+        }
+      }
+    }
+
+    // Pass 2: Apply to routines
+    for (const r of routines) {
+      let changed = false;
+      for (const e of (r.exercises || [])) {
+         const stdName = standardizeName(e.name);
+         if (e.name !== stdName) { e.name = stdName; changed = true; }
+         const newTags = translateTags(e.tags || []);
+         if (JSON.stringify(newTags) !== JSON.stringify(e.tags)) { e.tags = newTags; changed = true; }
+         const targetId = nameToId.get(stdName);
+         if (e.exerciseId !== targetId) { e.exerciseId = targetId; changed = true; }
+      }
+      if (changed) await this.routineUseCases.updateRoutine(r);
+    }
+    
+    // Pass 3: Apply to logs
+    for (const l of logs) {
+      let changed = false;
+      for (const e of (l.exercises || [])) {
+         const stdName = standardizeName(e.name);
+         if (e.name !== stdName) { e.name = stdName; changed = true; }
+         const newTags = translateTags(e.tags || []);
+         if (JSON.stringify(newTags) !== JSON.stringify(e.tags)) { e.tags = newTags; changed = true; }
+         const targetId = nameToId.get(stdName);
+         if (e.exerciseId !== targetId) { e.exerciseId = targetId; changed = true; }
+      }
+      if (changed) await this.workoutUseCases.updateWorkoutSession(l);
+    }
+
+    // Sync if folder is connected
+    if (this.fsConnected()) {
+      await this.syncUseCases.exportAllData();
+    }
+
+    this.migrationStatus.set('¡Completado!');
+    setTimeout(() => this.migrationStatus.set(''), 3000);
   }
 }

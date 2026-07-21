@@ -51,6 +51,7 @@ describe('ProgressionService', () => {
     it('should suggest an increase in weight if all reps were met', async () => {
       const mockSet: StrengthSet = { setNumber: 1, reps: 12, weight: 60 };
       const previousLog: ExerciseLog = {
+        exerciseId: 'Bench Press',
         name: 'Bench Press',
         type: 'strength',
         sets: [mockSet, { setNumber: 2, reps: 12, weight: 60 }, { setNumber: 3, reps: 12, weight: 60 }]
@@ -76,6 +77,7 @@ describe('ProgressionService', () => {
 
     it('should suggest same weight if reps dropped (failed to complete volume)', async () => {
       const previousLog: ExerciseLog = {
+        exerciseId: 'Bench Press',
         name: 'Bench Press',
         type: 'strength',
         sets: [

@@ -301,6 +301,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   async selectTemplate(tmpl: Routine): Promise<void> {
     const exercises: ExerciseLog[] = tmpl.exercises.map((ej) => ({
       id: generateId(),
+      exerciseId: ej.exerciseId,
       name: ej.name,
       type: ej.type,
       tags: ej.tags ?? [],
@@ -332,16 +333,15 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   }
 
   private async loadSuggestions(log: WorkoutSession): Promise<void> {
-    const monthId = this.dateISO().substring(0, 7); // Not strictly needed but API wants it
     const promesas = log.exercises.map((ej) =>
-      this.getSuggestionForExercise(ej, monthId)
+      this.getSuggestionForExercise(ej)
     );
     this.suggestions.set(await Promise.all(promesas));
   }
 
-  private getSuggestionForExercise(ej: ExerciseLog, monthId: string): Promise<Suggestion | null> {
+  private getSuggestionForExercise(ej: ExerciseLog): Promise<Suggestion | null> {
     return ej.type === 'strength'
-        ? this.progression.getSuggestion(ej.name, monthId)
+        ? this.progression.getSuggestion(ej.exerciseId, ej.name)
         : Promise.resolve(null);
   }
 

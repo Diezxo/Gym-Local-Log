@@ -28,8 +28,8 @@ export class ProgressionService {
    * - If < 8 reps → suggests same weight and same reps (consolidate)
    */
   async getSuggestion(
-    exerciseName: string,
-    monthId: string // No longer strictly needed for fetching but keeping for API compatibility
+    exerciseId: string | undefined,
+    exerciseName: string
   ): Promise<Suggestion | null> {
     const allWorkouts = await this.workoutUseCases.getAllWorkouts();
     // Sort descending
@@ -37,7 +37,10 @@ export class ProgressionService {
 
     let lastLog: ExerciseLog | undefined;
     for (const w of allWorkouts) {
-      const ex = w.exercises.find(e => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength');
+      const ex = w.exercises.find(e => 
+        e.type === 'strength' && 
+        ((exerciseId && e.exerciseId === exerciseId) || e.name.toLowerCase() === exerciseName.toLowerCase())
+      );
       if (ex) {
         lastLog = ex;
         break;
@@ -88,7 +91,7 @@ export class ProgressionService {
     }
   }
 
-  async getExerciseHistory(exerciseName: string, limit: number = 5): Promise<ExerciseHistoryRecord[]> {
+  async getExerciseHistory(exerciseId: string | undefined, exerciseName: string, limit: number = 5): Promise<ExerciseHistoryRecord[]> {
     const allWorkouts = await this.workoutUseCases.getAllWorkouts();
     const logsDescending = [...allWorkouts].sort((a, b) => b.date.localeCompare(a.date));
 
@@ -96,7 +99,8 @@ export class ProgressionService {
 
     for (const log of logsDescending) {
       const exercise = log.exercises.find(
-        (e) => e.name.toLowerCase() === exerciseName.toLowerCase() && e.type === 'strength'
+        (e) => e.type === 'strength' && 
+               ((exerciseId && e.exerciseId === exerciseId) || e.name.toLowerCase() === exerciseName.toLowerCase())
       );
       
       if (exercise && exercise.sets && exercise.sets.length > 0) {

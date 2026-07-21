@@ -8,8 +8,15 @@ export class RoutineUseCases {
   private storage = inject<StoragePort>(STORAGE_PORT);
 
   async createRoutine(routineData: Omit<Routine, 'id' | 'schemaVersion' | 'createdAt' | 'updatedAt' | 'deviceId' | 'version' | 'syncStatus'>): Promise<Routine> {
+    // Ensure all exercises have an ID
+    const exercisesWithIds = (routineData.exercises || []).map(ex => ({
+      ...ex,
+      exerciseId: ex.exerciseId || generateId()
+    }));
+
     const routine: Routine = {
       ...routineData,
+      exercises: exercisesWithIds,
       id: generateId(),
       schemaVersion: 3,
       createdAt: Date.now(),
@@ -23,6 +30,11 @@ export class RoutineUseCases {
   }
 
   async updateRoutine(routine: Routine): Promise<void> {
+    // Ensure all exercises have an ID
+    routine.exercises = (routine.exercises || []).map(ex => ({
+      ...ex,
+      exerciseId: ex.exerciseId || generateId()
+    }));
     await this.storage.saveRoutine(routine);
   }
 

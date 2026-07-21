@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RoutineUseCases } from '../../use-cases/routine.use-cases';
@@ -18,7 +18,7 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
         <p class="text-[var(--color-text-muted)] text-sm font-medium mt-1">{{ templates().length }} plantilla{{ templates().length !== 1 ? 's' : '' }} guardada{{ templates().length !== 1 ? 's' : '' }}</p>
       </div>
 
-      @if (templates().length === 0) {
+      @if (activeTemplates().length === 0 && archivedTemplates().length === 0) {
         <!-- Empty state -->
         <div class="flex flex-col items-center justify-center mt-12 text-center px-4 animate-fade-in">
           <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--color-bg-input)] to-[var(--color-bg-primary)] border border-white/5 shadow-inner flex items-center justify-center mb-6 relative overflow-hidden">
@@ -37,9 +37,9 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
           </button>
         </div>
       } @else {
-        <!-- Template cards -->
+        <!-- Active Template cards -->
         <div class="flex flex-col gap-4">
-          @for (template of templates(); track template.id) {
+          @for (template of activeTemplates(); track template.id) {
               <div
                 class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden transition-all shadow-sm hover:shadow-md group cursor-pointer"
                 role="button"
@@ -61,18 +61,28 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
                     <p class="text-[var(--color-text-muted)] text-xs font-medium line-clamp-1">{{ getExercisesList(template) }}</p>
                   </div>
 
-                  <!-- Badge + Delete -->
+                  <!-- Badge + Delete/Archive -->
                   <div class="flex flex-col items-end gap-3 shrink-0">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
                       {{ template.exercises.length }} ej.
                     </span>
-                    <button
-                      (click)="confirmDelete(template); $event.stopPropagation()"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      aria-label="Eliminar rutina"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        (click)="toggleArchive(template); $event.stopPropagation()"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-white hover:bg-white/10 transition-colors"
+                        aria-label="Archivar rutina"
+                        title="Archivar rutina"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="4" rx="2"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg>
+                      </button>
+                      <button
+                        (click)="confirmDelete(template); $event.stopPropagation()"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        aria-label="Eliminar rutina"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -87,6 +97,41 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
               </div>
           }
         </div>
+
+        <!-- Archived Templates Section -->
+        @if (archivedTemplates().length > 0) {
+          <div class="mt-8">
+            <h2 class="text-xl font-bold tracking-tight text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="4" rx="2"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg>
+              Archivadas
+            </h2>
+            <div class="flex flex-col gap-4 opacity-75 grayscale-[20%]">
+              @for (template of archivedTemplates(); track template.id) {
+                <div class="bg-[var(--color-bg-input)] rounded-2xl border border-white/5 overflow-hidden flex items-center justify-between p-4">
+                  <div>
+                    <h3 class="text-white font-bold mb-1">{{ template.name }}</h3>
+                    <p class="text-[var(--color-text-muted)] text-xs">{{ template.exercises.length }} ejercicios</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      (click)="toggleArchive(template); $event.stopPropagation()"
+                      class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    >
+                      Desarchivar
+                    </button>
+                    <button
+                      (click)="confirmDelete(template); $event.stopPropagation()"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      aria-label="Eliminar rutina permanentemente"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
       }
 
       <!-- Delete confirmation modal -->
@@ -138,6 +183,10 @@ export class TemplateListComponent implements OnInit {
 
   templates = signal<Routine[]>([]);
   templateToDelete = signal<Routine | null>(null);
+  
+  // Computeds
+  activeTemplates = computed(() => this.templates().filter(t => !t.archived));
+  archivedTemplates = computed(() => this.templates().filter(t => t.archived));
 
   async ngOnInit() {
     await this.loadData();
@@ -170,32 +219,24 @@ export class TemplateListComponent implements OnInit {
     this.templateToDelete.set(template);
   }
 
-  onDragEnded(event: any, template: Routine) {
-    // Removed: swipe-to-delete was blocking vertical scroll
-  }
-
   async deleteConfirmed() {
-    const t = this.templateToDelete();
-    if (t) {
-      await this.routineUseCases.deleteRoutine(t.id);
-      this.templateToDelete.set(null);
+    const tmpl = this.templateToDelete();
+    if (tmpl) {
+      await this.routineUseCases.deleteRoutine(tmpl.id);
       await this.loadData();
     }
+    this.templateToDelete.set(null);
+  }
+
+  async toggleArchive(template: Routine) {
+    template.archived = !template.archived;
+    await this.routineUseCases.updateRoutine(template);
+    await this.loadData();
   }
 
   async loadDefaultTemplates() {
-    for (const t of DEFAULT_TEMPLATES) {
-      await this.routineUseCases.updateRoutine({
-        id: t.id + '-' + Date.now(),
-        schemaVersion: 3,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        deviceId: 'local',
-        version: 1,
-        syncStatus: 'local_only',
-        name: t.name,
-        exercises: t.exercises
-      });
+    for (const tmpl of DEFAULT_TEMPLATES) {
+      await this.routineUseCases.createRoutine(tmpl);
     }
     await this.loadData();
   }

@@ -280,6 +280,7 @@ export class TemplateEditorComponent implements OnInit {
       name: name,
       // Strip internal _uid before saving
       exercises: exercisesList.map(({ _uid: _discard, ...e }) => ({
+        exerciseId: e.exerciseId,
         name: e.name.trim(),
         type: e.type,
         tags: e.tags ?? [],
