@@ -1,0 +1,122 @@
+{
+  "exportVersion": 1,
+  "routines": [
+    {
+      "id": "rutina-espalda-biceps",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Espalda y Biceps",
+      "exercises": [
+        { "exerciseId": "ex-dominadas", "name": "Dominadas", "type": "strength", "tags": ["Back", "Biceps"] },
+        { "exerciseId": "ex-jalon", "name": "Jalon Al pecho", "type": "strength", "tags": ["Back"] },
+        { "exerciseId": "ex-remo", "name": "Remo en maquina", "type": "strength", "tags": ["Back"] },
+        { "exerciseId": "ex-curl-barra", "name": "Curl de bicep en barra", "type": "strength", "tags": ["Biceps"] },
+        { "exerciseId": "ex-curl-martillo", "name": "Curl martillo", "type": "strength", "tags": ["Biceps"] },
+        { "exerciseId": "ex-abs-maq", "name": "Abdominales en maquina", "type": "strength", "tags": ["Core"] },
+        { "exerciseId": "ex-face-pulls", "name": "Face pulls", "type": "strength", "tags": ["Shoulders", "Back"] }
+      ]
+    },
+    {
+      "id": "rutina-intervalos",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Intervalos",
+      "exercises": [
+        { "exerciseId": "ex-carrera", "name": "Carrera a Intervalo", "type": "cardio", "tags": ["Cardio"] },
+        { "exerciseId": "ex-aquiles", "name": "Elevaciones de punta (Aquiles)", "type": "strength", "tags": ["Legs", "Calves"] },
+        { "exerciseId": "ex-iso-gemelo", "name": "Isometricos de Gemelo", "type": "strength", "tags": ["Legs", "Calves"] }
+      ]
+    },
+    {
+      "id": "rutina-pecho-hombro-triceps",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Pecho, Hombro, Triceps",
+      "exercises": [
+        { "exerciseId": "ex-press-pecho", "name": "Press Pecho", "type": "strength", "tags": ["Chest"] },
+        { "exerciseId": "ex-press-incl", "name": "Press Inclinado", "type": "strength", "tags": ["Chest"] },
+        { "exerciseId": "ex-elev-lat", "name": "Elevaciones Laterales", "type": "strength", "tags": ["Shoulders"] },
+        { "exerciseId": "ex-flies", "name": "Flies", "type": "strength", "tags": ["Chest"] },
+        { "exerciseId": "ex-ext-triceps", "name": "Extension de triceps", "type": "strength", "tags": ["Triceps"] },
+        { "exerciseId": "ex-abs-maq", "name": "Abdominales en maquina", "type": "strength", "tags": ["Core"] }
+      ]
+    },
+    {
+      "id": "rutina-trote-suave",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Trote suave",
+      "exercises": [
+        { "exerciseId": "ex-trote", "name": "Trote suave", "type": "cardio", "tags": ["Cardio"] }
+      ]
+    },
+    {
+      "id": "rutina-pierna",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Pierna",
+      "exercises": [
+        { "exerciseId": "ex-press-pierna", "name": "Press Pierna", "type": "strength", "tags": ["Legs"] },
+        { "exerciseId": "ex-hip-thrust", "name": "Hip Thrust", "type": "strength", "tags": ["Legs", "Glutes"] },
+        { "exerciseId": "ex-curl-femoral", "name": "Curl Femoral", "type": "strength", "tags": ["Legs", "Hamstrings"] },
+        { "exerciseId": "ex-ext-cuad", "name": "Extension de Cuadricep", "type": "strength", "tags": ["Legs", "Quads"] },
+        { "exerciseId": "ex-adductores", "name": "Adductores", "type": "strength", "tags": ["Legs"] },
+        { "exerciseId": "ex-abductores", "name": "Abductores", "type": "strength", "tags": ["Legs"] },
+        { "exerciseId": "ex-elev-talon", "name": "Elevacion de talon", "type": "strength", "tags": ["Legs", "Calves"] }
+      ]
+    },
+    {
+      "id": "rutina-sabado-fondo",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Sabado: Fondo",
+      "exercises": [
+        { "exerciseId": "ex-correr", "name": "Correr al aire libre", "type": "cardio", "tags": ["Cardio"] }
+      ]
+    },
+    {
+      "id": "rutina-full-body",
+      "schemaVersion": 4,
+      "createdAt": 1784576370323,
+      "updatedAt": 1784576370323,
+      "deviceId": "local",
+      "version": 1,
+      "syncStatus": "local_only",
+      "name": "Full Body",
+      "exercises": [
+        { "exerciseId": "ex-press-incl-manc", "name": "Press Inclinado Mancuernas", "type": "strength", "tags": ["Chest"] },
+        { "exerciseId": "ex-flies", "name": "Flyes", "type": "strength", "tags": ["Chest"] },
+        { "exerciseId": "ex-jalon", "name": "Jalon Al Pecho", "type": "strength", "tags": ["Back"] },
+        { "exerciseId": "ex-remo", "name": "Remo en maquina", "type": "strength", "tags": ["Back"] },
+        { "exerciseId": "ex-ext-triceps", "name": "Extension de triceps", "type": "strength", "tags": ["Triceps"] },
+        { "exerciseId": "ex-curl-manc", "name": "Curl con Mancuernas", "type": "strength", "tags": ["Biceps"] },
+        { "exerciseId": "ex-abs-maq", "name": "Abdominales en maquina", "type": "strength", "tags": ["Core"] }
+      ]
+    }
+  ],
+  "archives": []
+}
