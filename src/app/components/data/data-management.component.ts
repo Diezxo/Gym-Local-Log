@@ -19,7 +19,7 @@ interface MonthStats {
   standalone: true,
   imports: [CommonModule, A11yModule, ScrollLockDirective],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-xl mx-auto w-full">
 
       <!-- Header -->
       <div class="flex items-center justify-between">

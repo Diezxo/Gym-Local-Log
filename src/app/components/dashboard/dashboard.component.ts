@@ -41,7 +41,7 @@ interface PRRecord {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 sm:gap-8 max-w-xl mx-auto w-full">
 
       <!-- ── Header ── -->
       <div class="flex items-center justify-between">

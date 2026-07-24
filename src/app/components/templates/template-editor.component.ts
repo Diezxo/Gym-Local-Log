@@ -20,7 +20,7 @@ interface ExerciseWithId extends BaseExercise {
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-xl mx-auto w-full">
       <!-- Header -->
       <div>
         <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">

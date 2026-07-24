@@ -15,7 +15,7 @@ import { generateId } from '../../utils/generate-id';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-2xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-xl mx-auto w-full">
       <!-- Header -->
       <div>
         <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ajustes</h1>

@@ -40,7 +40,7 @@ import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
     ScrollLockDirective,
   ],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] pb-36 md:pb-12 px-4 sm:px-6 max-w-3xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] pb-36 md:pb-12 px-4 sm:px-6 max-w-xl mx-auto w-full">
 
       <!-- Header -->
       <header class="pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
