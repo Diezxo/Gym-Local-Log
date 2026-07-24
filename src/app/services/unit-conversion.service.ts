@@ -1,21 +1,19 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
-import { UserSettings, WeightUnit, DistanceUnit } from '../models/interfaces';
+import { UserSettings } from '../models/interfaces';
 import { STORAGE_PORT, StoragePort } from '../ports/storage.port';
 
 @Injectable({ providedIn: 'root' })
 export class UnitConversionService {
-  // We keep a signal of the current user settings to reactively update conversions in the UI
-  // This will be fed by DbService when it loads or updates settings
+  // Signal of the current user settings — fed by initialize() on app startup
+  // and by SettingsComponent on every save.
   public currentSettings = signal<UserSettings | null>(null);
   public settingsLoaded = signal<boolean>(false);
-  
+
   private storage = inject<StoragePort>(STORAGE_PORT);
 
-  constructor() {
-    this.loadInitialSettings();
-  }
-
-  private async loadInitialSettings() {
+  // Called once by APP_INITIALIZER before any component renders.
+  // Returns a Promise so Angular can await it during bootstrap.
+  async initialize(): Promise<void> {
     const settings = await this.storage.getSettings();
     this.currentSettings.set(settings);
     this.settingsLoaded.set(true);
@@ -39,7 +37,7 @@ export class UnitConversionService {
     if (this.currentWeightUnit() === 'lb') {
       return this.round(kg * this.LBS_PER_KG);
     }
-    return this.round(kg); // Already kg
+    return this.round(kg);
   }
 
   // Convert User input (kg or lb) to base DB value (kg) for saving
@@ -60,7 +58,6 @@ export class UnitConversionService {
     if (unit === 'mi') {
       return this.round(meters / this.METERS_PER_MILE, 2);
     }
-    // Default to km
     return this.round(meters / this.METERS_PER_KM, 2);
   }
 
@@ -70,7 +67,6 @@ export class UnitConversionService {
     if (unit === 'mi') {
       return this.round(userDistance * this.METERS_PER_MILE, 0);
     }
-    // Default to km
     return this.round(userDistance * this.METERS_PER_KM, 0);
   }
 

@@ -361,16 +361,20 @@ export class ExerciseStrengthComponent implements OnInit {
   }
 
   // ─── Delete a completed series ───
+  // Fix #4: Build a new array instead of mutating the input object in-place.
+  // Angular OnPush + signals require reference changes to trigger re-renders.
   deleteSet(index: number): void {
     const log = this.exerciseLog();
     if (!log.sets || log.sets.length === 0) return;
-    log.sets.splice(index, 1);
-    // Renumber remaining sets
-    log.sets.forEach((s, i) => (s.setNumber = i + 1));
-    this.logUpdated.emit(log);
+    const newSets = log.sets
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({ ...s, setNumber: i + 1 }));
+    this.logUpdated.emit({ ...log, sets: newSets });
   }
 
   // ─── Complete a set ───
+  // Fix #4: Create a new ExerciseLog object (spread) instead of mutating the
+  // input reference. This ensures the parent signal updates correctly with OnPush.
   completeSet(): void {
     if (!this.isValidInput()) return;
 
@@ -379,17 +383,16 @@ export class ExerciseStrengthComponent implements OnInit {
     const reps = this.getTargetReps();
 
     const log = this.exerciseLog();
-    if (!log.sets) {
-      log.sets = [];
-    }
+    const currentSets = log.sets ?? [];
 
     const newSet: StrengthSet = {
-      setNumber: log.sets.length + 1,
+      setNumber: currentSets.length + 1,
       weight: baseWeight,
       reps,
     };
 
-    log.sets.push(newSet);
+    // Immutable update: spread existing sets + new set
+    const updatedLog = { ...log, sets: [...currentSets, newSet] };
 
     // Clear inputs
     this.weightInput = '';
@@ -403,7 +406,7 @@ export class ExerciseStrengthComponent implements OnInit {
 
     // Emit events
     this.setCompleted.emit(newSet);
-    this.logUpdated.emit(log);
+    this.logUpdated.emit(updatedLog);
 
     this.vibrarShort();
   }

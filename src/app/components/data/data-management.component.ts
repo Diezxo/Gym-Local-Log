@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { A11yModule } from '@angular/cdk/a11y';
 import { ExportService } from '../../services/export.service';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
@@ -17,7 +17,6 @@ interface MonthStats {
   selector: 'app-data-management',
   standalone: true,
   imports: [CommonModule, A11yModule],
-  providers: [DatePipe],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 

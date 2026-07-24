@@ -270,23 +270,27 @@ export class DashboardComponent implements OnInit {
   private readonly dayNamesFull = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
   async ngOnInit() {
+    // Fix #6: Load all sessions ONCE here and reuse throughout the component
+    // lifecycle. Previously, loadDashboardData() and getLastWorkout() each
+    // made independent calls to getAllWorkoutSessions(), causing up to 5 full
+    // IDB reads on the initial render.
     const allSessions = await this.workoutUseCases.getAllWorkouts();
     const monthsSet = new Set<string>();
     allSessions.forEach(s => monthsSet.add(s.date.substring(0, 7)));
     const months = Array.from(monthsSet);
-    
+
     const now = new Date();
     const currentMes = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
+
     if (!months.includes(currentMes)) {
       months.unshift(currentMes);
     }
     months.sort().reverse();
-    
+
     this.availableMonths.set(months);
     this.currentMonthId.set(currentMes);
-    
-    await this.loadDashboardData(now);
+
+    await this.loadDashboardData(now, allSessions);
   }
 
   canGoPrev(): boolean {
@@ -305,28 +309,36 @@ export class DashboardComponent implements OnInit {
     const months = this.availableMonths();
     const currentIndex = months.indexOf(this.currentMonthId());
     if (currentIndex === -1) return;
-    
+
     const nextIndex = currentIndex - direction;
     if (nextIndex >= 0 && nextIndex < months.length) {
       const nextMes = months[nextIndex];
       this.currentMonthId.set(nextMes);
-      
+
       const realNow = new Date();
       const currentRealMes = `${realNow.getFullYear()}-${String(realNow.getMonth() + 1).padStart(2, '0')}`;
-      
+
       let refDate: Date;
       if (nextMes === currentRealMes) {
         refDate = realNow;
       } else {
-        const [y, m] = nextMes.split('-');
-        refDate = new Date(parseInt(y, 10), parseInt(m, 10), 0);
+        // Fix #9: Parse year and month correctly (month is 1-indexed in the
+        // string but 0-indexed in the Date constructor).
+        // The previous code used new Date(y, m, 0) which returned the last day
+        // of the month BEFORE nextMes (off-by-one bug that broke December).
+        const [y, m] = nextMes.split('-').map(Number);
+        // Use last day of the target month: new Date(y, m, 0) with m as 1-indexed
+        // equals new Date(y, m-1, lastDay). We use the correct form here:
+        const lastDay = new Date(y, m, 0).getDate();
+        refDate = new Date(y, m - 1, lastDay);
       }
-      
-      await this.loadDashboardData(refDate);
+
+      const allSessions = await this.workoutUseCases.getAllWorkouts();
+      await this.loadDashboardData(refDate, allSessions);
     }
   }
 
-  async loadDashboardData(now: Date) {
+  async loadDashboardData(now: Date, allSessions?: WorkoutSession[]) {
     const realNow = new Date();
     const isCurrentMonth = now.getMonth() === realNow.getMonth() && now.getFullYear() === realNow.getFullYear();
     
@@ -339,50 +351,43 @@ export class DashboardComponent implements OnInit {
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
     this.daysLeftInMonth.set(daysLeft);
 
-    const [allSessions, lastLog] = await Promise.all([
-      this.workoutUseCases.getAllWorkouts(),
-      this.workoutUseCases.getLastWorkout(),
-    ]);
+    const sessions = allSessions ?? await this.workoutUseCases.getAllWorkouts();
 
+    const lastLog = sessions.length > 0 ? sessions.sort((a, b) => b.date.localeCompare(a.date))[0] : null;
     this.lastLog.set(lastLog);
 
     const allTrainingDays = new Set<string>();
-    allSessions.forEach(s => allTrainingDays.add(s.date));
+    sessions.forEach(s => allTrainingDays.add(s.date));
     const sortedDays = Array.from(allTrainingDays).sort();
 
-    // ── All logs (chronological) for the cross-month progression chart ──
-    const allLogsList = [...allSessions].sort((a, b) => a.date.localeCompare(b.date));
+    const allLogsList = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
     this.allLogs.set(allLogsList);
 
-    // ── Streak ──
     this.streak.set(this.calcStreak(sortedDays, now));
 
-    // ── Heatmap 30 días ──
     this.buildHeatmap(allTrainingDays, now);
 
-    // ── Semana actual ──
     this.buildWeek(allTrainingDays, now);
 
-    // ── Stats del mes ──
     const monthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const logsThisMonth = allSessions.filter(s => s.date.startsWith(monthId));
+    const logsThisMonth = sessions.filter(s => s.date.startsWith(monthId));
     
     this.monthSessions.set(logsThisMonth.length);
     this.monthLogs.set(logsThisMonth);
 
-    // ── Volumen por tag (mes actual) ──
     this.calcTagVolumens(logsThisMonth);
 
-    // ── Distancia cardio esta semana (últimos 7 días, todos los meses) ──
-    this.weeklyCardioDistance.set(this.calcWeeklyCardioDistance(allSessions, now));
+    // ── Distancia cardio esta semana (todos los meses) ──
+    this.weeklyCardioDistance.set(this.calcWeeklyCardioDistance(sessions, now));
 
     // ── Último PR (máximo histórico cross-month) ──
-    this.lastPR.set(this.calcLastPR(allSessions));
+    this.lastPR.set(this.calcLastPR(sessions));
   }
 
   // ─── Weekly Cardio Distance ───
 
   private calcWeeklyCardioDistance(sessions: WorkoutSession[], now: Date): number {
+
     const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
     const weekAgoStr = this.toLocalDateStr(weekAgo);
     const todayStr = this.toLocalDateStr(now);

@@ -51,10 +51,16 @@ export class ProgressionService {
       return null;
     }
 
-    // Use the last completed series as reference
-    const lastSet = lastLog.sets[lastLog.sets.length - 1];
-    const previousBaseWeight = lastSet.weight; // kg
-    const previousReps = lastSet.reps;
+    // Fix #5: Use the BEST set (highest weight, tie-broken by reps) as reference,
+    // not the last chronological set. This correctly handles drop sets and
+    // pyramids where the last set has a lower weight than the peak effort.
+    const bestSet = [...lastLog.sets].sort((a, b) => {
+      if (b.weight !== a.weight) return b.weight - a.weight;
+      return b.reps - a.reps;
+    })[0];
+
+    const previousBaseWeight = bestSet.weight; // kg
+    const previousReps = bestSet.reps;
     
     // We convert previous weight to user unit for the reference text and logic
     const prevUserWeight = this.unitSvc.kgToUser(previousBaseWeight);

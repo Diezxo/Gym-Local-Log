@@ -110,195 +110,171 @@ export class ExportService {
 
   /**
    * Import JSON (Strict validation)
+   * Fix #8: Use file.text() instead of FileReader + Promise wrapper.
+   * The modern API is properly awaitable and eliminates the async-in-callback
+   * pattern that could produce unhandled floating promises.
    */
   async importJSON(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          let data: any;
-          try {
-            data = JSON.parse(reader.result as string);
-          } catch {
-            reject(new Error('Invalid JSON file'));
-            return;
-          }
+    let data: any;
+    try {
+      data = JSON.parse(await file.text());
+    } catch {
+      throw new Error('Invalid JSON file');
+    }
 
-          if (Array.isArray(data)) {
-            const allErrors: string[] = [];
-            for (let i = 0; i < data.length; i++) {
-              const errs = this.validateMonthlyArchive(data[i], `array[${i}]`);
-              allErrors.push(...errs);
-            }
-            if (allErrors.length > 0) {
-              reject(new Error(`Validation errors (${allErrors.length}):\n• ${allErrors.slice(0, 10).join('\n• ')}`));
-              return;
-            }
-            for (const monthData of data) {
-              for (const log of monthData.logs) {
-                // Generate id if missing for older formats
-                const session: WorkoutSession = {
-                  id: log.id || generateId(),
-                  schemaVersion: 3,
-                  createdAt: Date.now(),
-                  updatedAt: Date.now(),
-                  version: log.version || 1,
-                  syncStatus: log.syncStatus || 'local_only',
-                  deviceId: log.deviceId || 'local',
-                  date: log.date || log.fecha,
-                  routineId: log.routineId || log.templateId,
-                  notes: log.notes || log.notas || '',
-                  exercises: log.exercises || log.ejercicios || []
-                };
-                await this.workoutUseCases.updateWorkoutSession(session);
-              }
-            }
-            resolve('all');
-          } else {
-            const errs = this.validateMonthlyArchive(data, 'root');
-            if (errs.length > 0) {
-              reject(new Error(`Validation errors (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`));
-              return;
-            }
-            for (const log of data.logs) {
-              const session: WorkoutSession = {
-                id: log.id || generateId(),
-                schemaVersion: 3,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                version: log.version || 1,
-                syncStatus: log.syncStatus || 'local_only',
-                deviceId: log.deviceId || 'local',
-                date: log.date || log.fecha,
-                routineId: log.routineId || log.templateId,
-                notes: log.notes || log.notas || '',
-                exercises: log.exercises || log.ejercicios || []
-              };
-              await this.workoutUseCases.updateWorkoutSession(session);
-            }
-            resolve(data.monthId || data.mesId);
-          }
-        } catch (err) {
-          reject(err);
+    if (Array.isArray(data)) {
+      const allErrors: string[] = [];
+      for (let i = 0; i < data.length; i++) {
+        const errs = this.validateMonthlyArchive(data[i], `array[${i}]`);
+        allErrors.push(...errs);
+      }
+      if (allErrors.length > 0) {
+        throw new Error(`Validation errors (${allErrors.length}):\n• ${allErrors.slice(0, 10).join('\n• ')}`);
+      }
+      for (const monthData of data) {
+        for (const log of monthData.logs) {
+          const session: WorkoutSession = {
+            id: log.id || generateId(),
+            schemaVersion: 3,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            version: log.version || 1,
+            syncStatus: log.syncStatus || 'local_only',
+            deviceId: log.deviceId || 'local',
+            date: log.date || log.fecha,
+            routineId: log.routineId || log.templateId,
+            notes: log.notes || log.notas || '',
+            exercises: log.exercises || log.ejercicios || []
+          };
+          await this.workoutUseCases.updateWorkoutSession(session);
         }
-      };
-      reader.onerror = () => reject(new Error('Error reading file'));
-      reader.readAsText(file);
-    });
+      }
+      return 'all';
+    } else {
+      const errs = this.validateMonthlyArchive(data, 'root');
+      if (errs.length > 0) {
+        throw new Error(`Validation errors (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`);
+      }
+      for (const log of data.logs) {
+        const session: WorkoutSession = {
+          id: log.id || generateId(),
+          schemaVersion: 3,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: log.version || 1,
+          syncStatus: log.syncStatus || 'local_only',
+          deviceId: log.deviceId || 'local',
+          date: log.date || log.fecha,
+          routineId: log.routineId || log.templateId,
+          notes: log.notes || log.notas || '',
+          exercises: log.exercises || log.ejercicios || []
+        };
+        await this.workoutUseCases.updateWorkoutSession(session);
+      }
+      return data.monthId || data.mesId;
+    }
   }
+
 
   /**
    * Import CSV
+   * Fix #8: Use file.text() instead of FileReader + Promise wrapper.
    */
   async importCSV(file: File): Promise<ImportResult> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const text = reader.result as string;
-          const lines = this.splitCSVLines(text);
+    const text = await file.text();
+    const lines = this.splitCSVLines(text);
 
-          if (lines.length < 2) {
-            reject(new Error('CSV is empty or only has headers'));
-            return;
-          }
+    if (lines.length < 2) {
+      throw new Error('CSV is empty or only has headers');
+    }
 
-          const header = lines[0].toLowerCase();
-          // Backward compatibility: accept 'fecha' and 'rutina' or 'date' and 'routine'
-          if (!(header.includes('fecha') || header.includes('date')) || !(header.includes('rutina') || header.includes('routine'))) {
-            reject(new Error('Invalid CSV format: missing Date/Routine columns'));
-            return;
-          }
+    const header = lines[0].toLowerCase();
+    if (!(header.includes('fecha') || header.includes('date')) || !(header.includes('rutina') || header.includes('routine'))) {
+      throw new Error('Invalid CSV format: missing Date/Routine columns');
+    }
 
-          const templates = await this.routineUseCases.getAllRoutines();
-          const templateMap = new Map(templates.map(t => [t.name.trim().toLowerCase(), t.id]));
+    const templates = await this.routineUseCases.getAllRoutines();
+    const templateMap = new Map(templates.map(t => [t.name.trim().toLowerCase(), t.id]));
 
-          const errors: string[] = [];
-          const rejectedRows: string[] = [];
-          const logMap = new Map<string, WorkoutSession>();
+    const errors: string[] = [];
+    const rejectedRows: string[] = [];
+    const logMap = new Map<string, WorkoutSession>();
 
-          for (let i = 1; i < lines.length; i++) {
-            const row = this.parseCSVRow(lines[i]);
-            if (row.length < 4) continue;
+    for (let i = 1; i < lines.length; i++) {
+      const row = this.parseCSVRow(lines[i]);
+      if (row.length < 4) continue;
 
-            const [date, routine, exercise, type, col5 = '', col6 = '', col7 = ''] = row.map(s => s.trim());
+      const [date, routine, exercise, type, col5 = '', col6 = '', col7 = ''] = row.map(s => s.trim());
 
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-              errors.push(`Row ${i + 1}: invalid date "${date}"`);
-              continue;
-            }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        errors.push(`Row ${i + 1}: invalid date "${date}"`);
+        continue;
+      }
 
-            const routineId = templateMap.get(routine.toLowerCase());
-            if (!routineId) {
-              rejectedRows.push(`Row ${i + 1}: Routine "${routine}" not found — ignored`);
-              continue;
-            }
+      const routineId = templateMap.get(routine.toLowerCase());
+      if (!routineId) {
+        rejectedRows.push(`Row ${i + 1}: Routine "${routine}" not found — ignored`);
+        continue;
+      }
 
-            const key = `${date}|${routineId}`;
-            if (!logMap.has(key)) {
-              logMap.set(key, { 
-                id: generateId(),
-                schemaVersion: 3,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                version: 1,
-                syncStatus: 'local_only',
-                deviceId: 'local',
-                date, 
-                routineId, 
-                exercises: [], 
-                notes: '' 
-              });
-            }
-            const log = logMap.get(key)!;
+      const key = `${date}|${routineId}`;
+      if (!logMap.has(key)) {
+        logMap.set(key, {
+          id: generateId(),
+          schemaVersion: 3,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: 1,
+          syncStatus: 'local_only',
+          deviceId: 'local',
+          date,
+          routineId,
+          exercises: [],
+          notes: ''
+        });
+      }
+      const log = logMap.get(key)!;
 
-            let ejLog = log.exercises.find(e => e.name === exercise);
-            if (!ejLog) {
-              const tipoNorm = (type.toLowerCase() === 'fuerza' || type.toLowerCase() === 'strength') ? 'strength' : 'cardio';
-              ejLog = {
-                name: exercise,
-                type: tipoNorm,
-                sets: tipoNorm === 'strength' ? [] : undefined,
-                cardio: tipoNorm === 'cardio' ? { distanceMeters: 0, timeMinutes: 0 } : undefined,
-              };
-              log.exercises.push(ejLog);
-            }
+      let ejLog = log.exercises.find(e => e.name === exercise);
+      if (!ejLog) {
+        const tipoNorm = (type.toLowerCase() === 'fuerza' || type.toLowerCase() === 'strength') ? 'strength' : 'cardio';
+        ejLog = {
+          name: exercise,
+          type: tipoNorm,
+          sets: tipoNorm === 'strength' ? [] : undefined,
+          cardio: tipoNorm === 'cardio' ? { distanceMeters: 0, timeMinutes: 0 } : undefined,
+        };
+        log.exercises.push(ejLog);
+      }
 
-            if (ejLog.type === 'strength') {
-              const setNum = parseInt(col5, 10);
-              const reps = parseInt(col6, 10);
-              const weight = parseFloat(col7);
-              if (isNaN(reps) || isNaN(weight) || reps < 0 || weight < 0) {
-                errors.push(`Row ${i + 1}: invalid reps or weight`);
-                continue;
-              }
-              ejLog.sets = ejLog.sets ?? [];
-              ejLog.sets.push({ setNumber: setNum || ejLog.sets.length + 1, reps, weight });
-            } else {
-              ejLog.cardio = {
-                distanceMeters: parseFloat(col5) || 0,
-                timeMinutes: parseFloat(col6) || 0,
-                technicalNotes: col7 || undefined,
-              };
-            }
-          }
-
-          for (const session of logMap.values()) {
-            await this.workoutUseCases.updateWorkoutSession(session);
-          }
-
-          resolve({
-            imported: logMap.size,
-            rejected: rejectedRows.length,
-            errors: [...errors, ...rejectedRows],
-          });
-        } catch (err) {
-          reject(err);
+      if (ejLog.type === 'strength') {
+        const setNum = parseInt(col5, 10);
+        const reps = parseInt(col6, 10);
+        const weight = parseFloat(col7);
+        if (isNaN(reps) || isNaN(weight) || reps < 0 || weight < 0) {
+          errors.push(`Row ${i + 1}: invalid reps or weight`);
+          continue;
         }
-      };
-      reader.onerror = () => reject(new Error('Error reading CSV'));
-      reader.readAsText(file);
-    });
+        ejLog.sets = ejLog.sets ?? [];
+        ejLog.sets.push({ setNumber: setNum || ejLog.sets.length + 1, reps, weight });
+      } else {
+        ejLog.cardio = {
+          distanceMeters: parseFloat(col5) || 0,
+          timeMinutes: parseFloat(col6) || 0,
+          technicalNotes: col7 || undefined,
+        };
+      }
+    }
+
+    for (const session of logMap.values()) {
+      await this.workoutUseCases.updateWorkoutSession(session);
+    }
+
+    return {
+      imported: logMap.size,
+      rejected: rejectedRows.length,
+      errors: [...errors, ...rejectedRows],
+    };
   }
 
   async getAvailableMonths(): Promise<string[]> {

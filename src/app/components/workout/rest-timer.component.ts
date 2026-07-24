@@ -131,9 +131,14 @@ export class RestTimerComponent implements OnInit, OnDestroy {
     if (this.isFinished()) {
       this.restart();
     }
-    
+
+    // Fix #10: Always stop any existing interval before starting a new one.
+    // Without this, calling start() while a timer is active creates a second
+    // interval, causing the timer to decrement at double speed.
+    this.stop();
+
     this.getAudioContext(); // Initialize lazily during a user gesture
-    
+
     this.isActive.set(true);
     this.isFinished.set(false);
     this.intervalId = setInterval(() => {

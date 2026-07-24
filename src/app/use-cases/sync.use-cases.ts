@@ -69,12 +69,16 @@ export class SyncUseCases {
 
       await Promise.all(importPromises);
 
+      // Fix #11: Process monthly files in parallel with Promise.allSettled so that
+      // a corrupt/missing file doesn’t abort the entire import, and errors are
+      // reported per-file rather than swallowing all progress.
       const monthlyFiles = await this.fs.listMonthlyFiles();
-      for (const filename of monthlyFiles) {
-        const archive = await this.fs.readJsonFile<any>(filename);
-        if (archive && (archive.monthId || archive.mesId) && Array.isArray(archive.logs)) {
-          // Normalize and import
-          for (const rawLog of archive.logs) {
+      const monthlyResults = await Promise.allSettled(
+        monthlyFiles.map(async (filename) => {
+          const archive = await this.fs.readJsonFile<any>(filename);
+          if (!archive || !(archive.monthId || archive.mesId) || !Array.isArray(archive.logs)) return;
+
+          const savePromises = archive.logs.map(async (rawLog: any) => {
             const session: WorkoutSession = {
               id: rawLog.id || generateId(),
               schemaVersion: rawLog.schemaVersion || 3,
@@ -97,15 +101,23 @@ export class SyncUseCases {
                   weight: s.weight || s.peso || 0,
                 })),
                 cardio: (e.cardio) ? {
-                   distanceMeters: e.cardio.distanceMeters || ((e.cardio.distanciaKm || 0) * 1000),
-                   timeMinutes: e.cardio.timeMinutes || e.cardio.tiempoMinutos || 0,
-                   technicalNotes: e.cardio.technicalNotes || e.cardio.notasTecnica,
+                  distanceMeters: e.cardio.distanceMeters || ((e.cardio.distanciaKm || 0) * 1000),
+                  timeMinutes: e.cardio.timeMinutes || e.cardio.tiempoMinutos || 0,
+                  technicalNotes: e.cardio.technicalNotes || e.cardio.notasTecnica,
                 } : undefined
               }))
             };
             await this.storage.saveWorkoutSession(session);
-          }
-        }
+          });
+
+          await Promise.all(savePromises);
+        })
+      );
+
+      const failed = monthlyResults.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.warn(`[SyncUseCases] ${failed.length} monthly file(s) failed to import:`,
+          failed.map(r => (r as PromiseRejectedResult).reason));
       }
     } catch (e) {
       console.error('Error importing from FS:', e);

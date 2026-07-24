@@ -267,11 +267,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const newSettings = { ...this.settings(), [key]: safeValue };
     this.settings.set(newSettings);
     await this.storage.saveSettings(newSettings);
-    
-    // Explicitly notify UnitConversionService about the update
-    if (key === 'weightUnit' || key === 'distanceUnit' || key === 'theme' || key === 'hapticFeedback') {
-      this.unitSvc.currentSettings.set(newSettings);
-    }
+
+    // Fix #12: Always notify UnitConversionService — not just for some keys.
+    // This ensures weightIncrement and restTime changes are immediately
+    // reflected in ProgressionService and other reactive consumers.
+    this.unitSvc.currentSettings.set(newSettings);
 
     // Show confirmation
     this.showSaved.set(true);

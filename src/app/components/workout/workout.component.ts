@@ -246,6 +246,8 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   sessionTimerLabel = signal('0:00');
   private timerInterval: any;
   private toastTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Fix #3: debounce handle for auto-save to prevent concurrent IDB writes
+  private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
@@ -277,6 +279,9 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     this.stopTimer();
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
+    }
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
     }
   }
 
@@ -369,10 +374,25 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     this.autoSave();
   }
 
-  onLogUpdated(_ejLog: ExerciseLog): void {
+  // Fix #4 (parent side): Replace the updated exercise inside the activeLog
+  // signal with the new immutable object emitted by ExerciseStrengthComponent.
+  // This makes the signal reference change so OnPush detects it and re-renders
+  // the progress bar correctly.
+  onLogUpdated(updatedEj: ExerciseLog): void {
+    const log = this.activeLog();
+    if (!log) return;
+    const updatedExercises = log.exercises.map(ej =>
+      ej.id === updatedEj.id ? updatedEj : ej
+    );
+    this.activeLog.set({ ...log, exercises: updatedExercises });
     this.autoSave();
   }
 
+  /**
+   * Fired when the rest timer reaches zero.
+   * Audio/haptic feedback is handled inside RestTimerComponent itself.
+   * No additional action is required at this level.
+   */
   onTimerFinished(): void {}
 
   // ─── Progress ───
@@ -395,15 +415,21 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Auto-save ───
-  private async autoSave(): Promise<void> {
-    const log = this.activeLog();
-    if (!log) return;
-    try {
-      await this.workoutUseCases.updateWorkoutSession(log);
-    } catch (e) {
-      console.error('Auto-save failed:', e);
-    }
+  // ─── Auto-save (debounced) ───
+  // Fix #3: Debounce prevents multiple concurrent IDB writes when the user
+  // completes sets in rapid succession. The 500ms window collapses all
+  // intermediate saves into a single write, keeping the version counter correct.
+  private autoSave(): void {
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = setTimeout(async () => {
+      const log = this.activeLog();
+      if (!log) return;
+      try {
+        await this.workoutUseCases.updateWorkoutSession(log);
+      } catch (e) {
+        console.error('Auto-save failed:', e);
+      }
+    }, 500);
   }
 
   // ─── Finalize ───

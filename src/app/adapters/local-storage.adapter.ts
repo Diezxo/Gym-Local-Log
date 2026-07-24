@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { StoragePort } from '../ports/storage.port';
 import { Routine, WorkoutSession, UserSettings, DEFAULT_SETTINGS } from '../models/interfaces';
@@ -7,8 +7,8 @@ import { FileSystemService } from '../services/file-system.service';
 import { DEFAULT_TEMPLATES } from '../models/default-templates';
 import { generateId } from '../utils/generate-id';
 
-// ─── IndexedDB Schema V3 ───
-interface GymDBSchemaV3 extends DBSchema {
+// ─── IndexedDB Schema V4 ───
+interface GymDBSchemaV4 extends DBSchema {
   routines: {
     key: string;
     value: Routine;
@@ -36,14 +36,24 @@ const DB_VERSION = 4;
   providedIn: 'root'
 })
 export class LocalStorageAdapter implements StoragePort {
-  private dbPromise: Promise<IDBPDatabase<any>>;
-  private resolvedDb: IDBPDatabase<any> | null = null;
+  // Fix #2: Expose a db error signal so the UI can react to fatal IDB failures.
+  readonly dbError = signal<string | null>(null);
+
+  private dbPromise: Promise<IDBPDatabase<GymDBSchemaV4>>;  // Fix #7: use typed schema
+  private resolvedDb: IDBPDatabase<GymDBSchemaV4> | null = null;
   private fs = inject(FileSystemService);
 
   constructor() {
-    this.dbPromise = openDB<any>(DB_NAME, DB_VERSION, {
-      async upgrade(db, oldVersion, newVersion, transaction) {
-        
+    // Fix #2: Wrap openDB with a .catch() that surfaces the error instead of
+    // letting the rejected promise propagate silently to every method.
+    this.dbPromise = openDB<GymDBSchemaV4>(DB_NAME, DB_VERSION, {
+      async upgrade(rawDb, oldVersion, _newVersion, transaction) {
+        // Cast to 'any' during migrations only: we need to access old store names
+        // ('templates', 'monthly-archives') that don't exist in GymDBSchemaV4.
+        // The typed schema is enforced everywhere else in the adapter.
+        const db = rawDb as IDBPDatabase<any>;
+        const tx = transaction as any;
+
         // 1. Create new object stores if they don't exist
         if (!db.objectStoreNames.contains('routines')) {
           db.createObjectStore('routines', { keyPath: 'id' });
@@ -62,11 +72,11 @@ export class LocalStorageAdapter implements StoragePort {
 
         // 2. Data Migration from older versions to V4
         if (oldVersion > 0 && oldVersion < 4) {
-          
+
           // Migrate templates -> routines
           if (db.objectStoreNames.contains('templates')) {
-            const oldTemplates = await transaction.objectStore('templates').getAll();
-            const routineStore = transaction.objectStore('routines');
+            const oldTemplates = await tx.objectStore('templates').getAll();
+            const routineStore = tx.objectStore('routines');
             for (const t of oldTemplates) {
               if (!t.schemaVersion || t.schemaVersion < 3) {
                 await routineStore.put({
@@ -79,7 +89,7 @@ export class LocalStorageAdapter implements StoragePort {
                   syncStatus: 'local_only',
                   name: t.name,
                   exercises: t.exercises
-                });
+                } as Routine);
               }
             }
             db.deleteObjectStore('templates');
@@ -87,13 +97,13 @@ export class LocalStorageAdapter implements StoragePort {
 
           // Migrate monthly-archives -> workout_sessions
           if (db.objectStoreNames.contains('monthly-archives')) {
-            const archives = await transaction.objectStore('monthly-archives').getAll();
-            const sessionStore = transaction.objectStore('workout_sessions');
+            const archives = await tx.objectStore('monthly-archives').getAll();
+            const sessionStore = tx.objectStore('workout_sessions');
             for (const archive of archives) {
               if (archive.logs) {
                 for (const log of archive.logs) {
                   await sessionStore.put({
-                    id: generateId(), // Allowed since modern browsers support it
+                    id: generateId(),
                     schemaVersion: 4,
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
@@ -104,7 +114,7 @@ export class LocalStorageAdapter implements StoragePort {
                     routineId: log.templateId,
                     notes: log.notes,
                     exercises: log.exercises
-                  });
+                  } as WorkoutSession);
                 }
               }
             }
@@ -113,7 +123,7 @@ export class LocalStorageAdapter implements StoragePort {
 
           // Migrate settings
           if (db.objectStoreNames.contains('settings')) {
-            const settingsStore = transaction.objectStore('settings');
+            const settingsStore = tx.objectStore('settings');
             const oldSettings = await settingsStore.get('user-settings');
             if (oldSettings && (!oldSettings.schemaVersion || oldSettings.schemaVersion < 3)) {
               await settingsStore.put({
@@ -125,7 +135,7 @@ export class LocalStorageAdapter implements StoragePort {
                 deviceId: 'local',
                 version: (oldSettings.version || 0) + 1,
                 syncStatus: 'local_only',
-              });
+              } as UserSettings);
             }
           }
         }
@@ -133,14 +143,25 @@ export class LocalStorageAdapter implements StoragePort {
     }).then(db => {
       this.resolvedDb = db;
       return db;
+    }).catch(err => {
+      // Fix #2: Surface the error so the UI can show a meaningful message
+      // instead of failing silently on every subsequent IDB operation.
+      const msg = `No se pudo abrir la base de datos (${err?.name ?? 'Error desconocido'}). Intenta recargar la página.`;
+      this.dbError.set(msg);
+      console.error('[LocalStorageAdapter] Fatal IDB open error:', err);
+      throw err;
     });
 
+    // Fix #1: Await initDefaultRoutines and handle its rejection explicitly
+    // so a seed failure is logged and doesn't become an unhandled rejection.
     this.dbPromise.then(() => {
-      this.initDefaultRoutines();
+      return this.initDefaultRoutines();
+    }).catch(e => {
+      console.error('[LocalStorageAdapter] Failed to seed default routines:', e);
     });
   }
 
-  private async getDb(): Promise<IDBPDatabase<any>> {
+  private async getDb(): Promise<IDBPDatabase<GymDBSchemaV4>> {
     return this.resolvedDb ?? this.dbPromise;
   }
 
@@ -177,7 +198,7 @@ export class LocalStorageAdapter implements StoragePort {
     const db = await this.getDb();
     const existing = await db.get('routines', routine.id);
     const op = existing ? 'update' : 'create';
-    
+
     routine.updatedAt = Date.now();
     routine.version = (routine.version || 0) + 1;
     if (routine.syncStatus !== 'local_only') {
@@ -239,7 +260,6 @@ export class LocalStorageAdapter implements StoragePort {
 
   async getWorkoutSessionsByDateRange(startDate: string, endDate: string): Promise<WorkoutSession[]> {
     const db = await this.getDb();
-    // In IDB, we can use an index with a bound range
     const range = IDBKeyRange.bound(startDate, endDate);
     const sessions = await db.getAllFromIndex('workout_sessions', 'by-date', range);
     return sessions.filter(s => !s.deletedAt).sort((a, b) => b.date.localeCompare(a.date));
