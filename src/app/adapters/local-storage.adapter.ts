@@ -4,7 +4,6 @@ import { StoragePort } from '../ports/storage.port';
 import { Routine, WorkoutSession, UserSettings, DEFAULT_SETTINGS } from '../models/interfaces';
 import { ChangeEvent, SyncOperation } from '../models/sync';
 import { FileSystemService } from '../services/file-system.service';
-import { DEFAULT_TEMPLATES } from '../models/default-templates';
 import { generateId } from '../utils/generate-id';
 
 // ─── IndexedDB Schema V4 ───
@@ -151,14 +150,6 @@ export class LocalStorageAdapter implements StoragePort {
       console.error('[LocalStorageAdapter] Fatal IDB open error:', err);
       throw err;
     });
-
-    // Fix #1: Await initDefaultRoutines and handle its rejection explicitly
-    // so a seed failure is logged and doesn't become an unhandled rejection.
-    this.dbPromise.then(() => {
-      return this.initDefaultRoutines();
-    }).catch(e => {
-      console.error('[LocalStorageAdapter] Failed to seed default routines:', e);
-    });
   }
 
   private async getDb(): Promise<IDBPDatabase<GymDBSchemaV4>> {
@@ -177,20 +168,6 @@ export class LocalStorageAdapter implements StoragePort {
       version: entity.version
     };
     await db.put('pending_changes', event);
-  }
-
-  private async initDefaultRoutines(): Promise<void> {
-    try {
-      const db = await this.getDb();
-      const existing = await db.getAll('routines');
-      if (existing.length === 0) {
-        for (const routine of DEFAULT_TEMPLATES) {
-          await db.put('routines', routine);
-        }
-      }
-    } catch (e) {
-      console.warn('Error seeding default routines:', e);
-    }
   }
 
   // --- Routines ---

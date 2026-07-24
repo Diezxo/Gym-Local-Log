@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RoutineUseCases } from '../../use-cases/routine.use-cases';
 import { Routine } from '../../models/interfaces';
-import { DEFAULT_TEMPLATES } from '../../models/default-templates';
 
 @Component({
   selector: 'app-template-list',
@@ -28,13 +27,6 @@ import { DEFAULT_TEMPLATES } from '../../models/default-templates';
             </svg>
           </div>
           <h3 class="text-white text-xl font-semibold mb-2">Sin rutinas</h3>
-          <p class="text-[var(--color-text-muted)] text-sm font-medium mb-10 max-w-[280px]">Crea tu primera plantilla de entrenamiento para empezar.</p>
-          <button
-            (click)="loadDefaultTemplates()"
-            class="btn-secondary w-full max-w-[280px] min-h-[48px] text-sm"
-          >
-            Cargar rutinas por defecto
-          </button>
         </div>
       } @else {
         <!-- Active Template cards -->
@@ -231,13 +223,6 @@ export class TemplateListComponent implements OnInit {
   async toggleArchive(template: Routine) {
     template.archived = !template.archived;
     await this.routineUseCases.updateRoutine(template);
-    await this.loadData();
-  }
-
-  async loadDefaultTemplates() {
-    for (const tmpl of DEFAULT_TEMPLATES) {
-      await this.routineUseCases.createRoutine(tmpl);
-    }
     await this.loadData();
   }
 }
