@@ -45,7 +45,7 @@ interface DataPoint {
               <span class="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
                 {{ metric() === 'maxWeight' ? 'Récord Histórico' : 'Volumen Total (Meses)' }}
               </span>
-              <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-secondary)]">
+              <span class="text-2xl font-bold text-[var(--color-accent)]">
                 {{ metric() === 'maxWeight' ? (overallMax() | number:'1.0-1') : (totalVolume() | number:'1.0-1') }}
                 <span class="text-sm font-medium text-[var(--color-accent-secondary)]">{{ unitSvc.currentWeightUnit() }}</span>
               </span>
@@ -84,7 +84,7 @@ interface DataPoint {
         @if (chartData().length > 1) {
           <div class="relative w-full aspect-[2/1] bg-gradient-to-b from-[var(--color-bg-input)] to-transparent rounded-2xl p-4 overflow-visible border border-white/5 shadow-inner">
             <!-- Y-Axis max label -->
-            <div class="absolute top-2 left-3 text-[10px] font-medium tracking-wider text-[var(--color-text-muted)]">{{ chartMax() | number:'1.0-1' }}{{ unitSvc.currentWeightUnit() }}</div>
+            <div class="absolute top-2 left-3 text-xs font-medium tracking-wider text-[var(--color-text-muted)]">{{ chartMax() | number:'1.0-1' }}{{ unitSvc.currentWeightUnit() }}</div>
             
             <svg class="w-full h-full overflow-visible" viewBox="0 0 100 50" preserveAspectRatio="none">
               <defs>
@@ -124,8 +124,8 @@ interface DataPoint {
           
           <!-- X-Axis Labels (first and last) -->
           <div class="flex justify-between mt-3 px-1">
-            <span class="text-[10px] font-medium text-[var(--color-text-muted)]">{{ chartData()[0].dateStr | slice:8:10 }} / {{ chartData()[0].dateStr | slice:5:7 }}</span>
-            <span class="text-[10px] font-medium text-[var(--color-text-muted)]">{{ chartData()[chartData().length - 1].dateStr | slice:8:10 }} / {{ chartData()[chartData().length - 1].dateStr | slice:5:7 }}</span>
+            <span class="text-xs font-medium text-[var(--color-text-muted)]">{{ chartData()[0].dateStr | slice:8:10 }} / {{ chartData()[0].dateStr | slice:5:7 }}</span>
+            <span class="text-xs font-medium text-[var(--color-text-muted)]">{{ chartData()[chartData().length - 1].dateStr | slice:8:10 }} / {{ chartData()[chartData().length - 1].dateStr | slice:5:7 }}</span>
           </div>
         } @else if (chartData().length === 1) {
           <div class="h-32 flex items-center justify-center text-center px-6 bg-[var(--color-bg-input)]/30 rounded-2xl border border-dashed border-[var(--color-border)]">

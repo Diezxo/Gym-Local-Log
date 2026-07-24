@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { A11yModule } from '@angular/cdk/a11y';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 import { ExportService } from '../../services/export.service';
 import { WorkoutUseCases } from '../../use-cases/workout.use-cases';
 import { UnitConversionService } from '../../services/unit-conversion.service';
@@ -16,9 +17,9 @@ interface MonthStats {
 @Component({
   selector: 'app-data-management',
   standalone: true,
-  imports: [CommonModule, A11yModule],
+  imports: [CommonModule, A11yModule, ScrollLockDirective],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -41,15 +42,15 @@ interface MonthStats {
       <div class="grid grid-cols-3 gap-3">
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
           <span class="text-3xl font-bold text-[var(--color-accent)] leading-none">{{ stats().sesiones }}</span>
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Sesiones</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Sesiones</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
           <span class="text-2xl font-bold text-white leading-none truncate w-full text-center">{{ formatVol(stats().volumenWeight) }}</span>
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Vol. Fza</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Vol. Fza</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
           <span class="text-2xl font-bold text-[var(--color-accent-success)] leading-none truncate w-full text-center">{{ stats().distanceMeters > 0 ? unitSvc.metersToUser(stats().distanceMeters) + ' ' + unitSvc.currentDistanceUnit() : '—' }}</span>
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Cardio</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Cardio</span>
         </div>
       </div>
 
@@ -58,7 +59,7 @@ interface MonthStats {
         <div class="flex gap-2 flex-wrap">
           @for (ts of stats().tagSesiones; track ts.tag) {
             <span
-              class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-white/5"
+              class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/5"
               [style.background]="getTagColor(ts.tag).bg"
               [style.borderColor]="getTagColor(ts.tag).border"
               [style.color]="getTagColor(ts.tag).text"
@@ -77,7 +78,7 @@ interface MonthStats {
               <div class="flex items-center gap-4 p-5">
                 <div class="flex flex-col items-center justify-center bg-[var(--color-bg-input)] rounded-2xl w-14 h-14 border border-white/5 shrink-0 shadow-inner">
                   <span class="text-[var(--color-accent)] font-bold text-xl leading-none">{{ log.date | slice:8:10 }}</span>
-                  <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
+                  <span class="text-[var(--color-text-muted)] text-xs font-semibold uppercase tracking-wider mt-0.5">{{ getMonthShort(log.date) }}</span>
                 </div>
 
                 <div class="flex-1 min-w-0">
@@ -91,7 +92,7 @@ interface MonthStats {
                       >{{ tag }}</span>
                     }
                     @if (getLogTags(log).length === 0) {
-                      <span class="text-[var(--color-text-muted)] text-[10px] font-semibold uppercase tracking-wider">Sin etiquetas</span>
+                      <span class="text-[var(--color-text-muted)] text-xs font-semibold uppercase tracking-wider">Sin etiquetas</span>
                     }
                   </div>
                   <p class="text-[var(--color-text-muted)] text-[11px] font-medium">{{ log.exercises.length }} ejercicio{{ log.exercises.length !== 1 ? 's' : '' }}</p>
@@ -119,7 +120,7 @@ interface MonthStats {
                         @for (s of ej.sets; track $index; let i = $index) {
                           <span
                             class="text-[11px] font-mono font-medium px-2 py-1 rounded-md border"
-                            [class]="isMaxSet(s, ej.sets ?? [])
+                            [class]="isMaxSet(s, ej.sets)
                               ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30'
                               : 'bg-[var(--color-bg-primary)] border-white/5 text-[var(--color-text-muted)]'"
                           >S{{ i + 1 }}: {{ unitSvc.kgToUser(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
@@ -144,12 +145,12 @@ interface MonthStats {
             @if (getLogVolumen(log) > 0 || getLogDistancia(log) > 0) {
               <div class="border-t border-white/5 px-5 py-3.5 flex gap-4 bg-[var(--color-bg-input)]/50">
                 @if (getLogVolumen(log) > 0) {
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
+                  <span class="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
                     Vol: <span class="text-white font-mono">{{ formatVol(getLogVolumen(log)) }}</span>
                   </span>
                 }
                 @if (getLogDistancia(log) > 0) {
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
+                  <span class="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
                     Cardio: <span class="text-[var(--color-accent-success)] font-mono">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
                   </span>
                 }
@@ -211,8 +212,8 @@ interface MonthStats {
 
       <!-- Delete confirmation modal -->
       @if (logToDelete()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in" cdkTrapFocus cdkTrapFocusAutoCapture>
+        <div appScrollLock class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" cdkTrapFocus cdkTrapFocusAutoCapture>
+          <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in">
             <h3 class="text-xl font-bold text-white tracking-tight mb-2">¿Eliminar registro?</h3>
             <p class="text-[var(--color-text-muted)] text-sm font-medium mb-8 leading-relaxed">
               Se eliminará el entrenamiento del <span class="text-white font-semibold">{{ logToDelete()?.date }}</span> permanentemente.

@@ -7,8 +7,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-t border-white/10 pb-safe pt-1 sm:border-x">
-      <div class="flex items-stretch justify-around w-full px-2">
+    <nav class="fixed bottom-0 left-0 w-full z-50 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-t border-white/10 pb-safe pt-1 transition-all md:top-0 md:h-[100dvh] md:w-[88px] md:border-t-0 md:border-r md:pt-8 md:pb-8 md:px-2 md:flex md:flex-col lg:w-[240px] lg:px-4">
+      <div class="flex items-stretch justify-around w-full px-2 md:flex-col md:justify-start md:gap-4 md:px-0 lg:gap-2">
         @for (item of navItems; track item.route) {
           <a
             [routerLink]="item.route"
@@ -16,18 +16,18 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             [routerLinkActiveOptions]="{ exact: item.exact }"
             #navLink="routerLinkActive"
             [attr.aria-current]="navLink.isActive ? 'page' : null"
-            class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-200 active:scale-95"
+            class="group relative flex flex-col items-center justify-center flex-1 min-h-[64px] py-2 text-[var(--color-text-muted)] transition-all duration-200 active:scale-95 md:flex-none md:min-h-0 md:py-4 md:rounded-xl lg:flex-row lg:justify-start lg:px-4 lg:py-3 lg:gap-4"
           >
             <!-- Active Indicator (Soft Glow) -->
             <div class="absolute inset-0 bg-[var(--color-accent)]/10 opacity-0 group-[.is-active]:opacity-100 rounded-2xl scale-75 group-[.is-active]:scale-100 transition-all duration-300 -z-10"></div>
             
             <div
-              class="mb-1 transition-all duration-300 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-0.5"
+              class="mb-1 transition-all duration-300 group-[.is-active]:text-[var(--color-accent)] group-[.is-active]:-translate-y-0.5 md:mb-0 md:group-[.is-active]:-translate-y-0"
               [innerHTML]="iconMap.get(item.id)"
             ></div>
 
             <span
-              class="text-[11px] font-medium transition-colors duration-300 group-[.is-active]:text-[var(--color-accent)]"
+              class="text-[11px] font-medium transition-colors duration-300 group-[.is-active]:text-[var(--color-accent)] md:hidden lg:block lg:text-sm"
             >{{ item.label }}</span>
           </a>
         }

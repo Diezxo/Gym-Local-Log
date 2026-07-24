@@ -1,14 +1,16 @@
-import { Component, input, output, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ExerciseLog, StrengthSet, Suggestion } from '../../models/interfaces';
+import { A11yModule } from '@angular/cdk/a11y';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
+import { StrengthSet, ExerciseLog, Suggestion } from '../../models/interfaces';
 import { ProgressionService, ExerciseHistoryRecord } from '../../services/progression.service';
 import { UnitConversionService } from '../../services/unit-conversion.service';
 
 @Component({
   selector: 'app-exercise-strength',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, A11yModule, ScrollLockDirective],
   template: `
     <div class="rounded-3xl bg-[var(--color-bg-card)] p-4 sm:p-5 border border-white/5 flex flex-col gap-5 shadow-sm">
       <!-- Header -->
@@ -80,7 +82,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
 
       <!-- Completed Sets Header -->
       @if (exerciseLog().sets && exerciseLog().sets!.length > 0) {
-        <div class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 text-[10px] text-[var(--color-text-muted)] font-medium uppercase tracking-wider text-center mt-2">
+        <div class="grid grid-cols-[32px_1fr_64px_64px_36px_40px] gap-2 px-2 text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wider text-center mt-2">
           <div>Set</div>
           <div class="text-left">Ant.</div>
           <div>{{ unitSvc.currentWeightUnit() }}</div>
@@ -110,7 +112,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
             <div class="flex justify-center">
               <button
                 (click)="deleteSet(i); $event.stopPropagation()"
-                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all"
+                class="w-11 h-11 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all"
                 aria-label="Eliminar serie"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
@@ -135,7 +137,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
           <!-- Peso stepper -->
           <div class="flex flex-col gap-1.5 flex-1">
             <div class="flex items-center justify-center gap-1.5">
-              <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unitSvc.currentWeightUnit() }}</label>
+              <label class="text-xs font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">{{ unitSvc.currentWeightUnit() }}</label>
               <button (click)="showPlateCalculator.set(true)" class="text-[var(--color-accent)] hover:text-white transition-colors p-0.5 rounded-full hover:bg-white/5 active:scale-95" aria-label="Calculadora de discos" title="Calculadora de discos">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
               </button>
@@ -143,7 +145,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
             <div class="flex items-center gap-1 bg-[var(--color-bg-input)] rounded-2xl p-1 border border-white/5">
               <button
                 (click)="decrementWeight()"
-                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
+                class="w-12 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Bajar peso"
               >−</button>
               <input
@@ -155,18 +157,18 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
               />
               <button
                 (click)="incrementWeight()"
-                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
+                class="w-12 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Subir peso"
               >+</button>
             </div>
           </div>
           <!-- Reps stepper -->
           <div class="flex flex-col gap-1.5 flex-1">
-            <label class="text-[10px] font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">Reps</label>
+            <label class="text-xs font-semibold text-[var(--color-text-muted)] text-center uppercase tracking-wider">Reps</label>
             <div class="flex items-center gap-1 bg-[var(--color-bg-input)] rounded-2xl p-1 border border-white/5">
               <button
                 (click)="decrementReps()"
-                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
+                class="w-12 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Bajar reps"
               >−</button>
               <input
@@ -178,14 +180,14 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
               />
               <button
                 (click)="incrementReps()"
-                class="w-10 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
+                class="w-12 h-12 rounded-xl bg-transparent text-[var(--color-text-muted)] font-bold text-xl flex items-center justify-center active:scale-95 hover:text-white transition-all hover:bg-white/5"
                 aria-label="Subir reps"
               >+</button>
             </div>
           </div>
           <!-- Complete button -->
           <div class="flex flex-col gap-1.5 shrink-0">
-            <label class="text-[10px] font-bold text-transparent text-center uppercase tracking-wider select-none">✓</label>
+            <label class="text-xs font-bold text-transparent text-center uppercase tracking-wider select-none">✓</label>
             <button
               (click)="completeSet()"
               [disabled]="!isValidInput()"
@@ -202,7 +204,7 @@ import { UnitConversionService } from '../../services/unit-conversion.service';
 
     <!-- Plate Calculator Modal -->
     @if (showPlateCalculator()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-fade-in" (click)="showPlateCalculator.set(false)">
+      <div appScrollLock class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-fade-in" (click)="showPlateCalculator.set(false)" cdkTrapFocus cdkTrapFocusAutoCapture>
         <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in" (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-bold text-white tracking-tight">Discos a cargar</h3>

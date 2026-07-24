@@ -18,7 +18,7 @@
   --color-accent-warning: #f59e0b;
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
-  --color-text-muted: #94a3b8;
+  --color-text-muted: #cbd5e1; /* WCAG AA Contrast Fix */
   --color-border: #475569;
   --color-border-active: #64748b;
 }

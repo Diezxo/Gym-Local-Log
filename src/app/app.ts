@@ -21,8 +21,8 @@ export const fadeAnimation = trigger('routeAnimation', [
   imports: [RouterOutlet, BottomNavComponent],
   animations: [fadeAnimation],
   template: `
-    <div class="global-wrapper max-w-[480px] mx-auto min-h-[100dvh] bg-[var(--color-bg-primary)] sm:border-x border-[var(--color-border)] relative shadow-2xl flex flex-col transition-colors duration-300">
-      <main class="app-shell flex-1 w-full pb-nav-safe" [@routeAnimation]="getRouteAnimationData()">
+    <div class="global-wrapper w-full min-h-[100dvh] bg-[var(--color-bg-primary)] sm:border-x border-[var(--color-border)] relative shadow-2xl flex transition-colors duration-300">
+      <main class="app-shell flex-1 w-full pb-nav-safe md:pb-0 md:pl-[88px] lg:pl-[240px]" [@routeAnimation]="getRouteAnimationData()">
         <router-outlet />
       </main>
       <app-bottom-nav />

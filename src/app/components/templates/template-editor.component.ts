@@ -20,7 +20,7 @@ interface ExerciseWithId extends BaseExercise {
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-4xl mx-auto w-full">
       <!-- Header -->
       <div>
         <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">
@@ -52,7 +52,7 @@ interface ExerciseWithId extends BaseExercise {
             <!-- Drag handle + exercise name row -->
             <div class="flex items-center gap-3 p-5 sm:p-6">
               <!-- Drag Handle -->
-              <div cdkDragHandle class="cursor-grab active:cursor-grabbing text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors shrink-0 p-1 -ml-2 rounded-lg hover:bg-white/5">
+              <div cdkDragHandle class="cursor-grab active:cursor-grabbing text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors shrink-0 w-11 h-11 flex items-center justify-center -ml-2 rounded-xl hover:bg-white/5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="16" y1="9" y2="9"/><line x1="8" x2="16" y1="15" y2="15"/></svg>
               </div>
 
@@ -115,7 +115,7 @@ interface ExerciseWithId extends BaseExercise {
                     <button
                       type="button"
                       (click)="toggleTag(exercise._uid, tag); $event.stopPropagation()"
-                      class="px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all active:scale-95 border"
+                      class="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 border"
                       [style.background]="hasTag(exercise, tag) ? getTagColor(tag).bg : 'var(--color-bg-primary)'"
                       [style.border-color]="hasTag(exercise, tag) ? getTagColor(tag).border : 'rgba(255,255,255,0.05)'"
                       [style.color]="hasTag(exercise, tag) ? getTagColor(tag).text : 'var(--color-text-muted)'"

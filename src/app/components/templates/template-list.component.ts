@@ -1,15 +1,17 @@
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { A11yModule } from '@angular/cdk/a11y';
 import { RoutineUseCases } from '../../use-cases/routine.use-cases';
 import { Routine } from '../../models/interfaces';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-template-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, A11yModule, ScrollLockDirective],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-10 pb-36 flex flex-col gap-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 max-w-7xl mx-auto w-full">
 
       <!-- Header -->
       <div>
@@ -30,7 +32,7 @@ import { Routine } from '../../models/interfaces';
         </div>
       } @else {
         <!-- Active Template cards -->
-        <div class="flex flex-col gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (template of activeTemplates(); track template.id) {
               <div
                 class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 overflow-hidden transition-all shadow-sm hover:shadow-md group cursor-pointer"
@@ -41,7 +43,7 @@ import { Routine } from '../../models/interfaces';
                 (keydown.space)="editTemplate(template.id); $event.preventDefault()"
               >
                 <!-- Main row -->
-                <div class="flex items-start gap-4 p-5 sm:p-6">
+                <div class="flex items-start gap-4 p-4 sm:p-5">
                   <!-- Icon -->
                   <div class="w-14 h-14 rounded-2xl bg-[var(--color-bg-input)] border border-white/5 flex items-center justify-center shrink-0 shadow-inner group-hover:bg-white/5 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent)]"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
@@ -55,7 +57,7 @@ import { Routine } from '../../models/interfaces';
 
                   <!-- Badge + Delete/Archive -->
                   <div class="flex flex-col items-end gap-3 shrink-0">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
                       {{ template.exercises.length }} ej.
                     </span>
                     <div class="flex items-center gap-1">
@@ -82,7 +84,7 @@ import { Routine } from '../../models/interfaces';
                 @if (getTemplateTags(template).length > 0) {
                   <div class="border-t border-white/5 px-5 sm:px-6 py-3.5 flex flex-wrap gap-2 bg-[var(--color-bg-input)]/30">
                     @for (tag of getTemplateTags(template); track tag) {
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5">{{ tag }}</span>
+                      <span class="px-2.5 py-1 rounded-full text-xs font-medium tracking-wider uppercase bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] border border-white/5">{{ tag }}</span>
                     }
                   </div>
                 }
@@ -97,7 +99,7 @@ import { Routine } from '../../models/interfaces';
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="4" rx="2"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg>
               Archivadas
             </h2>
-            <div class="flex flex-col gap-4 opacity-75 grayscale-[20%]">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75 grayscale-[20%]">
               @for (template of archivedTemplates(); track template.id) {
                 <div class="bg-[var(--color-bg-input)] rounded-2xl border border-white/5 overflow-hidden flex items-center justify-between p-4">
                   <div>
@@ -128,7 +130,7 @@ import { Routine } from '../../models/interfaces';
 
       <!-- Delete confirmation modal -->
       @if (templateToDelete()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div appScrollLock class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" cdkTrapFocus cdkTrapFocusAutoCapture>
           <div class="bg-[var(--color-bg-card)] rounded-3xl p-6 w-full max-w-sm border border-white/5 shadow-xl animate-scale-in">
             <h3 class="text-xl font-bold text-white tracking-tight mb-2">¿Eliminar rutina?</h3>
             <p class="text-[var(--color-text-muted)] text-sm font-medium mb-8 leading-relaxed">

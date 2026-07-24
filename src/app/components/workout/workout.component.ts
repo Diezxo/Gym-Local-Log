@@ -5,6 +5,7 @@ import { Component,
   OnDestroy,
   ViewChild, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { A11yModule } from '@angular/cdk/a11y';
 import { Router } from '@angular/router';
 import {
   Routine,
@@ -25,6 +26,7 @@ import { ProgressionService } from '../../services/progression.service';
 import { RestTimerComponent } from './rest-timer.component';
 import { ExerciseStrengthComponent } from './exercise-strength.component';
 import { ExerciseCardioComponent } from './exercise-cardio.component';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-workout',
@@ -34,13 +36,15 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
     RestTimerComponent,
     ExerciseStrengthComponent,
     ExerciseCardioComponent,
+    A11yModule,
+    ScrollLockDirective,
   ],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] pb-36 px-4 sm:px-6 max-w-4xl mx-auto w-full">
+    <div class="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] pb-36 md:pb-12 px-4 sm:px-6 max-w-3xl mx-auto w-full">
 
       <!-- Header -->
-      <header class="pt-10 pb-6">
-        <p class="text-[10px] sm:text-xs text-[var(--color-accent)] uppercase font-semibold tracking-widest mb-1">{{ activeLog() ? 'Entrenamiento Activo' : 'Entrenar' }}</p>
+      <header class="pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <p class="text-xs sm:text-xs text-[var(--color-accent)] uppercase font-semibold tracking-widest mb-1">{{ activeLog() ? 'Entrenamiento Activo' : 'Entrenar' }}</p>
         <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white capitalize">{{ dateDisplay() }}</h1>
       </header>
 
@@ -75,7 +79,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
                   </p>
                 </div>
 
-                <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-accent)] bg-[var(--color-accent)]/10 px-3 py-1.5 rounded-full">
+                <span class="shrink-0 text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)] bg-[var(--color-accent)]/10 px-3 py-1.5 rounded-full">
                   {{ tmpl.exercises.length }} ej.
                 </span>
               </div>
@@ -85,7 +89,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
                 <div class="border-t border-white/5 px-5 sm:px-6 py-3.5 flex flex-wrap gap-2 bg-[var(--color-bg-input)]/30">
                   @for (tag of getTemplateTags(tmpl); track tag) {
                     <span
-                      class="px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase"
+                      class="px-2.5 py-1 rounded-full text-xs font-medium tracking-wider uppercase"
                       [style.background]="getTagColor(tag).bg"
                       [style.color]="getTagColor(tag).text"
                     >{{ tag }}</span>
@@ -117,7 +121,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
               <span class="font-mono text-sm font-semibold tracking-wider text-white">{{ sessionTimerLabel() }}</span>
             </div>
 
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-white bg-[var(--color-accent)]/80 px-3 py-1.5 rounded-full hidden sm:inline-block">En curso</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-white bg-[var(--color-accent)]/80 px-3 py-1.5 rounded-full hidden sm:inline-block">En curso</span>
           </div>
 
           <!-- Template name + tags -->
@@ -127,7 +131,7 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
               <div class="flex flex-wrap gap-2">
                 @for (tag of activeTemplateTags(); track tag) {
                   <span
-                    class="px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase"
+                    class="px-2.5 py-1 rounded-full text-xs font-medium tracking-wider uppercase"
                     [style.background]="getTagColor(tag).bg"
                     [style.color]="getTagColor(tag).text"
                   >{{ tag }}</span>
@@ -207,6 +211,38 @@ import { ExerciseCardioComponent } from './exercise-cardio.component';
           <span class="font-medium text-sm">Entrenamiento Guardado</span>
         </div>
       }
+
+      <!-- Modal Cancelar Entrenamiento -->
+      @if (showCancelModal()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" appScrollLock>
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="showCancelModal.set(false)"></div>
+          <div class="relative bg-[var(--color-bg-card)] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl" cdkTrapFocus cdkTrapFocusAutoCapture>
+            <div class="p-6">
+              <div class="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-hot)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </div>
+              <h3 class="text-xl font-bold text-white mb-2">¿Cancelar Entrenamiento?</h3>
+              <p class="text-[var(--color-text-muted)] text-sm leading-relaxed mb-6">
+                Se perderá todo el progreso de la sesión actual. Esta acción no se puede deshacer.
+              </p>
+              <div class="flex gap-3">
+                <button
+                  (click)="showCancelModal.set(false)"
+                  class="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[var(--color-bg-input)] hover:bg-white/10 transition-colors"
+                >
+                  Continuar
+                </button>
+                <button
+                  (click)="confirmCancelWorkout()"
+                  class="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[var(--color-accent-hot)] hover:bg-rose-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -240,6 +276,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
   dailyNotes = signal('');
   showToast = signal(false);
   restTimerActive = signal(false);
+  showCancelModal = signal(false);
 
   // Session timer
   sessionStartTime = signal<number | null>(null);
@@ -456,11 +493,16 @@ export class WorkoutComponent implements OnInit, OnDestroy {
 
   // ─── Cancel ───
   cancelWorkout(): void {
+    this.showCancelModal.set(true);
+  }
+
+  confirmCancelWorkout(): void {
     this.stopTimer();
     this.activeLog.set(null);
     this.activeTemplateName.set('');
     this.activeTemplateTags.set([]);
     this.suggestions.set([]);
     this.dailyNotes.set('');
+    this.showCancelModal.set(false);
   }
 }
