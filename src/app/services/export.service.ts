@@ -44,7 +44,9 @@ export class ExportService {
    */
   async exportAllJSON(): Promise<void> {
     const allWorkouts = await this.workoutUseCases.getAllWorkouts();
-    if (allWorkouts.length === 0) {
+    const allRoutines = await this.routineUseCases.getAllRoutines();
+
+    if (allWorkouts.length === 0 && allRoutines.length === 0) {
       throw new Error('No data to export');
     }
 
@@ -58,7 +60,13 @@ export class ExportService {
     }
     
     const archives = Array.from(archivesMap.values());
-    const json = JSON.stringify(archives, null, 2);
+    const fullExport = {
+      exportVersion: 1,
+      routines: allRoutines,
+      archives: archives
+    };
+
+    const json = JSON.stringify(fullExport, null, 2);
     this.downloadFile(json, `gym_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
   }
 
@@ -122,7 +130,38 @@ export class ExportService {
       throw new Error('Invalid JSON file');
     }
 
-    if (Array.isArray(data)) {
+    if (data.exportVersion === 1) {
+      // New full export format
+      if (Array.isArray(data.routines)) {
+        for (const r of data.routines) {
+          await this.routineUseCases.createRoutine(r);
+        }
+      }
+      const allLogsToImport: WorkoutSession[] = [];
+      if (Array.isArray(data.archives)) {
+        for (const monthData of data.archives) {
+          for (const log of monthData.logs) {
+            const session: WorkoutSession = {
+              id: log.id || generateId(),
+              schemaVersion: 3,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              version: log.version || 1,
+              syncStatus: log.syncStatus || 'local_only',
+              deviceId: log.deviceId || 'local',
+              date: log.date || log.fecha,
+              routineId: log.routineId || log.templateId,
+              notes: log.notes || log.notas || '',
+              exercises: log.exercises || log.ejercicios || []
+            };
+            allLogsToImport.push(session);
+            await this.workoutUseCases.updateWorkoutSession(session);
+          }
+        }
+      }
+      await this.reconstructRoutines(allLogsToImport);
+      return 'all';
+    } else if (Array.isArray(data)) {
       const allErrors: string[] = [];
       for (let i = 0; i < data.length; i++) {
         const errs = this.validateMonthlyArchive(data[i], `array[${i}]`);
@@ -131,6 +170,7 @@ export class ExportService {
       if (allErrors.length > 0) {
         throw new Error(`Validation errors (${allErrors.length}):\n• ${allErrors.slice(0, 10).join('\n• ')}`);
       }
+      const allLogsToImport: WorkoutSession[] = [];
       for (const monthData of data) {
         for (const log of monthData.logs) {
           const session: WorkoutSession = {
@@ -146,15 +186,18 @@ export class ExportService {
             notes: log.notes || log.notas || '',
             exercises: log.exercises || log.ejercicios || []
           };
+          allLogsToImport.push(session);
           await this.workoutUseCases.updateWorkoutSession(session);
         }
       }
+      await this.reconstructRoutines(allLogsToImport);
       return 'all';
     } else {
       const errs = this.validateMonthlyArchive(data, 'root');
       if (errs.length > 0) {
         throw new Error(`Validation errors (${errs.length}):\n• ${errs.slice(0, 10).join('\n• ')}`);
       }
+      const allLogsToImport: WorkoutSession[] = [];
       for (const log of data.logs) {
         const session: WorkoutSession = {
           id: log.id || generateId(),
@@ -169,9 +212,57 @@ export class ExportService {
           notes: log.notes || log.notas || '',
           exercises: log.exercises || log.ejercicios || []
         };
+        allLogsToImport.push(session);
         await this.workoutUseCases.updateWorkoutSession(session);
       }
+      await this.reconstructRoutines(allLogsToImport);
       return data.monthId || data.mesId;
+    }
+  }
+
+  private async reconstructRoutines(logs: WorkoutSession[]) {
+    const existingRoutines = await this.routineUseCases.getAllRoutines();
+    const existingIds = new Set(existingRoutines.map(r => r.id));
+
+    // Group logs by routineId to find the most recent one for the template
+    const logsByRoutine = new Map<string, WorkoutSession>();
+    for (const log of logs) {
+      if (!existingIds.has(log.routineId)) {
+        const existing = logsByRoutine.get(log.routineId);
+        if (!existing || log.date > existing.date) {
+          logsByRoutine.set(log.routineId, log);
+        }
+      }
+    }
+
+    for (const [routineId, latestLog] of logsByRoutine.entries()) {
+      let name = routineId
+        .replace(/-\d{13}$/, '') // remove timestamp
+        .replace(/-/g, ' ') // replace dashes
+        .replace(/\b\w/g, l => l.toUpperCase()); // capitalize
+
+      if (routineId === 'df9a9acd-dcc5-4b89-92f4-6dcc9eaaff0b') name = 'Espalda y Biceps';
+      else if (routineId === 'custom' || /^[0-9a-f]{8}-/.test(routineId)) {
+         name = 'Rutina ' + latestLog.date;
+      }
+
+      const routine: import('../models/interfaces').Routine = {
+        id: routineId,
+        schemaVersion: 4,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        deviceId: 'local',
+        version: 1,
+        syncStatus: 'local_only',
+        name,
+        exercises: latestLog.exercises.map(e => ({
+          exerciseId: e.exerciseId || generateId(),
+          name: e.name,
+          type: e.type,
+          tags: e.tags
+        }))
+      };
+      await this.routineUseCases.createRoutine(routine);
     }
   }
 

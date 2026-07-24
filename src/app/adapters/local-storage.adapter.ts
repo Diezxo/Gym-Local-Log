@@ -287,7 +287,16 @@ export class LocalStorageAdapter implements StoragePort {
     if (settings.syncStatus !== 'local_only') {
       settings.syncStatus = 'pending_sync';
     }
-    await db.put('settings', settings);
+
+    const tx = db.transaction('settings', 'readwrite');
+    const store = tx.objectStore('settings');
+    if (store.keyPath) {
+      await store.put(settings);
+    } else {
+      await store.put(settings, 'user-settings');
+    }
+    await tx.done;
+
     await this.logChange('update', 'UserSettings', settings);
   }
 
