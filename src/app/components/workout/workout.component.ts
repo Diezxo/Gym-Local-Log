@@ -154,12 +154,19 @@ import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
             </div>
           </div>
 
-          <!-- Rest Timer -->
+          <!-- Rest Timer: collapses when idle, expands on first set -->
           <app-rest-timer
             #restTimerRef
             [duration]="settings().restTime"
             (timerFinished)="onTimerFinished()"
+            [class.hidden]="!restTimerActive()"
           />
+          @if (!restTimerActive()) {
+            <div class="rounded-2xl bg-[var(--color-bg-card)] border border-white/5 px-5 py-3.5 flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-white/20"></div>
+              <span class="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wider">Completa una serie para iniciar el descanso</span>
+            </div>
+          }
 
           <!-- Exercises -->
           <div class="flex flex-col gap-6 mt-4">
@@ -308,7 +315,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
       this.routineUseCases.getAllRoutines(),
       this.storage.getSettings()
     ]);
-    this.templates.set(tmpls);
+    this.templates.set(tmpls.filter(t => !t.archived));
     this.settings.set(setts);
   }
 
@@ -489,6 +496,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
     this.activeTemplateTags.set([]);
     this.suggestions.set([]);
     this.dailyNotes.set('');
+    this.restTimerActive.set(false);
   }
 
   // ─── Cancel ───
@@ -498,6 +506,7 @@ export class WorkoutComponent implements OnInit, OnDestroy {
 
   confirmCancelWorkout(): void {
     this.stopTimer();
+    this.restTimerActive.set(false);
     this.activeLog.set(null);
     this.activeTemplateName.set('');
     this.activeTemplateTags.set([]);
