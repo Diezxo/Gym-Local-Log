@@ -9,13 +9,18 @@ import {
   MuscleTag,
   TAG_COLORS,
 } from '../../models/interfaces';
-import { ProgressionChartComponent } from './progression-chart.component';
 
-interface TagVolumen {
+
+interface WeeklyMuscleSet {
   tag: MuscleTag;
-  valor: number; // sets for strength, distance for cardio
-  unidad: string;
-  sesiones: number;
+  sets: number;
+}
+
+interface MuscleRecovery {
+  tag: MuscleTag;
+  lastTrained: string | null;
+  status: 'fresh' | 'fatigued';
+  daysAgo: number | null;
 }
 
 interface HeatDay {
@@ -34,7 +39,7 @@ interface PRRecord {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ProgressionChartComponent],
+  imports: [CommonModule],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-primary)] px-4 sm:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-36 md:pb-12 flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
 
@@ -125,11 +130,28 @@ interface PRRecord {
             </div>
           }
 
-          <!-- ── Chart Integration ── -->
-          <div class="mt-2">
-             <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Progresión del Volumen</h2>
-             <app-progression-chart [logs]="allLogs()"></app-progression-chart>
-          </div>
+          <!-- ── Series Semanales por Músculo ── -->
+          @if (weeklyMuscleSets().length > 0) {
+            <div>
+               <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Series Semanales (7 días)</h2>
+               <div class="bg-[var(--color-bg-card)] rounded-3xl border border-white/5 shadow-sm p-5 flex flex-col gap-4">
+                 @for (ms of weeklyMuscleSets(); track ms.tag) {
+                   <div>
+                     <div class="flex items-center justify-between mb-1.5">
+                       <div class="flex items-center gap-2">
+                         <div class="w-2.5 h-2.5 rounded-full" [style.background]="getTagColor(ms.tag).text"></div>
+                         <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ ms.tag }}</span>
+                       </div>
+                       <span class="text-sm font-bold text-[var(--color-text-primary)]">{{ ms.sets }} <span class="text-xs text-[var(--color-text-muted)] font-normal">sets</span></span>
+                     </div>
+                     <div class="w-full bg-[var(--color-bg-input)]/50 rounded-full h-1.5 overflow-hidden">
+                       <div class="h-full rounded-full transition-all" [style.width]="getProgressBarWidth(ms.sets)" [style.background]="getTagColor(ms.tag).text"></div>
+                     </div>
+                   </div>
+                 }
+               </div>
+            </div>
+          }
         </div>
 
         <!-- Right Column -->
@@ -186,28 +208,26 @@ interface PRRecord {
             </div>
           }
 
-          <!-- ── Volumen por Tag ── -->
-          @if (tagVolumens().length > 0) {
-            <div>
-              <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Volumen mensual</h2>
-              <div class="flex flex-col gap-3">
-                @for (tv of tagVolumens(); track tv.tag) {
-                  <div
-                    class="flex items-center gap-4 rounded-2xl px-4 py-3.5 bg-[var(--color-bg-card)] border border-white/5 shadow-sm"
-                  >
-                    <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" [style.background]="getTagColor(tv.tag).text"></div>
-                    <span class="flex-1 text-sm font-semibold text-[var(--color-text-primary)]">{{ tv.tag }}</span>
-                    <div class="flex items-center gap-3">
-                      <span class="text-xs tracking-wider text-[var(--color-text-muted)] font-medium">{{ tv.sesiones }} SES.</span>
-                      <span class="font-semibold text-base" [style.color]="getTagColor(tv.tag).text">
-                        {{ formatTagValue(tv) }}
-                      </span>
-                    </div>
+          <!-- ── Estado de Recuperación ── -->
+          <div>
+            <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Estado de Recuperación</h2>
+            <div class="grid grid-cols-2 gap-3">
+              @for (mr of muscleRecovery(); track mr.tag) {
+                <div class="bg-[var(--color-bg-card)] rounded-2xl border border-white/5 shadow-sm p-3.5 flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-[var(--color-text-primary)]">{{ mr.tag }}</span>
+                    <div class="w-2 h-2 rounded-full" [class]="mr.status === 'fresh' ? 'bg-[var(--color-accent-success)]' : 'bg-red-500'"></div>
                   </div>
-                }
-              </div>
+                  <span class="text-xs font-medium" [class]="mr.status === 'fresh' ? 'text-[var(--color-accent-success)]' : 'text-red-400'">
+                    {{ mr.status === 'fresh' ? 'Fresco' : 'Fatigado' }}
+                  </span>
+                  <span class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">
+                    {{ mr.daysAgo === null ? 'Sin registrar' : (mr.daysAgo === 0 ? 'Hoy' : 'Hace ' + mr.daysAgo + 'd') }}
+                  </span>
+                </div>
+              }
             </div>
-          }
+          </div>
 
           <!-- ── Consistencia (30 días) ── -->
           <div>
@@ -249,7 +269,8 @@ export class DashboardComponent implements OnInit {
   streak = signal(0);
   monthSessions = signal(0);
   daysLeftInMonth = signal(0);
-  tagVolumens = signal<TagVolumen[]>([]);
+  weeklyMuscleSets = signal<WeeklyMuscleSet[]>([]);
+  muscleRecovery = signal<MuscleRecovery[]>([]);
   heatmap = signal<HeatDay[]>([]);
   trainedCount = signal(0);
   lastLog = signal<WorkoutSession | null>(null);
@@ -375,7 +396,8 @@ export class DashboardComponent implements OnInit {
     this.monthSessions.set(logsThisMonth.length);
     this.monthLogs.set(logsThisMonth);
 
-    this.calcTagVolumens(logsThisMonth);
+    this.calcWeeklySets(sessions, now);
+    this.calcMuscleRecovery(sessions, now);
 
     // ── Distancia cardio esta semana (todos los meses) ──
     this.weeklyCardioDistance.set(this.calcWeeklyCardioDistance(sessions, now));
@@ -509,57 +531,83 @@ export class DashboardComponent implements OnInit {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  private calcTagVolumens(logs: WorkoutSession[]) {
-    const tagMap = new Map<MuscleTag, { seriesCount: number; distanceMeters: number; sesiones: Set<string> }>();
+  private calcWeeklySets(sessions: WorkoutSession[], now: Date) {
+    const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    const weekAgoStr = this.toLocalDateStr(weekAgo);
+    const todayStr = this.toLocalDateStr(now);
 
-    for (const log of logs) {
-      for (const ej of log.exercises) {
-        const tags = ej.tags ?? [];
-        for (const tag of tags) {
-          if (!tagMap.has(tag)) tagMap.set(tag, { seriesCount: 0, distanceMeters: 0, sesiones: new Set() });
-          const entry = tagMap.get(tag)!;
-          entry.sesiones.add(log.date);
+    const tagSets = new Map<MuscleTag, number>();
+
+    for (const log of sessions) {
+      if (log.date >= weekAgoStr && log.date <= todayStr) {
+        for (const ej of log.exercises) {
           if (ej.type === 'strength' && ej.sets) {
-            entry.seriesCount += ej.sets.length;
-          } else if (ej.cardio) {
-            entry.distanceMeters += ej.cardio.distanceMeters ?? 0;
+            const tags = ej.tags ?? [];
+            for (const tag of tags) {
+              if (tag === 'Cardio' || tag === 'Warmup') continue;
+              tagSets.set(tag, (tagSets.get(tag) || 0) + ej.sets.length);
+            }
           }
         }
       }
     }
 
-    const result: TagVolumen[] = [];
-    tagMap.forEach((v, tag) => {
-      const isCardio = tag === 'Cardio';
-      if (isCardio) {
-        const userDist = this.unitSvc.metersToUser(v.distanceMeters);
-        result.push({
-          tag,
-          valor: Math.round(userDist * 10) / 10,
-          unidad: this.unitSvc.currentDistanceUnit(),
-          sesiones: v.sesiones.size,
-        });
-      } else {
-        result.push({
-          tag,
-          valor: v.seriesCount,
-          unidad: 'series',
-          sesiones: v.sesiones.size,
-        });
-      }
+    const result: WeeklyMuscleSet[] = [];
+    tagSets.forEach((sets, tag) => {
+      result.push({ tag, sets });
     });
+    result.sort((a, b) => b.sets - a.sets);
+    this.weeklyMuscleSets.set(result);
+  }
 
-    result.sort((a, b) => b.valor - a.valor);
-    this.tagVolumens.set(result);
+  private calcMuscleRecovery(sessions: WorkoutSession[], now: Date) {
+    const sortedLogs = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
+    const recovery: MuscleRecovery[] = [];
+    const mainTags: MuscleTag[] = ['Chest', 'Back', 'Legs', 'Arms', 'Core'];
+    const todayStr = this.toLocalDateStr(now);
+
+    for (const tag of mainTags) {
+      let lastTrainedDate: string | null = null;
+      let daysAgo: number | null = null;
+      let status: 'fresh' | 'fatigued' = 'fresh';
+
+      for (const log of sortedLogs) {
+        if (log.date <= todayStr) {
+          const hasTag = log.exercises.some(ej => (ej.tags ?? []).includes(tag));
+          if (hasTag) {
+            lastTrainedDate = log.date;
+            break; // Since sorted descending, the first one we find is the latest
+          }
+        }
+      }
+
+      if (lastTrainedDate) {
+        const [y, m, d] = lastTrainedDate.split('-').map(Number);
+        const logDate = new Date(y, m - 1, d);
+        const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        daysAgo = Math.round((todayLocal.getTime() - logDate.getTime()) / 86400000);
+        
+        // Fatigued if trained today or yesterday (<= 1)
+        if (daysAgo <= 1) {
+          status = 'fatigued';
+        } else {
+          status = 'fresh';
+        }
+      }
+
+      recovery.push({ tag, lastTrained: lastTrainedDate, status, daysAgo });
+    }
+
+    this.muscleRecovery.set(recovery);
+  }
+
+  getProgressBarWidth(sets: number): string {
+    const percentage = Math.min((sets / 15) * 100, 100);
+    return percentage + '%';
   }
 
   getTagColor(tag: MuscleTag) {
     return TAG_COLORS[tag] ?? { bg: 'rgba(255,255,255,0.05)', text: '#a3a3a3', border: 'rgba(255,255,255,0.1)' };
-  }
-
-  formatTagValue(tv: TagVolumen): string {
-    if (tv.tag === 'Cardio') return `${tv.valor} ${tv.unidad}`;
-    return `${tv.valor} series`;
   }
 
   getLogTags(log: WorkoutSession): MuscleTag[] {
