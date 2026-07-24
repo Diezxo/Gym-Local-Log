@@ -9,7 +9,7 @@ import { WorkoutSession, MuscleTag, TAG_COLORS, ExerciseLog, StrengthSet } from 
 
 interface MonthStats {
   sesiones: number;
-  volumenWeight: number;
+  seriesWeight: number; // Changed from volumenWeight
   distanceMeters: number;
   tagSesiones: { tag: MuscleTag; count: number }[];
 }
@@ -45,8 +45,8 @@ interface MonthStats {
           <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Sesiones</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
-          <span class="text-2xl font-bold text-white leading-none truncate w-full text-center">{{ formatVol(stats().volumenWeight) }}</span>
-          <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Vol. Fza</span>
+          <span class="text-2xl font-bold text-white leading-none truncate w-full text-center">{{ stats().seriesWeight }}</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] text-center mt-1">Series Fza</span>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-1 min-h-[100px] shadow-sm">
           <span class="text-2xl font-bold text-[var(--color-accent-success)] leading-none truncate w-full text-center">{{ stats().distanceMeters > 0 ? unitSvc.metersToUser(stats().distanceMeters) + ' ' + unitSvc.currentDistanceUnit() : '—' }}</span>
@@ -112,48 +112,49 @@ interface MonthStats {
             <div class="border-t border-white/5 px-5 pt-4 pb-5 flex flex-col gap-4 bg-[var(--color-bg-input)]/20">
               @for (ej of log.exercises; track ej.name) {
                 <div class="flex flex-col gap-1.5">
-                  <span class="text-white text-sm font-semibold tracking-wide uppercase">{{ ej.name }}</span>
+                   <!-- Ejercicio header -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-white text-sm font-semibold tracking-wide uppercase">{{ ej.name }}</span>
+                    @if (ej.type === 'strength' && ej.sets && ej.sets.length > 0) {
+                      <!-- Compact summary always visible on the right -->
+                      <span class="text-[10px] uppercase tracking-wider font-semibold text-[var(--color-text-muted)]">
+                        {{ ej.sets.length }} SERIES
+                      </span>
+                    }
+                  </div>
+                  
                   @if (ej.type === 'strength' && ej.sets && ej.sets.length > 0) {
                     @if (hasProgressiveOverload(ej.sets)) {
-                      <!-- Progressive overload: show each set as a chip -->
-                      <div class="flex flex-wrap gap-2">
+                      <!-- Different sets: show minimal chips -->
+                      <div class="flex flex-wrap gap-1.5 mt-1">
                         @for (s of ej.sets; track $index; let i = $index) {
                           <span
-                            class="text-[11px] font-mono font-medium px-2 py-1 rounded-md border"
+                            class="text-[10px] font-mono font-medium px-2 py-0.5 rounded border"
                             [class]="isMaxSet(s, ej.sets)
-                              ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30'
-                              : 'bg-[var(--color-bg-primary)] border-white/5 text-[var(--color-text-muted)]'"
-                          >S{{ i + 1 }}: {{ unitSvc.kgToUser(s.weight) }}{{ unitSvc.currentWeightUnit() }}×{{ s.reps }}</span>
+                              ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/20'
+                              : 'bg-transparent border-white/5 text-[var(--color-text-muted)]'"
+                          >{{ s.reps }}×{{ unitSvc.kgToUser(s.weight) }}</span>
                         }
                       </div>
                     } @else {
-                      <!-- All sets equal: compact summary -->
-                      <span class="text-sm font-semibold text-[var(--color-text-muted)] font-mono">
-                        {{ ej.sets.length }}×{{ ej.sets[0].reps }} &#64; {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
+                      <!-- All sets equal -->
+                      <span class="text-xs font-semibold text-[var(--color-text-muted)] font-mono">
+                        Todo a {{ ej.sets[0].reps }} reps × {{ unitSvc.kgToUser(ej.sets[0].weight) }}{{ unitSvc.currentWeightUnit() }}
                       </span>
                     }
                   } @else if (ej.type === 'cardio') {
-                    <span class="text-sm font-semibold text-[var(--color-accent-success)] font-mono">{{ getEjercicioResumen(ej) }}</span>
-                  } @else {
-                    <span class="text-sm text-[var(--color-text-muted)]">—</span>
+                    <span class="text-xs font-semibold text-[var(--color-accent-success)] font-mono">{{ getEjercicioResumen(ej) }}</span>
                   }
                 </div>
               }
             </div>
 
-            <!-- Volume footer -->
-            @if (getLogVolumen(log) > 0 || getLogDistancia(log) > 0) {
+            <!-- Distancia Footer (Only for cardio) -->
+            @if (getLogDistancia(log) > 0) {
               <div class="border-t border-white/5 px-5 py-3.5 flex gap-4 bg-[var(--color-bg-input)]/50">
-                @if (getLogVolumen(log) > 0) {
-                  <span class="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
-                    Vol: <span class="text-white font-mono">{{ formatVol(getLogVolumen(log)) }}</span>
-                  </span>
-                }
-                @if (getLogDistancia(log) > 0) {
-                  <span class="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
-                    Cardio: <span class="text-[var(--color-accent-success)] font-mono">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
-                  </span>
-                }
+                <span class="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">
+                  Cardio: <span class="text-[var(--color-accent-success)] font-mono">{{ unitSvc.metersToUser(getLogDistancia(log)) }} {{ unitSvc.currentDistanceUnit() }}</span>
+                </span>
               </div>
             }
           </div>
@@ -179,33 +180,37 @@ interface MonthStats {
         </div>
       }
 
-      <!-- Exportar -->
-      <div class="mt-8">
-        <h2 class="text-base font-bold uppercase tracking-wider text-white mb-4">Exportar Datos</h2>
-        <div class="flex flex-col gap-3 mb-4">
-          <div class="flex gap-3">
-            <button (click)="exportJSON()" class="btn-secondary flex-1 min-h-[48px] rounded-xl text-[11px] uppercase tracking-wider">
-              Mes (JSON)
-            </button>
-            <button (click)="exportCSV()" class="btn-secondary flex-1 min-h-[48px] rounded-xl text-[11px] uppercase tracking-wider">
-              Mes (CSV)
-            </button>
-          </div>
-          <div class="flex gap-3">
-            <button (click)="exportAllJSON()" class="w-full bg-[var(--color-bg-input)] text-[var(--color-accent)] border border-[var(--color-accent)]/30 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-wider hover:bg-[var(--color-accent)]/10 active:scale-95 transition-all flex-1">
-              Todo (JSON)
-            </button>
-            <button (click)="exportAllCSV()" class="w-full bg-[var(--color-bg-input)] text-[var(--color-accent-success)] border border-[var(--color-accent-success)]/30 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-wider hover:bg-[var(--color-accent-success)]/10 active:scale-95 transition-all flex-1">
-              Todo (CSV)
-            </button>
-          </div>
+      <!-- Exportar / Importar Compacto -->
+      <div class="mt-8 bg-[var(--color-bg-card)] rounded-3xl p-5 border border-white/5 shadow-sm">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-white mb-4">Gestión de Datos</h2>
+        
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button (click)="exportJSON()" class="flex items-center justify-center gap-2 bg-[var(--color-bg-input)] hover:bg-white/5 text-[var(--color-text-primary)] border border-white/5 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent)]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Mes JSON
+          </button>
+          <button (click)="exportCSV()" class="flex items-center justify-center gap-2 bg-[var(--color-bg-input)] hover:bg-white/5 text-[var(--color-text-primary)] border border-white/5 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-accent-success)]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Mes CSV
+          </button>
+          <button (click)="exportAllJSON()" class="flex items-center justify-center gap-2 bg-[var(--color-bg-input)] hover:bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all w-full">
+            Todo JSON
+          </button>
+          <button (click)="exportAllCSV()" class="flex items-center justify-center gap-2 bg-[var(--color-bg-input)] hover:bg-[var(--color-accent-success)]/10 text-[var(--color-accent-success)] border border-[var(--color-accent-success)]/30 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all w-full">
+            Todo CSV
+          </button>
         </div>
-        <button (click)="fileInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] text-[11px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent)]/50 hover:text-[var(--color-accent)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)]">
-          Importar (.json)
-        </button>
-        <button (click)="csvInput.click()" class="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] text-[11px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent-success)]/50 hover:text-[var(--color-accent-success)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)] mt-3">
-          Importar (.csv)
-        </button>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <button (click)="fileInput.click()" class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] py-2.5 text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent)]/50 hover:text-[var(--color-accent)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            Importar JSON
+          </button>
+          <button (click)="csvInput.click()" class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 text-[var(--color-text-muted)] py-2.5 text-[10px] font-semibold uppercase tracking-wider active:scale-95 transition-all hover:border-[var(--color-accent-success)]/50 hover:text-[var(--color-accent-success)] bg-[var(--color-bg-input)]/50 hover:bg-[var(--color-bg-input)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            Importar CSV
+          </button>
+        </div>
       </div>
       <input #fileInput type="file" accept=".json" (change)="onFileSelected($event)" class="hidden" aria-label="Seleccionar archivo JSON" />
       <input #csvInput type="file" accept=".csv" (change)="onCSVSelected($event)" class="hidden" aria-label="Seleccionar archivo CSV" />
@@ -246,7 +251,7 @@ export class DataManagementComponent implements OnInit, OnDestroy {
   feedbackIsError = signal(false);
 
   allLogs = signal<WorkoutSession[]>([]);
-  stats = signal<MonthStats>({ sesiones: 0, volumenWeight: 0, distanceMeters: 0, tagSesiones: [] });
+  stats = signal<MonthStats>({ sesiones: 0, seriesWeight: 0, distanceMeters: 0, tagSesiones: [] });
   logToDelete = signal<WorkoutSession | null>(null);
   
   private feedbackTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -325,14 +330,14 @@ export class DataManagementComponent implements OnInit, OnDestroy {
   }
 
   private calcStats(logs: WorkoutSession[]) {
-    let volumen = 0;
+    let seriesCount = 0;
     let distancia = 0;
     const tagCount = new Map<MuscleTag, Set<string>>();
 
     for (const log of logs) {
       for (const ej of log.exercises) {
         if (ej.type === 'strength' && ej.sets) {
-          volumen += ej.sets.reduce((s, r) => s + r.weight * r.reps, 0);
+          seriesCount += ej.sets.length;
         } else if (ej.cardio) {
           distancia += ej.cardio.distanceMeters ?? 0;
         }
@@ -349,7 +354,7 @@ export class DataManagementComponent implements OnInit, OnDestroy {
 
     this.stats.set({
       sesiones: logs.length,
-      volumenWeight: volumen,
+      seriesWeight: seriesCount,
       distanceMeters: distancia,
       tagSesiones,
     });
